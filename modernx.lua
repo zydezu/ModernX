@@ -47,7 +47,7 @@ local user_opts = {
     showskip = true,            -- show the skip back and forward (chapter) buttons
     showloop = true;            -- show the loop button
     showinfo = true;            -- show the info button
-    compactmode = true;        -- replace the jump buttons with the chapter buttons, clicking the
+    compactmode = false;        -- replace the jump buttons with the chapter buttons, clicking the
                                 -- buttons will act as jumping, and shift clicking will as skipping
                                 -- a chapter
     jumpamount = 5,             -- change the jump amount (in seconds by default)
