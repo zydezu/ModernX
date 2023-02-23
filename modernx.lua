@@ -47,7 +47,7 @@ local user_opts = {
     showskip = true,            -- show the skip back and forward (chapter) buttons
     showloop = true;            -- show the loop button
     showinfo = true;            -- show the info button
-    compactmode = false;        -- replace the jump buttons with the chapter buttons, clicking the
+    compactmode = true;        -- replace the jump buttons with the chapter buttons, clicking the
                                 -- buttons will act as jumping, and shift clicking will as skipping
                                 -- a chapter
     jumpamount = 5,             -- change the jump amount (in seconds by default)
@@ -1609,7 +1609,7 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 400 - nojumpoffset*10)
     ne.softrepeat = true
     ne.content = icons.backward
-    ne.enabled = (have_ch) -- disables button when no chapters available.
+    ne.enabled = (have_ch) or compactmode -- disables button when no chapters available.
     ne.eventresponder['mbtn_left_down'] =
         function () 
             if compactmode then
@@ -1651,7 +1651,7 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 400 - nojumpoffset*10)
     ne.softrepeat = true
     ne.content = icons.forward
-    ne.enabled = (have_ch) -- disables button when no chapters available.
+    ne.enabled = (have_ch) or compactmode -- disables button when no chapters available.
     ne.eventresponder['mbtn_left_down'] =
         function ()
             if compactmode then
