@@ -1,7 +1,7 @@
 # ModernX
 A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-modern/)), that aims to mirror the functionality of MPV's stock OSC while with a more modern-looking interface.
 
-![img](https://github.com/zydezu/ModernX/blob/main/preview.png)
+![image](https://user-images.githubusercontent.com/50119098/232332600-afb7ba86-9bdb-4aca-8b98-386ed8ad872d.png)
 
 # Additional Features
 This fork changes the following:
@@ -19,13 +19,14 @@ This fork changes the following:
 - Changed icon window x visibility range to prevent them from overlapping
 - Added Japanese translation
 - N/A when hovering over audio will not show if either the audio track's language or title are known
+- Added ability to hide pin window button
 
 # How to install
 
 Locate your MPV folder. It is typically located at `\%APPDATA%\mpv\` on Windows and `~/.config/mpv/` on Linux/MacOS. See the [Files section](https://mpv.io/manual/master/#files) in mpv's manual for more info.
 
-Put mordenx.lua into your mpv "\~\~/scripts/" folder. Create the "\~\~/scripts/" folder if you don't already have one and remove any other OSC scripts,
-then put `Material-Design-Iconic-Font.ttf` in the "\~\~/fonts" folder.
+Put mordenx.lua into your mpv "\~\/scripts/" folder. Create the "\~\/scripts/" folder if you don't already have one and remove any other OSC scripts,
+then put `Material-Design-Iconic-Font.ttf` in the "\~\/fonts/" folder.
 
 in mpv.conf:
 
@@ -37,7 +38,15 @@ border = no # Optional, but recommended
 
 # How to config
 
-edit osc.conf in "\~\~/script-opts/" folder, however many options are changed, so refer to the user_opts variable in the script file for details.
+Edit osc.conf in "\~\/script-opts/" folder, however many options can be changed, so refer to the user_opts variable in the script file for details.
+
+Example, in osc.conf:
+
+```
+showloop=no
+showinfo=no
+titlefontsize=20
+```
 
 # Thumbnails
 
@@ -70,6 +79,9 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 * Left mouse button/Right mouse button: cycle to next/previous track
 * Shift + Left mouse button: cycle to next/previous track and show track list
 * Shift + Right mouse button: show track list
+## Pin button
+* Left mouse button: toggle pinning (and removing video border)
+* Right mouse button: toggle pinning without changing the border
 ## Volume
 * Left mouse button: mute/unmute video
 * Scroll wheel: change volume
