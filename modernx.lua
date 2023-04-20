@@ -7,8 +7,6 @@
 
 -- further fork by zydezu
 
--- clean up code, implement "title bar in pinned mode"
-
 local assdraw = require 'mp.assdraw'
 local msg = require 'mp.msg'
 local opt = require 'mp.options'
@@ -53,7 +51,7 @@ local user_opts = {
     compactmode = true,         -- replace the jump buttons with the chapter buttons, clicking the
                                 -- buttons will act as jumping, and shift clicking will as skipping
                                 -- a chapter
-    bottomhover = true,        -- if the osc should only display when hover occurs at video elements on the bottom of the window
+    bottomhover = true,         -- if the osc should only display when hover occurs at video elements on the bottom of the window
     jumpamount = 5,             -- change the jump amount (in seconds by default)
     jumpiconnumber = true,      -- show different icon when jumpamount is 5, 10, or 30
     jumpmode = 'exact',         -- seek mode for jump buttons. e.g.
@@ -70,7 +68,7 @@ local user_opts = {
     volumecontrol = true,       -- whether to show mute button and volume slider
     keyboardnavigation = false, -- enable directional keyboard navigation
     chapter_fmt = "Chapter: %s",-- chapter print format for seekbar-hover. "no" to disable
-    boxalpha = 80,              -- alpha of the background box,0 (opaque) to 255 (fully transparent)
+    boxalpha = 50,              -- alpha of the background box, 0 (opaque) to 255 (fully transparent)
 }
 
 -- Icons for jump button depending on jumpamount 
@@ -207,6 +205,7 @@ local osc_styles = {
     Time = '{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs17\\fn' .. user_opts.font .. '}',
     Tooltip = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs18\\fn' .. user_opts.font .. '}',
     Title = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. user_opts.titlefontsize ..'\\q2\\fn' .. user_opts.font .. '}',
+    WindowTitle = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. 22 ..'\\q2\\fn' .. user_opts.font .. '}',
     WinCtrl = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs20\\fnmpv-osd-symbols}',
     elementDown = '{\\1c&H999999&}',
     elementHighlight = '{\\blur1\\bord1\\1c&HFFC033&}',
@@ -250,7 +249,8 @@ local state = {
     fulltime = user_opts.timems,
     highlight_element = 'cy_audio',
     chapter_list = {},                      -- sorted by time
-    looping = false
+    looping = false,
+    windowtitle = "",
 }
 
 local thumbfast = {
@@ -271,9 +271,6 @@ if builtin_osc_enabled then
     mp.set_property_native('osc', false)
 end
 
---
-
-
 -- WindowControl helpers
 function window_controls_enabled()
     val = user_opts.windowcontrols
@@ -284,10 +281,7 @@ function window_controls_enabled()
     end
 end
 
-
-
 function build_keyboard_controls()
-
     -- prepare the main button row
     local bottom_button_line = {}
     table.insert(bottom_button_line, 'cy_audio')
@@ -308,7 +302,6 @@ function build_keyboard_controls()
         table.insert(bottom_button_line, 'skipfrwd')
     end
     table.insert(bottom_button_line, 'pl_next')
-
 
     if user_opts.showinfo then
         table.insert(bottom_button_line, 'tog_info')
@@ -337,8 +330,6 @@ function build_keyboard_controls()
 
     return mapping
 end
-
-
 --
 -- Helperfunctions
 --
@@ -1231,6 +1222,15 @@ function window_controls()
     -- and libass will complain that they are not present in the
     -- default font, even if another font with them is available.
 
+    -- Window Title
+    local geo =
+        {x = 10, y = button_y + 12, an = 1, w = 40, h = wc_geo.h}
+    lo = add_layout('windowtitle')
+    lo.geometry = geo
+    lo.style = osc_styles.WindowTitle
+	lo.alpha[3] = 0
+    lo.button.maxchars = geo.w / 13
+
     -- Close: ??
     ne = new_element('close', 'button')
     ne.content = '\238\132\149'
@@ -1302,28 +1302,31 @@ layouts = function ()
     local osc_w, osc_h=
         osc_geo.w, osc_geo.h
 
-	--
     -- Controller Background
-    --
 	local lo
-
+    
 	new_element('TransBg', 'box')
 	lo = add_layout('TransBg')
 	lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
 	lo.style = osc_styles.TransBg
 	lo.layer = 10
 	lo.alpha[3] = user_opts.boxalpha
+
+    if (not state.border or state.fullscreen) then
+        new_element('TitleTransBg', 'box')
+        lo = add_layout('TitleTransBg')
+        lo.geometry = {x = posX, y = -80, an = 7, w = osc_w, h = -0.5}
+        lo.style = osc_styles.TransBg
+        lo.layer = 10
+        lo.alpha[3] = user_opts.boxalpha
+    end
 	
-    --
     -- Alignment
-    --
 	local refX = osc_w / 2
 	local refY = posY
 	local geo
 	
-    --
     -- Seekbar
-    --
     new_element('seekbarbg', 'box')
     lo = add_layout('seekbarbg')
     lo.geometry = {x = refX , y = refY - 96 , an = 5, w = osc_geo.w - 50, h = 2}
@@ -1339,8 +1342,6 @@ layouts = function ()
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
 
-    
-
     local showjump = user_opts.showjump
     local showskip = user_opts.showskip
     local showloop = user_opts.showloop
@@ -1354,17 +1355,13 @@ layouts = function ()
     local offset = showjump and 60 or 0
     local outeroffset = (showskip and 0 or 100) + (showjump and 0 or 100)
     
-
-    --
     -- Volumebar
-    --
     lo = new_element('volumebarbg', 'box')
     lo.visible = (osc_param.playresx >= 900) and user_opts.volumecontrol
     lo = add_layout('volumebarbg')
     lo.geometry = {x = 155, y = refY - 40, an = 4, w = 80, h = 2}
     lo.layer = 13
     lo.style = osc_styles.VolumebarBg
-
     
     lo = add_layout('volumebar')
     lo.geometry = {x = 155, y = refY - 40, an = 4, w = 80, h = 8}
@@ -1946,10 +1943,17 @@ function osc_init()
         return not (title == '') and title or ' '
     end
     ne.visible = osc_param.playresy >= 200 and user_opts.showtitle
+
+    -- windowtitle
+    ne = new_element('windowtitle', 'button')
+    ne.content = function ()
+        local title = mp.command_native({"expand-text", state.windowtitle})
+        return not (title == '') and title or ' '
+    end
+    ne.visible = osc_param.playresy >= 200
     
     --seekbar
     ne = new_element('seekbar', 'slider')
-
     ne.enabled = not (mp.get_property('percent-pos') == nil)
     state.slider_element = ne.enabled and ne or nil  -- used for forced_title
     ne.slider.markerF = function ()
@@ -2138,6 +2142,7 @@ function osc_init()
     end
     ne.eventresponder['mbtn_left_up'] =
         function () state.rightTC_trem = not state.rightTC_trem end
+
 
     -- load layout
     layouts()
@@ -2502,7 +2507,7 @@ function process_event(source, what)
 
         if (user_opts.minmousemove == 0) or (not ((state.last_mouseX == nil) or (state.last_mouseY == nil)) and ((math.abs(mouseX - state.last_mouseX) >= user_opts.minmousemove) or (math.abs(mouseY - state.last_mouseY) >= user_opts.minmousemove))) then
                 if user_opts.bottomhover then -- if enabled, only show osc if mouse is hovering at the bottom of the screen (where the UI elements are)
-                    if (mouseY > osc_param.playresy - 200) or (mp.get_property('border') == 'no' and mouseX > osc_param.playresx - 150 and mouseY < 40) then -- account for scaling options
+                    if (mouseY > osc_param.playresy - 200) or ((not state.border or state.fullscreen) and mouseY < 40) then -- account for scaling options
                         show_osc()
                     else
                         hide_osc()
@@ -2716,6 +2721,12 @@ mp.observe_property('loop-file', 'bool',
         else 
             state.looping = false
         end
+    end
+)
+mp.observe_property('title', 'string',
+    function(name, val)
+        state.windowtitle = val
+        show_message(state.windowtitle);
     end
 )
 mp.observe_property('border', 'bool',
