@@ -30,7 +30,7 @@ local user_opts = {
     hidetimeout = 1500,         -- duration in ms until the OSC hides if no
                                 -- mouse movement. enforced non-negative for the
                                 -- user, but internally negative is 'always-on'.
-    fadeduration = 100,         -- duration of fade out in ms, 0 = no fade
+    fadeduration = 150,         -- duration of fade out in ms, 0 = no fade
     minmousemove = 1,           -- minimum amount of pixels the mouse has to
                                 -- move between ticks to make the OSC show up
     iamaprogrammer = false,     -- use native mpv values and disable OSC
@@ -59,6 +59,7 @@ local user_opts = {
     title = '${media-title}',   -- string compatible with property-expansion
                                 -- to be shown as OSC title
     showtitle = true,		    -- show title in OSC
+    showwindowtitle = true,     -- show window title in borderless/fullscreen mode
     showonpause = true,         -- whether to disable the hide timeout on pause
     timetotal = true,          	-- display total time instead of remaining time?
     timems = false,             -- Display time down to millliseconds by default
@@ -232,6 +233,7 @@ local state = {
     tick_timer = nil,
     tick_last_time = 0,                     -- when the last tick() was run
     titletick = 0,
+    windowtitletick = 0,
     oldtitle = ' ',
     initialborder = mp.get_property('border'),
     hide_timer = nil,
@@ -924,7 +926,7 @@ function render_elements(master_ass)
             end
             buttontext = buttontext:gsub(':%((.?.?.?)%) unknown ', ':%(%1%)')  --gsub('%) unknown %(\'', '')
 
-            if (user_opts.titlecutoff or user_opts.scrollingtitle) and element.name=='title' then
+            if (user_opts.titlecutoff or user_opts.scrollingtitle) and (element.name == 'title') then
                 local maxchars = element.layout.button.maxchars
                 -- 认为1个中文字符约等于1.5个英文字符
                 -- local charcount = buttontext:len()-  (buttontext:len()-select(2, buttontext:gsub('[^\128-\193]', '')))/1.5
@@ -959,6 +961,10 @@ function render_elements(master_ass)
                     state.titletick = 0 --if title/chapter fits on screen, reset scrolling
                     state.oldtitle = ' '
                 end
+            end
+
+            if (element.name == 'windowtitle') then
+                
             end
 
             elem_ass:append(buttontext)
@@ -1223,13 +1229,15 @@ function window_controls()
     -- default font, even if another font with them is available.
 
     -- Window Title
-    local geo =
-        {x = 10, y = button_y + 12, an = 1, w = 40, h = wc_geo.h}
-    lo = add_layout('windowtitle')
-    lo.geometry = geo
-    lo.style = osc_styles.WindowTitle
-	lo.alpha[3] = 0
-    lo.button.maxchars = geo.w / 13
+    if user_opts.showwindowtitle then
+        local geo =
+            {x = 10, y = button_y + 12, an = 1, w = 40, h = wc_geo.h}
+        lo = add_layout('windowtitle')
+        lo.geometry = geo
+        lo.style = osc_styles.WindowTitle
+        lo.alpha[3] = 0
+        lo.button.maxchars = geo.w / 20
+    end
 
     -- Close: ??
     ne = new_element('close', 'button')
@@ -1312,10 +1320,10 @@ layouts = function ()
 	lo.layer = 10
 	lo.alpha[3] = user_opts.boxalpha
 
-    if (not state.border or state.fullscreen) then
+    if (not state.border or state.fullscreen and user_opts.showwindowtitle) then
         new_element('TitleTransBg', 'box')
         lo = add_layout('TitleTransBg')
-        lo.geometry = {x = posX, y = -80, an = 7, w = osc_w, h = -0.5}
+        lo.geometry = {x = posX, y = -100, an = 7, w = osc_w, h = -1}
         lo.style = osc_styles.TransBg
         lo.layer = 10
         lo.alpha[3] = user_opts.boxalpha
@@ -1945,12 +1953,14 @@ function osc_init()
     ne.visible = osc_param.playresy >= 200 and user_opts.showtitle
 
     -- windowtitle
-    ne = new_element('windowtitle', 'button')
-    ne.content = function ()
-        local title = mp.command_native({"expand-text", state.windowtitle})
-        return not (title == '') and title or ' '
+    if user_opts.showwindowtitle then
+        ne = new_element('windowtitle', 'button')
+        ne.content = function ()
+            local title = mp.command_native({"expand-text", state.windowtitle})
+            return not (title == '') and title or ' '
+        end
+        ne.visible = osc_param.playresy >= 200
     end
-    ne.visible = osc_param.playresy >= 200
     
     --seekbar
     ne = new_element('seekbar', 'slider')
@@ -2410,7 +2420,7 @@ function render()
     if not (state.showtime == nil) and (get_hidetimeout() >= 0) then
         local timeout = state.showtime + (get_hidetimeout()/1000) - now
         if timeout <= 0 then
-            if (state.active_element == nil) and not (mouse_over_osc) then
+            if (state.active_element == nil) and (user_opts.bottomhover or not (mouse_over_osc)) then
                 hide_osc()
             end
         else
@@ -2723,12 +2733,13 @@ mp.observe_property('loop-file', 'bool',
         end
     end
 )
-mp.observe_property('title', 'string',
-    function(name, val)
-        state.windowtitle = val
-        show_message(state.windowtitle);
-    end
-)
+if user_opts.showwindowtitle then
+    mp.observe_property('title', 'string',
+        function(name, val)
+            state.windowtitle = val
+        end
+    )
+end
 mp.observe_property('border', 'bool',
     function(name, val)
         state.border = val
