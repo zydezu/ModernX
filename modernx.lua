@@ -61,8 +61,10 @@ local user_opts = {
     showtitle = true,		    -- show title in OSC
     showwindowtitle = true,     -- show window title in borderless/fullscreen mode
     showonpause = true,         -- whether to disable the hide timeout on pause
+    thumbnailborder = 2,        -- the width of the thumbnail border
+    raisesubswithosc = true,    -- whether to raise subtitles above the osc when it's shown
     timetotal = true,          	-- display total time instead of remaining time?
-    timems = false,             -- Display time down to millliseconds by default
+    timems = false,             -- show time as milliseconds by default
     visibility = 'auto',        -- only used at init to set visibility_mode(...)
     windowcontrols = 'auto',    -- whether to show window controls
     greenandgrumpy = false,     -- disable santa hat
@@ -867,11 +869,11 @@ function render_elements(master_ass)
                             local r_w, r_h = get_virt_scale_factor()
 
                             local tooltip_font_size = 18
-                            local thumbPad = 4
+                            local thumbPad = user_opts.thumbnailborder
                             local thumbMarginX = 18 / r_w
                             local thumbMarginY = tooltip_font_size + thumbPad + 2 / r_h
-                            local tooltipBgColor = "FFFFFF"
-                            local tooltipBgAlpha = 80
+                            local tooltipBgColor = "FFFFFF" -- unused
+                            local tooltipBgAlpha = 80 -- unused
                             local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
                             local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
 
@@ -2218,6 +2220,15 @@ function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
     end
+    -- raise subtitles
+    if user_opts.raisesubswithosc and state.osc_visible == true and (state.fullscreen == false or user_opts.showfullscreen) then
+	local w, h = mp.get_osd_size()
+	if h > 0 then
+		mp.commandv('set', 'sub-pos', 80)
+	end
+	else
+		mp.commandv('set', 'sub-pos', 100)
+	end	
     request_tick()
 end
 
