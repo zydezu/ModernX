@@ -54,7 +54,7 @@ local user_opts = {
     windowcontrols = 'auto',    -- whether to show window controls
     greenandgrumpy = false,     -- disable santa hat
     language = 'eng',		-- eng=English, chs=Chinese
-    volumecontrol = true,       -- whether to show mute button and volumne slider
+    volumecontrol = true,       -- whether to show mute button and volume slider
     keyboardnavigation = false, -- enable directional keyboard navigation
     chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
 }
