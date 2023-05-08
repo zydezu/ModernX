@@ -107,8 +107,7 @@ titlefontsize=20
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_jrEP1mKJ2A](https://user-images.githubusercontent.com/50119098/236635427-7c78b93e-d37c-48c6-9209-e10ffabdcab5.png) |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
-| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_iRUTYp69ew](https://user-images.githubusercontent.com/50119098/236637089-361745a1-f9e0-46e2-970f-d11a58ce8685.gif)
- |
+| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_iRUTYp69ew](https://user-images.githubusercontent.com/50119098/236637089-361745a1-f9e0-46e2-970f-d11a58ce8685.gif) |
 | timetotal | Whether to display the total time instead of remaining time |
 | timems | Whether to display time in milliseconds |
 | visibility | The visiblity mode of the UI |
