@@ -102,6 +102,7 @@ titlefontsize=20
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
 | jumpmode | What kind of seeking mode is used for the jump buttons |
 | title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
+| dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
 | showtitle | Whether to show the title in the OSC |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_jrEP1mKJ2A](https://user-images.githubusercontent.com/50119098/236635427-7c78b93e-d37c-48c6-9209-e10ffabdcab5.png) |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
@@ -110,9 +111,9 @@ titlefontsize=20
  |
 | timetotal | Whether to display the total time instead of remaining time |
 | timems | Whether to display time in milliseconds |
-| visibility | only used at init to set visibility_mode(...) |
+| visibility | The visiblity mode of the UI |
 | windowcontrols | Whether to show window controls |
-| greenandgrumpy | Disable showing the santa hat in December |
+| noxmas | Disable showing the santa hat in December |
 | keyboardnavigation | Enable full keyboard control of the OSC |
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
@@ -162,6 +163,7 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 * `Right mouse button` show chapter list
 * `Shift + Left mouse button` go to previous/next chapter and show playlist
 * `Shift + Right mouse button` show chapter list
+* `TAB` show chapter list
 ### Jump back/forward buttons
 * `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
 * `Right mouse button` jumps forwards/backwards by 1 minute
