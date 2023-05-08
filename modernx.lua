@@ -16,62 +16,61 @@ local utils = require 'mp.utils'
 -- default user option values
 -- may change them in osc.conf
 local user_opts = {
-    language = 'en',		    -- en:English, chs:Chinese, pl:Polish, jp:Japanese
-    showwindowed = true,        -- show OSC when windowed?
-    showfullscreen = true,      -- show OSC when fullscreen?
-    idlescreen = true,          -- draw logo and text when idle
-    scalewindowed = 1.0,        -- scaling of the controller when windowed
-    scalefullscreen = 1.0,      -- scaling of the controller when fullscreen
-    scaleforcedwindow = 1.0,    -- scaling when rendered on a forced window
-    titlefontsize = 28,         -- the font size of the title text
-    titlecutoff = true,         -- if title is long, replace with '...' instead of cutting of screen
-    scrollingtitle = true,      -- instead of cutting off the title, it will scroll
-    vidscale = false,           -- scale the controller with the video?
-    hidetimeout = 1500,         -- duration in ms until the OSC hides if no
-                                -- mouse movement. enforced non-negative for the
-                                -- user, but internally negative is 'always-on'.
-    fadeduration = 150,         -- duration of fade out in ms, 0 = no fade
-    minmousemove = 1,           -- minimum amount of pixels the mouse has to
-                                -- move between ticks to make the OSC show up
-    iamaprogrammer = false,     -- use native mpv values and disable OSC
-                                -- internal track list management (and some
-                                -- functions that depend on it)
-    font = 'mpv-osd-symbols',	-- default osc font
-    seekbarhandlesize = 1.0,	-- size ratio of the slider handle, range 0 ~ 1
-    seekrange = true,		    -- show seekrange overlay
-    seekrangealpha = 64,      	-- transparency of seekranges
-    seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
-    showjump = true,            -- show "jump forward/backward 5 seconds" buttons 
-                                -- shift+left-click to step 1 frame and 
-                                -- right-click to jump 1 minute
-    showskip = true,            -- show the skip back and forward (chapter) buttons
-    showloop = true,            -- show the loop button
-    showinfo = true,            -- show the info button
-    showontop = true,           -- show window on top button
-    compactmode = true,         -- replace the jump buttons with the chapter buttons, clicking the
-                                -- buttons will act as jumping, and shift clicking will as skipping
-                                -- a chapter
-    bottomhover = true,         -- if the osc should only display when hover occurs at video elements on the bottom of the window
-    jumpamount = 5,             -- change the jump amount (in seconds by default)
-    jumpiconnumber = true,      -- show different icon when jumpamount is 5, 10, or 30
-    jumpmode = 'exact',         -- seek mode for jump buttons. e.g.
-                                -- 'exact', 'relative+keyframes', etc.
-    title = '${media-title}',   -- string compatible with property-expansion
-                                -- to be shown as OSC title
-    showtitle = true,		    -- show title in OSC
-    showwindowtitle = true,     -- show window title in borderless/fullscreen mode
-    showonpause = true,         -- whether to disable the hide timeout on pause
-    thumbnailborder = 2,        -- the width of the thumbnail border
-    raisesubswithosc = true,    -- whether to raise subtitles above the osc when it's shown
-    timetotal = true,          	-- display total time instead of remaining time?
-    timems = false,             -- show time as milliseconds by default
-    visibility = 'auto',        -- only used at init to set visibility_mode(...)
-    windowcontrols = 'auto',    -- whether to show window controls
-    greenandgrumpy = false,     -- disable santa hat
-    volumecontrol = true,       -- whether to show mute button and volume slider
-    keyboardnavigation = false, -- enable directional keyboard navigation
-    chapter_fmt = "Chapter: %s",-- chapter print format for seekbar-hover. "no" to disable
-    boxalpha = 50,              -- alpha of the background box, 0 (opaque) to 255 (fully transparent)
+    language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
+    showwindowed = true,            -- show OSC when windowed?
+    showfullscreen = true,          -- show OSC when fullscreen?
+    welcomescreen = true,           -- show the mpv 'play files' screen upon open
+    scalewindowed = 1.0,            -- scaling of the controller when windowed
+    scalefullscreen = 1.0,          -- scaling of the controller when fullscreen
+    scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
+    titlefontsize = 28,             -- the font size of the title text
+    titlecutoff = true,             -- if title is long, replace with '...' instead of cutting of screen
+    scrollingtitle = true,          -- instead of cutting off the title, it will scroll
+    vidscale = false,               -- scale the controller with the video?
+    hidetimeout = 1500,             -- duration in ms until the OSC hides if no
+                                    -- mouse movement. enforced non-negative for the
+                                    -- user, but internally negative is 'always-on'.
+    fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
+    minmousemove = 1,               -- minimum amount of pixels the mouse has to
+                                    -- move between ticks to make the OSC show up
+    font = 'mpv-osd-symbols',	    -- default osc font
+    seekbarhandlesize = 1.0,	    -- size ratio of the slider handle, range 0 ~ 1
+    seekrange = true,		        -- show seekrange overlay
+    seekrangealpha = 64,      	    -- transparency of seekranges
+    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
+    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
+                                    -- shift+left-click to step 1 frame and 
+                                    -- right-click to jump 1 minute
+    showskip = true,                -- show the skip back and forward (chapter) buttons
+    showloop = true,                -- show the loop button
+    showinfo = true,                -- show the info button
+    showontop = true,               -- show window on top button
+    volumecontrol = true,           -- whether to show mute button and volume slider
+    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
+                                    -- buttons will act as jumping, and shift clicking will act as
+                                    -- skipping a chapter
+    bottomhover = true,             -- if the osc should only display when hover occurs at video elements on the bottom of the window
+    jumpamount = 5,                 -- change the jump amount (in seconds by default)
+    jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
+    jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
+                                    -- 'exact', 'relative+keyframes', etc.
+    title = '${media-title}',       -- string compatible with property-expansion
+                                    -- to be shown as OSC title
+    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
+                                    -- differ (like with playing urls, audio or some media)
+    showtitle = true,		        -- show title in OSC
+    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    showonpause = true,             -- whether to disable the hide timeout on pause
+    thumbnailborder = 2,            -- the width of the thumbnail border
+    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
+    timetotal = true,          	    -- display total time instead of remaining time?
+    timems = false,                 -- show time as milliseconds by default
+    visibility = 'auto',            -- only used at init to set visibility_mode(...)
+    windowcontrols = 'auto',        -- whether to show window controls
+    noxmas = false,                 -- disable santa hat
+    keyboardnavigation = false,     -- enable directional keyboard navigation
+    chapter_fmt = "Chapter: %s",    -- chapter print format for seekbar-hover. "no" to disable
+    boxalpha = 50,                  -- alpha of the background box, 0 (opaque) to 255 (fully transparent)
 }
 
 -- Icons for jump button depending on jumpamount 
@@ -123,7 +122,7 @@ local language = {
         loopdisable = 'Disable looping',
 	},
 	['chs'] = {
-		welcome = '{\\1c&H00\\bord0\\fs30\\fn微软雅黑 light\\fscx125}MPV{\\fscx100} 播放器',  -- this text appears when mpv starts
+		welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}将文件或URL放在这里播放',  -- this text appears when mpv starts
 		off = '关闭',
 		na = 'n/a',
 		none = '无数据',
@@ -157,8 +156,8 @@ local language = {
 		nolist = 'Lista odtwarzania pusta.',
 		chapter = 'Rozdział',
 		nochapter = 'Brak rozdziałów.',
-        ontop = 'Umożliwić pozostawienie okna na górze',
-        ontopdisable = 'Wyłączenie pozostawania okna na górze',
+        ontop = 'Przypnij okno do góry',
+        ontopdisable = 'Odepnij okno od góry',
         loopenable = 'Włączenie zapętlenia',
         loopdisable = 'Wyłączenie zapętlenia',
 	},
@@ -177,17 +176,17 @@ local language = {
 		nolist = '空のプレイリスト.',
 		chapter = 'チャプター',
 		nochapter = '利用可能なチャプターはありません.',
-        ontop = 'ウィンドウが上に表示されるようにする',
-        ontopdisable = 'ウィンドウが上に表示されないようにする',
+        ontop = 'ピンウィンドウをトップに表示',
+        ontopdisable = 'ウィンドウを上からアンピンする',
         loopenable = 'ループON',
         loopdisable = 'ループOFF',
     }
 }
 -- read options from config and command-line
-opt.read_options(user_opts, 'osc', function(list) update_options(list) end)
+opt.read_options(user_opts, 'modernx', function(list) update_options(list) end)
 -- apply lang opts
 local texts = language[user_opts.language]
-local osc_param = { -- calculated by osc_init()
+local osc_param = {                         -- calculated by osc_init()
     playresy = 0,                           -- canvas size Y
     playresx = 0,                           -- canvas size X
     display_aspect = 1,
@@ -255,6 +254,7 @@ local state = {
     chapter_list = {},                      -- sorted by time
     looping = false,
     windowtitle = "",
+    videoDescription = "",                  -- fill if it is a YouTube
 }
 
 local thumbfast = {
@@ -460,13 +460,6 @@ end
 -- get value at current mouse position
 function get_slider_value(element)
     return get_slider_value_at(element, get_virt_mouse_pos())
-end
-
-function countone(val)
-    if not (user_opts.iamaprogrammer) then
-        val = val + 1
-    end
-    return val
 end
 
 -- multiplies two alpha values, formular can probably be improved
@@ -1024,7 +1017,7 @@ function limited_list(prop, pos)
     end
 
     local fs = tonumber(mp.get_property('options/osd-font-size'))
-    local max = math.ceil(osc_param.unscaled_y*0.75 / fs)
+    local max = math.ceil(osc_param.unscaled_y*1 / fs)
     if max % 2 == 0 then
         max = max - 1
     end
@@ -1039,6 +1032,17 @@ function limited_list(prop, pos)
         table.insert(reslist, item)
     end
     return count, reslist
+end
+
+function checktitle()
+    if not string.find(user_opts.title, "filename") then
+        if user_opts.dynamictitle and  mp.get_property("filename") ~= mp.get_property("media-title") then
+            msg.warn("Changing title name to include filename")
+            user_opts.title = "${filename} | ${media-title}" -- {filename/no-ext}
+        else
+            user_opts.title = "${media-title}"
+        end
+    end
 end
 
 function get_playlist()
@@ -1821,7 +1825,9 @@ function osc_init()
     end
     ne.nothingavailable = texts.nosub
     ne.eventresponder['mbtn_left_up'] = 
-        function () set_track('sub', 1) end
+        function () 
+            set_track('sub', 1) 
+        end
     ne.eventresponder['enter'] = 
         function ()
             set_track('sub', 1)
@@ -2175,8 +2181,6 @@ end
 --
 -- Other important stuff
 --
-
-
 function show_osc()
     -- show when disabled can happen (e.g. mouse_move) due to async/delayed unbinding
     if not state.enabled then return end
@@ -2578,7 +2582,7 @@ local santa_hat_lines = {
 function tick()
     if (not state.enabled) then return end
 
-    if (state.idle) then
+    if (state.idle) then -- this is the screen mpv opens to (not playing a file directly), or if you quit a video (idle=yes in mpv.conf)
 	   
         -- render idle message
         msg.trace('idle message')
@@ -2591,7 +2595,7 @@ function tick()
 
         local ass = assdraw.ass_new()
         -- mpv logo
-        if user_opts.idlescreen then
+        if user_opts.welcomescreen then
             for i, line in ipairs(logo_lines) do
                 ass:new_event()
                 ass:append(line_prefix .. line)
@@ -2599,14 +2603,14 @@ function tick()
         end
 
         -- Santa hat
-        if is_december and user_opts.idlescreen and not user_opts.greenandgrumpy then
+        if is_december and user_opts.welcomescreen and not user_opts.noxmas then
             for i, line in ipairs(santa_hat_lines) do
                 ass:new_event()
                 ass:append(line_prefix .. line)
             end
         end
    
-        if user_opts.idlescreen then
+        if user_opts.welcomescreen then
             ass:new_event()
             ass:pos(display_w / 2, icon_y + 65)
             ass:an(8)
@@ -2672,57 +2676,21 @@ function enable_osc(enable)
     end
 end
 
--- duration is observed for the sole purpose of updating chapter markers
--- positions. live streams with chapters are very rare, and the update is also
--- expensive (with request_init), so it's only observed when we have chapters
--- and the user didn't disable the livemarkers option (update_duration_watch).
-function on_duration() request_init() end
-
-local duration_watched = false
-function update_duration_watch()
-    local want_watch = user_opts.livemarkers and
-                       (mp.get_property_number("chapters", 0) or 0) > 0 and
-                       true or false  -- ensure it's a boolean
-
-    if (want_watch ~= duration_watched) then
-        if want_watch then
-            mp.observe_property("duration", nil, on_duration)
-        else
-            mp.unobserve_property(on_duration)
-        end
-        duration_watched = want_watch
-    end
-end
-
 validate_user_opts()
-update_duration_watch()
 
 mp.register_event('shutdown', shutdown)
 mp.register_event('start-file', request_init)
+mp.register_event("file-loaded", checktitle)
 mp.observe_property('track-list', nil, request_init)
 mp.observe_property('playlist', nil, request_init)
-mp.observe_property("chapter-list", "native", function(_, list)
+mp.observe_property("chapter-list", "native", function(_, list) -- chapter list changes
     list = list or {}  -- safety, shouldn't return nil
     table.sort(list, function(a, b) return a.time < b.time end)
     state.chapter_list = list
-    update_duration_watch()
     request_init()
 end)
 
-mp.register_script_message('osc-message', show_message)
-mp.register_script_message('osc-chapterlist', function(dur)
-    show_message(get_chapterlist(), dur)
-end)
-mp.register_script_message('osc-playlist', function(dur)
-    show_message(get_playlist(), dur)
-end)
-mp.register_script_message('osc-tracklist', function(dur)
-    local msg = {}
-    for k,v in pairs(nicetypes) do
-        table.insert(msg, get_tracklist(k))
-    end
-    show_message(table.concat(msg, '\n\n'), dur)
-end)
+mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
 
 mp.observe_property('fullscreen', 'bool',
     function(name, val)
@@ -3073,11 +3041,7 @@ function osc_disable_key_bindings()
 	osc_key_bindings = {}
 end
 
-
-
 visibility_mode(user_opts.visibility, true)
-mp.register_script_message('osc-visibility', visibility_mode)
-mp.add_key_binding(nil, 'visibility', function() visibility_mode('cycle') end)
 
 mp.register_script_message("thumbfast-info", function(json)
     local data = utils.parse_json(json)
