@@ -6,22 +6,16 @@ A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-mo
 
 # Additional Features
 This fork changes the following:
-- Added loop button, and option to disable it
-- Added options to disable the info button, the skip buttons and the back/next buttons
-- Moving the volume slider whilst muted now unmutes it
-- When muted, the slider becomes 0 (but the volume of the video is remembered when unmuted)
-- Although... scrolling up whilst volume is muted sets it to 0 and increases it from there
-- Unmuting whilst the volume slider is already 0 increases the volume from 0
-- Made elements being unavailable vs being off (audio tracks and subtitles) more distinguishable
-- When shift+left clicking the audio/subtitles button, a list of tracks are shown and traversed through
-- When shift+right clicking the same button, the list is shown, but the track isn't changed
-- This shift-clicking rule also applies for the skip buttons and back/next buttons
-- Full keyboard control now shows messages when enter is pressed on the relevant icon (eg: showing the list of chapters when the skip forward is pressed)
+- Adds compact mode and reorganises some features
+- Added loop and pin window buttons
+- Bug fixes to do with the volume slider
+- Made elements being unavailable vs being turned off (audio tracks and subtitles) more distinguishable
+- Fixes bugs to due with tooltips
+- Added shift+left clicking and shift+right clicking the audio/subtitles button for a list of tracks are shown and traversed through
+- Pressing TAB will now show a list of chapters
+- Added dynamic title changing depending on the file/source being played
 - Changed icon window x visibility range to prevent them from overlapping
-- Added Japanese translation
-- N/A when hovering over audio will not show if either the audio track's language or title are known
-- Added ability to hide pin window button
-
+- Many more configurable options
 
 # Installation
 
@@ -108,8 +102,7 @@ titlefontsize=20
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_jrEP1mKJ2A](https://user-images.githubusercontent.com/50119098/236635427-7c78b93e-d37c-48c6-9209-e10ffabdcab5.png) |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
-| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_iRUTYp69ew](https://user-images.githubusercontent.com/50119098/236637089-361745a1-f9e0-46e2-970f-d11a58ce8685.gif)
- |
+| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_iRUTYp69ew](https://user-images.githubusercontent.com/50119098/236637089-361745a1-f9e0-46e2-970f-d11a58ce8685.gif) |
 | timetotal | Whether to display the total time instead of remaining time |
 | timems | Whether to display time in milliseconds |
 | visibility | The visiblity mode of the UI |
