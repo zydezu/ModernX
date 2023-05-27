@@ -2227,16 +2227,19 @@ function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
     end
-    -- raise subtitles
+    adjustSubtitles()    -- raise subtitles
+    request_tick()
+end
+
+function adjustSubtitles()
     if user_opts.raisesubswithosc and state.osc_visible == true and (state.fullscreen == false or user_opts.showfullscreen) then
-	local w, h = mp.get_osd_size()
-	if h > 0 then
-		mp.commandv('set', 'sub-pos', 80)
-	end
+        local w, h = mp.get_osd_size()
+        if h > 0 then
+            mp.commandv('set', 'sub-pos', math.floor((osc_param.playresy - 175)/osc_param.playresy*100)) -- percentage
+        end
 	else
 		mp.commandv('set', 'sub-pos', 100)
 	end	
-    request_tick()
 end
 
 function pause_state(name, enabled)
@@ -2294,6 +2297,7 @@ end
 
 -- Like request_init(), but also request an immediate update
 function request_init_resize()
+    adjustSubtitles()
     request_init()
     -- ensure immediate update
     state.tick_timer:kill()
