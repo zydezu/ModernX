@@ -86,6 +86,7 @@ titlefontsize=20
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
+| iconstyle | Whether the icons are normal or round varients - thanks to [https://github.com/cyl0/ModernX/pull/55](https://github.com/cyl0/ModernX/pull/55) |
 | seekbarhandlesize | How big the seek bar handle appears, from 0 to 1 |
 | seekrange | Whether to show the buffer range on the seekbar |
 | seekrangealpha | The transparency of seekranges |
