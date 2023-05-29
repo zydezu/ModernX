@@ -112,6 +112,12 @@ titlefontsize=20
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
 
+### Clips
+
+Using the clip hotkey, one can use ffmpeg to mark a start and end of a clip
+
+* `c` marks the clip, pressed again marks the end of the clip and called ffmpeg to make the clip.
+
 
 ### Compact Mode
 
