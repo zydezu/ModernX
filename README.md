@@ -3,6 +3,10 @@ A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-mo
 
 ![image](https://user-images.githubusercontent.com/50119098/232332600-afb7ba86-9bdb-4aca-8b98-386ed8ad872d.png)
 
+# mpvconfig
+
+This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig). Check that repository for a full mpv configuration.
+
 
 # Additional Features
 This fork changes the following:
