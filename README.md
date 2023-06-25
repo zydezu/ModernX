@@ -40,7 +40,7 @@ border = no # Optional, but recommended
 
 ### Border differences
 
-This is what disabling and enablign the border looks like:
+This is what disabling and enabling the border looks like:
 
 | Border Enabled | Border Disabled |
 | -------------- | --------------- |
