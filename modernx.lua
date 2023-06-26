@@ -76,7 +76,6 @@ local user_opts = {
     keyboardnavigation = false,     -- enable directional keyboard navigation
     chapter_fmt = "Chapter: %s",    -- chapter print format for seekbar-hover. "no" to disable
     boxalpha = 100,                  -- alpha of the background box, 0 (opaque) to 255 (fully transparent)
-    barmargin = 0,                  -- vertical margin of top/bottombar
     blur_intensity = 150,           -- adjust the strength of the OSC blur
     osc_color = "000000",           -- accent of the OSC and the title bar
     seekbarfg_color = "E39C42",     -- color of the seekbar progress and handle
