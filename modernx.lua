@@ -1453,7 +1453,7 @@ layouts = function ()
 
     -- Volumebar
     lo = new_element('volumebarbg', 'box')
-    lo.visible = (osc_param.playresx >= 900) and user_opts.volumecontrol
+    lo.visible = (osc_param.playresx >= 900 - outeroffset) and user_opts.volumecontrol
     lo = add_layout('volumebarbg')
     lo.geometry = {x = 155, y = refY - 40, an = 4, w = 80, h = 2}
     lo.layer = 13
