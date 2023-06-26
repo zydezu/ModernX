@@ -63,6 +63,7 @@ local user_opts = {
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     showtitle = true,		        -- show title in OSC
+    showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
     showonpause = true,             -- whether to disable the hide timeout on pause
     thumbnailborder = 2,            -- the width of the thumbnail border
@@ -110,6 +111,7 @@ local icons = {
   loopon = '', -- copied private use character
   info = '',
   download = '',
+  downloading = '',
   ontopon = '\xEF\x86\x8C',
   ontopoff = '\xEF\x86\x8B',
 }
@@ -225,6 +227,7 @@ local osc_styles = {
     Tooltip = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs18\\fn' .. user_opts.font .. '}',
     Title = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. user_opts.titlefontsize ..'\\q2\\fn' .. user_opts.font .. '}',
     WindowTitle = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. 20 ..'\\q2\\fn' .. user_opts.font .. '}',
+    Description = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
     WinCtrl = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs20\\fnmpv-osd-symbols}',
     elementDown = '{\\1c&H999999&}',
     elementHover = "{\\blur5\\2c&HFFFFFF&}",
@@ -274,6 +277,7 @@ local state = {
     looping = false,
     windowtitle = "",
     videoDescription = "",                  -- fill if it is a YouTube
+    descriptionLoaded = false,
     isWebVideo = false,
     path = "",                               -- used for yt-dlp downloading
     downloading = false,
@@ -1042,8 +1046,7 @@ function checkWebLink()
         path = string.gsub(path, "ytdl://", "https://") -- Strip possible ytdl:// prefix and replace with "https://" if there it isn't there already
     end
 
-    print("Loading description...")
-    state.videoDescription = "Loading..."
+    msg.info("Loading description...")
 
     local command = { "yt-dlp", "--no-download", "--get-description", path}
     exec_title(command)
@@ -1085,12 +1088,14 @@ function exec_title(args, result)
         state.videoDescription = val.stdout
         -- replace actual linebreaks with ASS linebreaks
         state.videoDescription = string.gsub(state.videoDescription, '\n', '\\N')
-        show_message(state.videoDescription)
+        state.descriptionLoaded = true
+        msg.info("Loaded video description")
+        msg.info(state.videoDescription)
     end)
 end
 
 function downloadDone()
-    show_message("{\\an9}Download complete")
+    show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/.downloads"}))
     state.downloading = false
 end
 
@@ -1297,10 +1302,12 @@ function window_controls()
     if user_opts.showwindowtitle then
         ne = new_element("windowtitle", "button")
         ne.content = function ()
-            local title = mp.command_native({"expand-text", user_opts.title})
+            local title = mp.command_native({"expand-text", mp.get_property('title')})
             -- escape ASS, and strip newlines and trailing slashes
             title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
-            return not (title == "") and title or "mpv"
+            local titleval = not (title == "") and title or "mpv"
+            if (mp.get_property('ontop') == 'yes') then return "📌 " .. titleval end
+            return titleval
         end
         lo = add_layout('windowtitle')
         lo.geometry = {x = 10, y = button_y + 10, an = 1, w = 40, h = wc_geo.h}
@@ -1366,7 +1373,7 @@ layouts = function ()
     osc_param.areas = {} -- delete areas
 
     -- area for active mouse input
-    add_area('input', get_hitbox_coords(posX, posY, 1, osc_geo.w, 104))
+    add_area('input', get_hitbox_coords(posX, posY, 1, osc_geo.w, osc_geo.h))
 
     -- area for show/hide
     add_area('showhide', 0, 0, osc_param.playresx, osc_param.playresy)
@@ -1428,13 +1435,22 @@ layouts = function ()
     local outeroffset = (showskip and 0 or 100) + (showjump and 0 or 100)
 
     -- Title
-    geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w - 50, h = 35}
+    geo = {x = 25, y = refY - 122 + (state.isWebVideo and -20 or 0), an = 1, w = osc_geo.w - 50, h = 35}
     lo = add_layout("title")
     lo.geometry = geo
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.Title,
                              geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
     lo.alpha[3] = 0
-    lo.button.maxchars = geo.w / 13
+    lo.button.maxchars = geo.w / 12
+
+    -- Description
+    if state.isWebVideo and user_opts.showdescription then
+        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w - 50, h = 30}
+        lo = add_layout("description")
+        lo.geometry = geo
+        lo.style = osc_styles.Description
+        lo.button.maxchars = geo.w / 8
+    end
 
     -- Volumebar
     lo = new_element('volumebarbg', 'box')
@@ -1451,7 +1467,6 @@ layouts = function ()
     lo.slider.gap = 3
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
-
 
 	-- buttons
     lo = add_layout('pl_prev')
@@ -1638,7 +1653,7 @@ function osc_init()
     local ne
 
     -- title
-    ne = new_element('title', "button")
+    ne = new_element('title', 'button')
     ne.visible = user_opts.showtitle
     ne.content = function ()
         local title = state.forced_title or
@@ -1647,6 +1662,36 @@ function osc_init()
         title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
         return not (title == "") and title or "mpv"
     end
+    ne.eventresponder["mbtn_left_up"] = function ()
+        local title = mp.get_property_osd("media-title")
+        show_message(title)
+    end
+    ne.eventresponder["mbtn_right_up"] =
+        function () show_message(mp.get_property_osd("filename")) end
+
+    -- description
+    ne = new_element('description', 'button')
+    ne.visible = state.isWebVideo and user_opts.showdescription
+    ne.content = function ()
+        local title = "Loading..."
+        if (state.descriptionLoaded) then
+            title = state.videoDescription
+            if (state.videoDescription == '\\N') then
+                title = "No description."
+            end
+        end
+        -- get rid of new lines
+        title = string.gsub(title, '\\N', ' ')
+        return not (title == "") and title or "mpv"
+    end
+    ne.eventresponder['mbtn_left_up'] =
+        function () 
+            if (state.videoDescription == '\\N') then
+                show_message("\\N" .. "No description.")
+            else
+                show_message("\\N" .. state.videoDescription)
+            end
+        end
 
     -- playlist buttons
     -- prev
@@ -1875,16 +1920,16 @@ function osc_init()
     end
     ne.nothingavailable = texts.noaudio
     ne.eventresponder['mbtn_left_up'] = 
-        function () set_track('audio', 1) end
+    function () set_track('audio', 1) show_message(get_tracklist('audio')) end
     ne.eventresponder['enter'] = 
         function () 
             set_track('audio', 1) 
             show_message(get_tracklist('audio'))
         end
     ne.eventresponder['mbtn_right_up'] = 
-        function () set_track('audio', -1) end
+        function () set_track('audio', -1) show_message(get_tracklist('audio')) end
     ne.eventresponder['shift+mbtn_left_down'] =
-        function () set_track('audio', 1); show_message(get_tracklist('audio')) end
+        function () show_message(get_tracklist('audio')) end
     ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_tracklist('audio')) end
                 
@@ -1914,18 +1959,16 @@ function osc_init()
     end
     ne.nothingavailable = texts.nosub
     ne.eventresponder['mbtn_left_up'] = 
-        function () 
-            set_track('sub', 1) 
-        end
+        function () set_track('sub', 1) show_message(get_tracklist('sub')) end
     ne.eventresponder['enter'] = 
         function ()
             set_track('sub', 1)
             show_message(get_tracklist('sub'))
         end
     ne.eventresponder['mbtn_right_up'] =
-        function () set_track('sub', -1) end
+        function () set_track('sub', -1) show_message(get_tracklist('sub')) end
     ne.eventresponder['shift+mbtn_left_down'] =
-        function () set_track('sub', 1); show_message(get_tracklist('sub')) end
+        function () show_message(get_tracklist('sub')) end
     ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_tracklist('sub')) end
     
@@ -2004,19 +2047,25 @@ function osc_init()
 
     --download
     ne = new_element('download', 'button')
-    ne.content = icons.download
+    ne.content = function ()
+        if (state.downloading) then
+            return (icons.downloading)
+        else
+            return (icons.download)
+        end
+    end
     ne.visible = (osc_param.playresx >= 900 - outeroffset) and state.isWebVideo
     ne.eventresponder['mbtn_left_up'] =
         function ()
             if state.downloading then
-                show_message("{\\an9}Already downloading...")
+                show_message("\\N{\\an9}Already downloading...")
                 return
             end
-            local localpath = mp.command_native({"expand-path", "~/Downloads/mpv"})
-            print(localpath)
+            local localpath = mp.command_native({"expand-path", "~~desktop/mpv/.downloads"})
+            msg.info(localpath)
             local command = { "yt-dlp", "-S res,ext:mp4:m4a", "--add-metadata", "--write-auto-subs", "--embed-subs", "-P " .. localpath ,state.path }
             state.downloading = true
-            show_message("{\\an9}Downloading...")
+            show_message("\\N{\\an9}Downloading...")
             local status = exec(command, downloadDone)
         end
 
