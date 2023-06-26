@@ -115,6 +115,11 @@ titlefontsize=20
 | keyboardnavigation | Enable full keyboard control of the OSC |
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
+| blur_intensity | The strenght of the blur on the OSC
+| osc_color | The colour of the OSC and title bar
+| seekbarfg_color | Colour of current seekbar progress and the handle
+| seekbarbg_color | Colour of the remaining seekbar
+| hovereffect | Whether buttons emit a glowing effect when hovered over
 
 
 ### Compact Mode
