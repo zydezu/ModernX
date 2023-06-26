@@ -1,7 +1,7 @@
 # ModernX
 A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-modern/)), that aims to mirror the functionality of MPV's stock OSC while with a more modern-looking interface.
 
-![image](https://user-images.githubusercontent.com/50119098/232332600-afb7ba86-9bdb-4aca-8b98-386ed8ad872d.png)
+![image](preview.png)
 
 # mpvconfig
 
@@ -115,6 +115,11 @@ titlefontsize=20
 | keyboardnavigation | Enable full keyboard control of the OSC |
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
+| blur_intensity | The strenght of the blur on the OSC
+| osc_color | The colour of the OSC and title bar
+| seekbarfg_color | Colour of current seekbar progress and the handle
+| seekbarbg_color | Colour of the remaining seekbar
+| hovereffect | Whether buttons emit a glowing effect when hovered over
 
 
 ### Compact Mode
