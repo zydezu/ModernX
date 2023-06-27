@@ -1094,7 +1094,7 @@ function exec_title(args, result)
 end
 
 function downloadDone()
-    show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/.downloads"}))
+    show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/downloads"}))
     state.downloading = false
 end
 
@@ -2060,9 +2060,9 @@ function osc_init()
                 show_message("\\N{\\an9}Already downloading...")
                 return
             end
-            local localpath = mp.command_native({"expand-path", "~~desktop/mpv/.downloads"})
+            local localpath = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
             msg.info(localpath)
-            local command = { "yt-dlp", "-S res,ext:mp4:m4a", "--add-metadata", "--write-auto-subs", "--embed-subs", "-P " .. localpath ,state.path }
+            local command = { "yt-dlp", "-S res,ext:mp4:m4a", "--add-metadata", "--write-auto-subs", "--embed-subs", "-P " .. localpath, state.path }
             state.downloading = true
             show_message("\\N{\\an9}Downloading...")
             local status = exec(command, downloadDone)
