@@ -111,8 +111,8 @@ local icons = {
   info = '',
   download = '',
   downloading = '',
-  ontopon = '\xEF\x86\x8C',
-  ontopoff = '\xEF\x86\x8B',
+  ontopon = '',
+  ontopoff = '',
 }
 
 -- Localization
