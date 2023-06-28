@@ -76,8 +76,6 @@ titlefontsize=20
 | scalefullscreen | The scaling of the OSC when in fullscreen |
 | scaleforcedwindow | The scaling when rendered on a forced window (like an audio file) |
 | titlefontsize | The size of the title text |
-| titlecutoff | Whether the title text is cut of and '...' appended to it, if it is too long <br> ![mpv_S3vkkf8YrJ](https://user-images.githubusercontent.com/50119098/236633686-40b99da5-dede-48f1-b937-02bcbf54bec8.png) 
-| scrollingtitle | Whether the the title text scrolls when too long (overrides 'titlecutoff') <br> ![mpv_5ez7Us4X9A](https://user-images.githubusercontent.com/50119098/236633730-e28a60b5-27c7-444f-9da5-27f6348b9f6e.gif) |
 | vidscale | Whether the OSC scales with the window's size |
 | hidetimeout | Duration in ms until the OSC hides when there is no mouse movement |
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
@@ -95,7 +93,7 @@ titlefontsize=20
 | showinfo | Whether to show the info button |
 | showontop | Whether to show the pin window on top button |
 | volumecontrol | Whether to show the mute button and volume slider |
-| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [compact mode](compact-mode) for more information |
+| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [[compact mode](compact-mode)](https://github.com/zydezu/ModernX#compact-mode) for more information |
 | bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) |
 | jumpamount | How many seconds the jump buttons jump by |
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
@@ -112,7 +110,6 @@ titlefontsize=20
 | visibility | The visiblity mode of the UI |
 | windowcontrols | Whether to show window controls |
 | noxmas | Disable showing the santa hat in December |
-| keyboardnavigation | Enable full keyboard control of the OSC |
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
 | blur_intensity | The strenght of the blur on the OSC
