@@ -2079,9 +2079,9 @@ function osc_init()
     ne = new_element('tog_ontop', 'button')
     ne.content = function ()
         if mp.get_property('ontop') == 'no' then
-            return ('\xEF\x86\x8B')
+            return (icons.ontopon)
         else
-            return ('\xEF\x86\x8C')
+            return (icons.ontopoff)
         end
     end
     ne.tooltip_style = osc_styles.Tooltip
