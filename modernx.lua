@@ -45,7 +45,7 @@ local user_opts = {
                                     -- right-click to jump 1 minute
     showskip = true,                -- show the skip back and forward (chapter) buttons
     showloop = true,                -- show the loop button
-    showinfo = true,                -- show the info button
+    showinfo = false,                -- show the info button
     showontop = true,               -- show window on top button
     downloadbutton = true,          -- show download button for web videos
     volumecontrol = true,           -- whether to show mute button and volume slider
@@ -2614,6 +2614,8 @@ function process_event(source, what)
         what and ('_' .. what) or '')
 
     if what == 'down' or what == 'press' then
+
+        state.showtime = mp.get_time() -- clicking resets the hideosc timer
 
         for n = 1, #elements do
 
