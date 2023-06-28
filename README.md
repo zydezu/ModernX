@@ -153,6 +153,15 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 ### Seekbar
 * `Left mouse button` seek to chosen position
 * `Right mouse button` seek to the head of chosen chapter
+### Title
+* `Left mouse button` show the full media title
+* `Right mouse button` show the full filename
+### Description (only on web videos)
+* `Left mouse button` show the full description
+### Playback time
+* `Left mouse button` display time in milliseconds
+### Duration
+* `Left mouse button` display total time instead of remaining time
 ### Playlist back/forward buttons
 * `Left mouse button` play previous/next file
 * `Right mouse button` show playlist
@@ -178,7 +187,3 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 ### Volume
 * `Left mouse button` mute/unmute video
 * `Scroll wheel` change volume
-### Playback time
-* `Left mouse button` display time in milliseconds
-### Duration
-* `Left mouse button` display total time instead of remaining time
