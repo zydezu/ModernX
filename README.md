@@ -93,7 +93,7 @@ titlefontsize=20
 | showinfo | Whether to show the info button |
 | showontop | Whether to show the pin window on top button |
 | volumecontrol | Whether to show the mute button and volume slider |
-| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [[compact mode](compact-mode)](https://github.com/zydezu/ModernX#compact-mode) for more information |
+| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [compact mode](https://github.com/zydezu/ModernX#compact-mode) for more information |
 | bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) |
 | jumpamount | How many seconds the jump buttons jump by |
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
