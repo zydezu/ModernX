@@ -12,7 +12,9 @@ This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig). 
 This fork changes the following:
 - Adds compact mode and reorganises some features
 - Added loop and pin window buttons
-- Bug fixes to do with the volume slider
+- Adds a download button for web videos
+- Displays descriptions from web videos
+- Bug fixes regarding the volume slider
 - Made elements being unavailable vs being turned off (audio tracks and subtitles) more distinguishable
 - Fixes bugs to due with tooltips
 - Added shift+left clicking and shift+right clicking the audio/subtitles button for a list of tracks are shown and traversed through
@@ -44,7 +46,7 @@ This is what disabling and enabling the border looks like:
 
 | Border Enabled | Border Disabled |
 | -------------- | --------------- |
-| ![mpv_1XwH1nkvPx](https://user-images.githubusercontent.com/50119098/236631985-8f21b44e-9ac2-410f-8235-2e2d7663022e.png) | ![mpv_oMMAipwaUu](https://user-images.githubusercontent.com/50119098/236632168-fd3687d4-dee1-4569-ba5b-759a4ae776ff.png) 
+| ![mpv_tkhXHUKNNt](https://github.com/zydezu/ModernX/assets/50119098/d2c3eb4e-5c7d-45df-ab35-6a0903c9c075) | ![mpv_rrIXTdX0Sx](https://github.com/zydezu/ModernX/assets/50119098/5573c30b-d57e-434a-b189-71dfb94b70bb) |
 
 This option may vary depending on your system.
 
@@ -59,8 +61,9 @@ Create an `osc.conf` file and place it in the `script-opts/` folder (create the 
 Here is an example of a configuration file, in `script-opts/osc.conf`:
 
 ```
+compactmode=no
 showloop=no
-showinfo=no
+showinfo=yes
 titlefontsize=20
 ```
 
@@ -68,7 +71,7 @@ titlefontsize=20
 
 | Option   | Description |
 | -------------- | --------------- |
-| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_ddz7rfBxHy](https://user-images.githubusercontent.com/50119098/236633617-baeec145-9ce2-4246-9c6d-f7ecc651aa71.png) |
+| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d)|
 | showwindowed   | Whether to show the OSC when windowed |
 | showfullscreen | Whether to show the OSC when in fullscreen |
 | welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen |
@@ -79,7 +82,6 @@ titlefontsize=20
 | vidscale | Whether the OSC scales with the window's size |
 | hidetimeout | Duration in ms until the OSC hides when there is no mouse movement |
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
-| minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
 | iconstyle | Whether the icons are normal or round varients - thanks to [https://github.com/cyl0/ModernX/pull/55](https://github.com/cyl0/ModernX/pull/55) |
@@ -94,14 +96,14 @@ titlefontsize=20
 | showontop | Whether to show the pin window on top button |
 | volumecontrol | Whether to show the mute button and volume slider |
 | compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [compact mode](https://github.com/zydezu/ModernX#compact-mode) for more information |
-| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) |
+| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> ### **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
 | jumpamount | How many seconds the jump buttons jump by |
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
 | jumpmode | What kind of seeking mode is used for the jump buttons |
 | title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
 | dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
 | showtitle | Whether to show the title in the OSC |
-| showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_jrEP1mKJ2A](https://user-images.githubusercontent.com/50119098/236635427-7c78b93e-d37c-48c6-9209-e10ffabdcab5.png) |
+| showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
 | raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
