@@ -30,7 +30,7 @@ local user_opts = {
                                     -- mouse movement. enforced non-negative for the
                                     -- user, but internally negative is 'always-on'.
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
-    minmousemove = 1,               -- minimum amount of pixels the mouse has to
+    minmousemove = 0,               -- minimum amount of pixels the mouse has to
                                     -- move between ticks to make the OSC show up
     font = 'mpv-osd-symbols',	    -- default osc font
     iconstyle = 'round',            -- icon style, 'solid' or 'round'
@@ -47,7 +47,7 @@ local user_opts = {
     showontop = true,               -- show window on top button
     downloadbutton = true,          -- show download button for web videos
     volumecontrol = true,           -- whether to show mute button and volume slider
-    volumecontroltype = "linear",       -- use linear or logarithmic volume scale
+    volumecontroltype = "linear",   -- use linear or logarithmic volume scale
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
                                     -- skipping a chapter
@@ -223,7 +223,7 @@ local osc_styles = {
     Time = '{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs17\\fn' .. user_opts.font .. '}',
     Tooltip = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs18\\fn' .. user_opts.font .. '}',
     Title = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. user_opts.titlefontsize ..'\\q2\\fn' .. user_opts.font .. '}',
-    WindowTitle = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. 20 ..'\\q2\\fn' .. user_opts.font .. '}',
+    WindowTitle = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
     Description = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
     WinCtrl = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs20\\fnmpv-osd-symbols}',
     elementDown = '{\\1c&H999999&}',
@@ -1025,7 +1025,7 @@ function checktitle()
         if (user_opts.dynamictitle and mp.get_property("filename") ~= mp.get_property("media-title")) 
         and (not string.find(mp.get_property("path"), "watch?")) then -- youtube links are garbage so dont use this
             msg.info("Changing title name to include filename")
-            user_opts.title = "${filename} | ${media-title}" -- {filename/no-ext}
+            user_opts.title = "${media-title} | ${filename}" -- {filename/no-ext}
         else
             user_opts.title = "${media-title}"
         end
@@ -1043,11 +1043,6 @@ function checkWebLink()
         path = string.gsub(path, "ytdl://", "https://") -- Strip possible ytdl:// prefix and replace with "https://" if there it isn't there already
     end
 
-    msg.info("Loading description...")
-
-    local command = { "yt-dlp", "--no-download", "--get-description", path}
-    exec_title(command)
-
     local function is_url(s)
         return nil ~=
             string.match(path,
@@ -1060,6 +1055,10 @@ function checkWebLink()
         state.isWebVideo = true
         state.path = path
         msg.info("Is a web video")
+        
+        msg.info("Loading description...")
+        local command = { "yt-dlp", "--no-download", "--get-description", path}
+        exec_title(command)
     end
 end
 
@@ -1307,8 +1306,10 @@ function window_controls()
             return titleval
         end
         lo = add_layout('windowtitle')
-        lo.geometry = {x = 10, y = button_y + 10, an = 1, w = 40, h = wc_geo.h}
+        geo = {x = 10, y = button_y + 10, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
+        lo.geometry = geo
         lo.style = osc_styles.WindowTitle
+        lo.button.maxchars = geo.w / 10
     end
 
     -- Close: 🗙
@@ -1438,7 +1439,7 @@ layouts = function ()
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.Title,
                              geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
     lo.alpha[3] = 0
-    lo.button.maxchars = geo.w / 12
+    lo.button.maxchars = geo.w / 13
 
     -- Description
     if state.isWebVideo and user_opts.showdescription then
