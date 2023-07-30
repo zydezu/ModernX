@@ -17,68 +17,76 @@ local utils = require 'mp.utils'
 -- default user option values
 -- may change them in osc.conf
 local user_opts = {
+    -- general settings --
     language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
+    welcomescreen = true,           -- show the mpv 'play files' screen upon open
+    visibility = 'auto',            -- only used at init to set visibility_mode(...)
+    windowcontrols = 'auto',        -- whether to show window controls
     showwindowed = true,            -- show OSC when windowed?
     showfullscreen = true,          -- show OSC when fullscreen?
-    welcomescreen = true,           -- show the mpv 'play files' screen upon open
+    noxmas = false,                 -- disable santa hat
+    
+    -- scaling settings --
+    vidscale = false,               -- whether to scale the controller with the video
     scalewindowed = 1.0,            -- scaling of the controller when windowed
     scalefullscreen = 1.0,          -- scaling of the controller when fullscreen
     scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
-    titlefontsize = 28,             -- the font size of the title text
-    vidscale = false,               -- scale the controller with the video?
-    hidetimeout = 1500,             -- duration in ms until the OSC hides if no
-                                    -- mouse movement. enforced non-negative for the
-                                    -- user, but internally negative is 'always-on'.
+
+    -- interface settings --
+    hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
-    minmousemove = 0,               -- minimum amount of pixels the mouse has to
-                                    -- move between ticks to make the OSC show up
+    minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
+    showonpause = true,             -- whether to disable the hide timeout on pause
+    bottomhover = true,             -- if the osc should only display when hovering at the bottom
+    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
+    thumbnailborder = 2,            -- the width of the thumbnail border
+
+    -- title and chapter settings --
+    showtitle = true,		        -- show title in OSC
+    showdescription = false,        -- show video description on web videos
+    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
+                                    -- differ (like with playing urls, audio or some media)
     font = 'mpv-osd-symbols',	    -- default osc font
-    iconstyle = 'round',            -- icon style, 'solid' or 'round'
+    title = '${media-title}',       -- string compatible with property-expansion
+                                    -- to be shown as OSC title
+    titlefontsize = 28,             -- the font size of the title text
+    chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
+    osc_color = '000000',           -- accent of the OSC and the title bar
+    blur_intensity = 150,           -- alpha of the background box for the OSC
+    boxalpha = 100,                 -- alpha of the window title bar
+
+    -- seekbar settings --
+    seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
+    seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
+    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
     seekbarhandlesize = 1.0,	    -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,		        -- show seekrange overlay
     seekrangealpha = 64,      	    -- transparency of seekranges
-    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
-    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
-                                    -- shift+left-click to step 1 frame and 
-                                    -- right-click to jump 1 minute
-    showskip = true,                -- show the skip back and forward (chapter) buttons
-    showloop = true,                -- show the loop button
-    showinfo = false,                -- show the info button
-    showontop = true,               -- show window on top button
-    downloadbutton = true,          -- show download button for web videos
-    volumecontrol = true,           -- whether to show mute button and volume slider
-    volumecontroltype = "linear",   -- use linear or logarithmic volume scale
-    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
-                                    -- buttons will act as jumping, and shift clicking will act as
-                                    -- skipping a chapter
-    bottomhover = true,             -- if the osc should only display when hover occurs at video elements on the bottom of the window
+    iconstyle = 'round',            -- icon style, 'solid' or 'round'
+    hovereffect = true,             -- whether buttons have a glowing effect when hovered over
+
+    -- button settings --
+    timetotal = true,          	    -- display total time instead of remaining time?
+    timems = false,                 -- show time as milliseconds by default
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
     jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
     jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
                                     -- 'exact', 'relative+keyframes', etc.
-    title = '${media-title}',       -- string compatible with property-expansion
-                                    -- to be shown as OSC title
-    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
-                                    -- differ (like with playing urls, audio or some media)
-    showtitle = true,		        -- show title in OSC
-    showdescription = true,         -- show video description on web videos
-    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
-    showonpause = true,             -- whether to disable the hide timeout on pause
-    thumbnailborder = 2,            -- the width of the thumbnail border
-    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
-    timetotal = true,          	    -- display total time instead of remaining time?
-    timems = false,                 -- show time as milliseconds by default
-    visibility = 'auto',            -- only used at init to set visibility_mode(...)
-    windowcontrols = 'auto',        -- whether to show window controls
-    noxmas = false,                 -- disable santa hat
-    keyboardnavigation = false,     -- enable directional keyboard navigation
-    chapter_fmt = "Chapter: %s",    -- chapter print format for seekbar-hover. "no" to disable
-    boxalpha = 100,                  -- alpha of the background box, 0 (opaque) to 255 (fully transparent)
-    blur_intensity = 150,           -- adjust the strength of the OSC blur
-    osc_color = "000000",           -- accent of the OSC and the title bar
-    seekbarfg_color = "E39C42",     -- color of the seekbar progress and handle
-    seekbarbg_color = "FFFFFF",     -- color of the remaining seekbar
-    hovereffect = true,             -- whether buttons have a glowing effect when hovered over
+    volumecontrol = true,           -- whether to show mute button and volume slider
+    volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
+    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
+                                    -- shift+left-click to step 1 frame and 
+                                    -- right-click to jump 1 minute
+    showskip = true,                -- show the skip back and forward (chapter) buttons
+    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
+                                    -- buttons will act as jumping, and shift clicking will act as
+                                    -- skipping a chapter
+    showloop = true,                -- show the loop button
+    loopinpause = true,             -- activate looping by right clicking pause
+    showontop = true,               -- show window on top button
+    showinfo = false,               -- show the info button
+    downloadbutton = true,          -- show download button for web videos
 }
 
 -- Icons for jump button depending on jumpamount 
@@ -1056,9 +1064,11 @@ function checkWebLink()
         state.path = path
         msg.info("Is a web video")
         
-        msg.info("Loading description...")
-        local command = { "yt-dlp", "--no-download", "--get-description", path}
-        exec_title(command)
+        if user_opts.showdescription then
+            msg.info("Loading description...")
+            local command = { "yt-dlp", "--no-download", "--get-description", path}
+            exec_title(command)
+        end
     end
 end
 
@@ -1087,6 +1097,9 @@ function exec_title(args, result)
         state.descriptionLoaded = true
         msg.info("Loaded video description")
         msg.info(state.videoDescription)
+        if (state.videoDescription == '' or state.videoDescription == '\\N') then
+            state.videoDescription = "No description"
+        end
     end)
 end
 
@@ -1433,7 +1446,7 @@ layouts = function ()
     local outeroffset = (showskip and 0 or 100) + (showjump and 0 or 100)
 
     -- Title
-    geo = {x = 25, y = refY - 122 + (state.isWebVideo and -20 or 0), an = 1, w = osc_geo.w - 50, h = 35}
+    geo = {x = 25, y = refY - 122 + ((state.isWebVideo and user_opts.showdescription) and -20 or 0), an = 1, w = osc_geo.w - 50, h = 35}
     lo = add_layout("title")
     lo.geometry = geo
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.Title,
@@ -1443,7 +1456,7 @@ layouts = function ()
 
     -- Description
     if state.isWebVideo and user_opts.showdescription then
-        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w - 50, h = 30}
+        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w - 50, h = 19}
         lo = add_layout("description")
         lo.geometry = geo
         lo.style = osc_styles.Description
@@ -1674,21 +1687,14 @@ function osc_init()
         local title = "Loading..."
         if (state.descriptionLoaded) then
             title = state.videoDescription
-            if (state.videoDescription == '\\N') then
-                title = "No description."
-            end
         end
         -- get rid of new lines
         title = string.gsub(title, '\\N', ' ')
-        return not (title == "") and title or "mpv"
+        return not (title == "") and title or "error"
     end
     ne.eventresponder['mbtn_left_up'] =
         function () 
-            if (state.videoDescription == '\\N') then
-                show_message("\\N" .. "No description.")
-            else
-                show_message("\\N" .. state.videoDescription)
-            end
+            show_message("\\N" .. state.videoDescription)
         end
 
     -- playlist buttons
@@ -1759,6 +1765,16 @@ function osc_init()
             else
                 mp.commandv("cycle", "pause")
             end
+        end
+    ne.eventresponder["mbtn_right_down"] =
+        function ()
+            if (state.looping) then
+                show_message("Looping disabled")
+            else
+                show_message("Looping enabled")
+            end    
+            state.looping = not state.looping
+            mp.set_property_native("loop-file", state.looping)
         end
 
 
@@ -2070,8 +2086,9 @@ function osc_init()
             local localpath = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
             msg.info(localpath)
             local command = { "yt-dlp", "-S res,ext:mp4:m4a", "--add-metadata", "--write-auto-subs", "--embed-subs", "-P " .. localpath, state.path }
-            state.downloading = true
+
             show_message("\\N{\\an9}Downloading...")
+            state.downloading = true
             local status = exec(command, downloadDone)
         end
 
@@ -2331,10 +2348,6 @@ function show_osc()
     state.showtime = mp.get_time()
 
     osc_visible(true)
-    
-    if user_opts.keyboardnavigation == true then
-        osc_enable_key_bindings()
-    end
 
     if (user_opts.fadeduration > 0) then
         state.anitype = nil
