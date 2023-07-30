@@ -123,6 +123,84 @@ titlefontsize=20
 | showinfo | Whether to show the info button |
 | downloadbutton | Whether to show download button for web videos |
 
+```
+-- Parameters
+-- default user option values
+-- may change them in osc.conf
+local user_opts = {
+    -- general settings --
+    language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
+    welcomescreen = true,           -- show the mpv 'play files' screen upon open
+    visibility = 'auto',            -- only used at init to set visibility_mode(...)
+    windowcontrols = 'auto',        -- whether to show window controls
+    showwindowed = true,            -- show OSC when windowed?
+    showfullscreen = true,          -- show OSC when fullscreen?
+    noxmas = false,                 -- disable santa hat
+    
+    -- scaling settings --
+    vidscale = false,               -- whether to scale the controller with the video
+    scalewindowed = 1.0,            -- scaling of the controller when windowed
+    scalefullscreen = 1.0,          -- scaling of the controller when fullscreen
+    scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
+
+    -- interface settings --
+    hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
+    fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
+    minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
+    showonpause = true,             -- whether to disable the hide timeout on pause
+    bottomhover = true,             -- if the osc should only display when hovering at the bottom
+    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
+    thumbnailborder = 2,            -- the width of the thumbnail border
+
+    -- title and chapter settings --
+    showtitle = true,		        -- show title in OSC
+    showdescription = false,        -- show video description on web videos
+    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
+                                    -- differ (like with playing urls, audio or some media)
+    font = 'mpv-osd-symbols',	    -- default osc font
+    title = '${media-title}',       -- string compatible with property-expansion
+                                    -- to be shown as OSC title
+    titlefontsize = 28,             -- the font size of the title text
+    chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
+    osc_color = '000000',           -- accent of the OSC and the title bar
+    blur_intensity = 150,           -- alpha of the background box for the OSC
+    boxalpha = 100,                 -- alpha of the window title bar
+
+    -- seekbar settings --
+    seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
+    seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
+    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
+    seekbarhandlesize = 1.0,	    -- size ratio of the slider handle, range 0 ~ 1
+    seekrange = true,		        -- show seekrange overlay
+    seekrangealpha = 64,      	    -- transparency of seekranges
+    iconstyle = 'round',            -- icon style, 'solid' or 'round'
+    hovereffect = true,             -- whether buttons have a glowing effect when hovered over
+
+    -- button settings --
+    timetotal = true,          	    -- display total time instead of remaining time?
+    timems = false,                 -- show time as milliseconds by default
+    jumpamount = 5,                 -- change the jump amount (in seconds by default)
+    jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
+    jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
+                                    -- 'exact', 'relative+keyframes', etc.
+    volumecontrol = true,           -- whether to show mute button and volume slider
+    volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
+    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
+                                    -- shift+left-click to step 1 frame and 
+                                    -- right-click to jump 1 minute
+    showskip = true,                -- show the skip back and forward (chapter) buttons
+    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
+                                    -- buttons will act as jumping, and shift clicking will act as
+                                    -- skipping a chapter
+    showloop = true,                -- show the loop button
+    loopinpause = true,             -- activate looping by right clicking pause
+    showontop = true,               -- show window on top button
+    showinfo = false,               -- show the info button
+    downloadbutton = true,          -- show download button for web videos
+}
+```
+
 ### Compact Mode
 
 Compact mode is a setting you can enable in the configuration, it removes the skip buttons, and places that functionality within the chapter buttons, allowing for more space in the interface. Clicking the buttons will act as jumping, and shift clicking will act as skipping a chapter
