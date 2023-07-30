@@ -69,7 +69,6 @@ titlefontsize=20
 ### Configurable Options
 
 | Option   | Description |
-| -- General Settings -- | --------------- |
 | language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d)|
 | welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen |
 | visibility | The visiblity mode of the UI |
@@ -77,12 +76,10 @@ titlefontsize=20
 | showwindowed | Whether to show the OSC when windowed |
 | showfullscreen | Whether to show the OSC when in fullscreen |
 | noxmas | Disable showing the santa hat in December |
-| -- Scaling Settings -- | --------------- |
 | vidscale | Whether the OSC scales with the window's size |
 | scalewindowed  | The scaling of the OSC when windowed |
 | scalefullscreen | The scaling of the OSC when in fullscreen |
 | scaleforcedwindow | The scaling when rendered on a forced window (like an audio file) |
-| -- Interface Settings -- | --------------- |
 | hidetimeout | Duration in ms until the OSC hides when there is no mouse movement |
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
@@ -90,7 +87,6 @@ titlefontsize=20
 | bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> ### **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
 | raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
-| -- Title and Chapter Settings -- | --------------- |
 | showtitle | Whether to show the title in the OSC |
 | showdescription | Whether to show video description on web videos |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
@@ -102,7 +98,6 @@ titlefontsize=20
 | osc_color | The colour of the OSC and title bar
 | blur_intensity | The strenght of the blur on the OSC
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
-| -- Seekbar Settings -- | --------------- |
 | seekbarfg_color | Colour of current seekbar progress and the handle
 | seekbarbg_color | Colour of the remaining seekbar
 | seekbarkeyframes | Whether to use keyframes when dragging the seekbar |
@@ -111,7 +106,6 @@ titlefontsize=20
 | seekrangealpha | The transparency of seekranges |
 | iconstyle | Whether the icons are normal or round varients - thanks to [https://github.com/cyl0/ModernX/pull/55](https://github.com/cyl0/ModernX/pull/55) |
 | hovereffect | Whether buttons emit a glowing effect when hovered over
-| -- Button Settings -- | --------------- |
 | timetotal | Whether to display the total time instead of remaining time |
 | timems | Whether to display time in milliseconds |
 | jumpamount | How many seconds the jump buttons jump by |
