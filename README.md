@@ -14,14 +14,13 @@ This fork changes the following:
 - Added loop and pin window buttons
 - Adds a download button for web videos
 - Displays descriptions from web videos
-- Bug fixes regarding the volume slider
 - Made elements being unavailable vs being turned off (audio tracks and subtitles) more distinguishable
-- Fixes bugs to due with tooltips
 - Added shift+left clicking and shift+right clicking the audio/subtitles button for a list of tracks are shown and traversed through
-- Pressing TAB will now show a list of chapters
+- Pressing TAB shows a list of chapters
 - Added dynamic title changing depending on the file/source being played
-- Changed icon window x visibility range to prevent them from overlapping
+- Changed icon visibility range to prevent them from overlapping
 - Many more configurable options
+- Various bug fixes
 
 # Installation
 
@@ -71,55 +70,136 @@ titlefontsize=20
 
 | Option   | Description |
 | -------------- | --------------- |
-| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d)|
-| showwindowed   | Whether to show the OSC when windowed |
-| showfullscreen | Whether to show the OSC when in fullscreen |
+| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d) |
 | welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen |
+| visibility | The visiblity mode of the UI |
+| windowcontrols | Whether to show window controls |
+| showwindowed | Whether to show the OSC when windowed |
+| showfullscreen | Whether to show the OSC when in fullscreen |
+| noxmas | Disable showing the santa hat in December |
+| vidscale | Whether the OSC scales with the window's size |
 | scalewindowed  | The scaling of the OSC when windowed |
 | scalefullscreen | The scaling of the OSC when in fullscreen |
 | scaleforcedwindow | The scaling when rendered on a forced window (like an audio file) |
-| titlefontsize | The size of the title text |
-| vidscale | Whether the OSC scales with the window's size |
 | hidetimeout | Duration in ms until the OSC hides when there is no mouse movement |
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
+| showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
+| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
+| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
+| thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
+| showtitle | Whether to show the title in the OSC |
+| showdescription | Whether to show video description on web videos |
+| showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
+| dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
-| iconstyle | Whether the icons are normal or round varients - thanks to [https://github.com/cyl0/ModernX/pull/55](https://github.com/cyl0/ModernX/pull/55) |
+| title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
+| titlefontsize | The size of the title text |
+| chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
+| osc_color | The colour of the OSC and title bar
+| blur_intensity | The strenght of the blur on the OSC
+| boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
+| seekbarfg_color | Colour of current seekbar progress and the handle
+| seekbarbg_color | Colour of the remaining seekbar
+| seekbarkeyframes | Whether to use keyframes when dragging the seekbar |
 | seekbarhandlesize | How big the seek bar handle appears, from 0 to 1 |
 | seekrange | Whether to show the buffer range on the seekbar |
 | seekrangealpha | The transparency of seekranges |
-| seekbarkeyframes | Whether to use keyframes when dragging the seekbar |
-| showjump | Whether to show the jump forward/backward buttons |
-| showskip | Whether to show the chapter buttons |
-| showloop | Whether to show the loop button |
-| showinfo | Whether to show the info button |
-| showontop | Whether to show the pin window on top button |
-| volumecontrol | Whether to show the mute button and volume slider |
-| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [compact mode](https://github.com/zydezu/ModernX#compact-mode) for more information |
-| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> ### **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
+| iconstyle | Whether the icons are normal or round varients - thanks to [https://github.com/cyl0/ModernX/pull/55](https://github.com/cyl0/ModernX/pull/55) |
+| hovereffect | Whether buttons emit a glowing effect when hovered over
+| timetotal | Whether to display the total time instead of remaining time |
+| timems | Whether to display time in milliseconds |
 | jumpamount | How many seconds the jump buttons jump by |
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
 | jumpmode | What kind of seeking mode is used for the jump buttons |
-| title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
-| dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
-| showtitle | Whether to show the title in the OSC |
-| showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
-| showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
-| thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
-| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
-| timetotal | Whether to display the total time instead of remaining time |
-| timems | Whether to display time in milliseconds |
-| visibility | The visiblity mode of the UI |
-| windowcontrols | Whether to show window controls |
-| noxmas | Disable showing the santa hat in December |
-| chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
-| boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
-| blur_intensity | The strenght of the blur on the OSC
-| osc_color | The colour of the OSC and title bar
-| seekbarfg_color | Colour of current seekbar progress and the handle
-| seekbarbg_color | Colour of the remaining seekbar
-| hovereffect | Whether buttons emit a glowing effect when hovered over
+| volumecontrol | Whether to show the mute button and volume slider |
+| volumecontroltype | Whether to use linear or logarithmic volume scale |
+| showjump | Whether to show the jump forward/backward buttons |
+| showskip | Whether to show the chapter buttons |
+| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [compact mode](https://github.com/zydezu/ModernX#compact-mode) for more information |
+| showloop | Whether to show the loop button |
+| loopinpause | Whether to activate looping by right clicking pause |
+| showontop | Whether to show the pin window on top button |
+| showinfo | Whether to show the info button |
+| downloadbutton | Whether to show download button for web videos |
 
+```lua
+-- Parameters
+-- default user option values
+-- may change them in osc.conf
+local user_opts = {
+    -- general settings --
+    language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
+    welcomescreen = true,           -- show the mpv 'play files' screen upon open
+    visibility = 'auto',            -- only used at init to set visibility_mode(...)
+    windowcontrols = 'auto',        -- whether to show window controls
+    showwindowed = true,            -- show OSC when windowed?
+    showfullscreen = true,          -- show OSC when fullscreen?
+    noxmas = false,                 -- disable santa hat
+    
+    -- scaling settings --
+    vidscale = false,               -- whether to scale the controller with the video
+    scalewindowed = 1.0,            -- scaling of the controller when windowed
+    scalefullscreen = 1.0,          -- scaling of the controller when fullscreen
+    scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
+
+    -- interface settings --
+    hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
+    fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
+    minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
+    showonpause = true,             -- whether to disable the hide timeout on pause
+    bottomhover = true,             -- if the osc should only display when hovering at the bottom
+    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
+    thumbnailborder = 2,            -- the width of the thumbnail border
+
+    -- title and chapter settings --
+    showtitle = true,		        -- show title in OSC
+    showdescription = false,        -- show video description on web videos
+    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
+                                    -- differ (like with playing urls, audio or some media)
+    font = 'mpv-osd-symbols',	    -- default osc font
+    title = '${media-title}',       -- string compatible with property-expansion
+                                    -- to be shown as OSC title
+    titlefontsize = 28,             -- the font size of the title text
+    chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
+    osc_color = '000000',           -- accent of the OSC and the title bar
+    blur_intensity = 150,           -- alpha of the background box for the OSC
+    boxalpha = 100,                 -- alpha of the window title bar
+
+    -- seekbar settings --
+    seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
+    seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
+    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
+    seekbarhandlesize = 1.0,	    -- size ratio of the slider handle, range 0 ~ 1
+    seekrange = true,		        -- show seekrange overlay
+    seekrangealpha = 64,      	    -- transparency of seekranges
+    iconstyle = 'round',            -- icon style, 'solid' or 'round'
+    hovereffect = true,             -- whether buttons have a glowing effect when hovered over
+
+    -- button settings --
+    timetotal = true,          	    -- display total time instead of remaining time?
+    timems = false,                 -- show time as milliseconds by default
+    jumpamount = 5,                 -- change the jump amount (in seconds by default)
+    jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
+    jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
+                                    -- 'exact', 'relative+keyframes', etc.
+    volumecontrol = true,           -- whether to show mute button and volume slider
+    volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
+    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
+                                    -- shift+left-click to step 1 frame and 
+                                    -- right-click to jump 1 minute
+    showskip = true,                -- show the skip back and forward (chapter) buttons
+    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
+                                    -- buttons will act as jumping, and shift clicking will act as
+                                    -- skipping a chapter
+    showloop = true,                -- show the loop button
+    loopinpause = true,             -- activate looping by right clicking pause
+    showontop = true,               -- show window on top button
+    showinfo = false,               -- show the info button
+    downloadbutton = true,          -- show download button for web videos
+}
+```
 
 ### Compact Mode
 
