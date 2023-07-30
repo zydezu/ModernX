@@ -123,7 +123,7 @@ titlefontsize=20
 | showinfo | Whether to show the info button |
 | downloadbutton | Whether to show download button for web videos |
 
-```
+```lua
 -- Parameters
 -- default user option values
 -- may change them in osc.conf
