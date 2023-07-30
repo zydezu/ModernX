@@ -69,7 +69,8 @@ titlefontsize=20
 ### Configurable Options
 
 | Option   | Description |
-| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d)|
+| -------------- | --------------- |
+| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d) |
 | welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen |
 | visibility | The visiblity mode of the UI |
 | windowcontrols | Whether to show window controls |
@@ -84,7 +85,7 @@ titlefontsize=20
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
-| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> ### **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
+| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
 | raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
 | showtitle | Whether to show the title in the OSC |
