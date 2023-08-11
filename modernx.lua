@@ -20,11 +20,10 @@ local user_opts = {
     -- general settings --
     language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
     welcomescreen = true,           -- show the mpv 'play files' screen upon open
-    visibility = 'auto',            -- only used at init to set visibility_mode(...)
-    windowcontrols = 'auto',        -- whether to show window controls
+    windowcontrols = 'auto',        -- whether to show OSC window controls, 'auto', 'yes' or 'no'
     showwindowed = true,            -- show OSC when windowed?
     showfullscreen = true,          -- show OSC when fullscreen?
-    noxmas = false,                 -- disable santa hat
+    noxmas = false,                 -- disable santa hat in December
     
     -- scaling settings --
     vidscale = false,               -- whether to scale the controller with the video
@@ -36,6 +35,7 @@ local user_opts = {
     hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
+    scrollingSpeed = 40,            -- the speed of scrolling text in menus
     showonpause = true,             -- whether to disable the hide timeout on pause
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
@@ -43,8 +43,9 @@ local user_opts = {
 
     -- title and chapter settings --
     showtitle = true,		        -- show title in OSC
-    showdescription = false,        -- show video description on web videos
+    showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     font = 'mpv-osd-symbols',	    -- default osc font
@@ -53,16 +54,17 @@ local user_opts = {
     titlefontsize = 28,             -- the font size of the title text
     chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
     osc_color = '000000',           -- accent of the OSC and the title bar
-    blur_intensity = 150,           -- alpha of the background box for the OSC
-    boxalpha = 100,                 -- alpha of the window title bar
+    OSCfadealpha = 150,             -- alpha of the background box for the OSC
+    boxalpha = 75,                  -- alpha of the window title bar
+    descriptionBoxAlpha = 100,      -- alpha of the description background box
 
     -- seekbar settings --
     seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
-    seekbarhandlesize = 1.0,	    -- size ratio of the slider handle, range 0 ~ 1
+    seekbarhandlesize = 0.8,	    -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,		        -- show seekrange overlay
-    seekrangealpha = 64,      	    -- transparency of seekranges
+    seekrangealpha = 150,      	    -- transparency of seekranges
     iconstyle = 'round',            -- icon style, 'solid' or 'round'
     hovereffect = true,             -- whether buttons have a glowing effect when hovered over
 
@@ -82,11 +84,12 @@ local user_opts = {
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
                                     -- skipping a chapter
-    showloop = true,                -- show the loop button
+    showloop = false,               -- show the loop button
     loopinpause = true,             -- activate looping by right clicking pause
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
+    ytdlpQuality = "-S res,ext:mp4:m4a" -- what quality of video the download button uses (max quality mp4 by default)
 }
 
 -- Icons for jump button depending on jumpamount 
@@ -105,20 +108,20 @@ local icons = {
   replay = '',
   backward = '\239\142\160',
   forward = '\239\142\159',
-  audio = '\239\142\183',
-  volume = '\239\142\188',
+  audio = '',
+  volume = '',
   volumelow = '',
-  volumemute = '\239\142\187',
-  sub = '\239\143\147',
-  minimize = '\239\133\172',
-  fullscreen = '\239\133\173',  
+  volumemute = '',
+  sub = '',
+  minimize = '',
+  fullscreen = '',  
   loopoff = '',
   loopon = '', -- copied private use character
   info = '',
   download = '',
   downloading = '',
-  ontopon = '',
-  ontopoff = '',
+  ontopon = '',
+  ontopoff = '',
 }
 
 -- Localization
@@ -219,7 +222,7 @@ local osc_param = {                         -- calculated by osc_init()
 local iconfont = user_opts.iconstyle == 'round' and 'Material-Design-Iconic-Round' or 'Material-Design-Iconic-Font'
 
 local osc_styles = {
-    TransBg = "{\\blur100\\bord" .. user_opts.blur_intensity .. "\\1c&H000000&\\3c&H" .. user_opts.osc_color .. "&}",
+    TransBg = "{\\blur100\\bord" .. user_opts.OSCfadealpha .. "\\1c&H000000&\\3c&H" .. user_opts.osc_color .. "&}",
     SeekbarBg = "{\\blur0\\bord0\\1c&H" .. user_opts.seekbarbg_color .. "&}",
     SeekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
     VolumebarBg = '{\\blur0\\bord0\\1c&H999999&}',
@@ -259,9 +262,6 @@ local state = {
     fullscreen = false,
     tick_timer = nil,
     tick_last_time = 0,                     -- when the last tick() was run
-    titletick = 0,
-    windowtitletick = 0,
-    oldtitle = ' ',
     initialborder = mp.get_property('border'),
     hide_timer = nil,
     cache_state = nil,
@@ -269,23 +269,27 @@ local state = {
     enabled = true,
     input_enabled = true,
     showhide_enabled = false,
-    windowcontrols_buttons = false,
-    dmx_cache = 0,
     border = true,
     maximized = false,
     osd = mp.create_osd_overlay('ass-events'),
     mute = false,
-    lastvisibility = user_opts.visibility,	-- save last visibility on pause if showonpause
     fulltime = user_opts.timems,
-    highlight_element = 'cy_audio',
     chapter_list = {},                      -- sorted by time
     looping = false,
-    windowtitle = "",
     videoDescription = "",                  -- fill if it is a YouTube
     descriptionLoaded = false,
+    showingDescription = false,
+    downloadedOnce = false,
+    downloadFileName = "",
+    scrolledlines = 25,
     isWebVideo = false,
     path = "",                               -- used for yt-dlp downloading
     downloading = false,
+    fileSizeBytes = 0,
+    fileSizeNormalised = "Approximating size...",
+    localDescription = nil,
+    localDescriptionClick = nil,
+    localDescriptionIsClickable = false,
 }
 
 local thumbfast = {
@@ -1029,19 +1033,51 @@ function startupevents()
 end
 
 function checktitle()
-    if not string.find(user_opts.title, "filename") then
-        if (user_opts.dynamictitle and mp.get_property("filename") ~= mp.get_property("media-title")) 
-        and (not string.find(mp.get_property("path"), "watch?")) then -- youtube links are garbage so dont use this
-            msg.info("Changing title name to include filename")
+    local mediatitle = mp.get_property("media-title")
+    if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamictitle then
+        if (string.find(mp.get_property("path"), "watch?")) then
+            user_opts.title = "${media-title}" -- youtube videos
+        elseif mp.get_property("filename/no-ext") ~= mediatitle then
+            msg.info("Changing title to include filename")
             user_opts.title = "${media-title} | ${filename}" -- {filename/no-ext}
         else
-            user_opts.title = "${media-title}"
+            user_opts.title = "${filename}" -- audio with the same title (without file extension) and filename
+        end
+    else
+        user_opts.title = "${media-title}"
+    end
+
+    -- fake description using metadata
+
+    state.localDescription = nil
+    state.localDescriptionClick = nil
+    local artist = mp.get_property("filtered-metadata/by-key/Artist") or mp.get_property("filtered-metadata/by-key/Album_Artist") or mp.get_property("filtered-metadata/by-key/Uploader")
+    local album = mp.get_property("filtered-metadata/by-key/Album")
+    local description = mp.get_property("filtered-metadata/by-key/Description")
+    local date = mp.get_property("filtered-metadata/by-key/Date")
+
+    -- print(artist)
+    -- print(album)
+    -- print(description)
+    -- print(date)
+
+    if (description ~= nil) then
+        description = string.gsub(description, '\n', '\\N')
+        state.localDescription = description
+        state.localDescriptionIsClickable = true
+    end
+    if (artist ~= nil) then
+        if (state.localDescription == nil) then
+            state.localDescription = artist
+        else
+            state.localDescriptionClick = state.localDescription .. "\\N_____\\N\\N\\NBy: " .. artist
+            state.localDescription = state.localDescription .. " | By: " .. artist
         end
     end
+
 end
 
 function checkWebLink()
-    if not user_opts.downloadbutton then return end
     local path = mp.get_property("path")
     if not path then return nil end
 
@@ -1053,7 +1089,7 @@ function checkWebLink()
 
     local function is_url(s)
         return nil ~=
-            string.match(path,
+            string.match(s,
                 "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%." ..
                 "[a-zA-Z0-9()][a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?" ..
                 "[-a-zA-Z0-9()@:%_\\+.~#?&/=]*")
@@ -1062,10 +1098,19 @@ function checkWebLink()
     if is_url(path) and path or nil then
         state.isWebVideo = true
         state.path = path
-        msg.info("Is a web video")
+        msg.info("WEB: Video is a web video")
+
+        if user_opts.downloadbutton then
+            msg.info("WEB: Loading filesize...")
+            local command = { "yt-dlp", "--no-download", "-O%(filesize,filesize_approx)s", path}
+            exec_filesize(command)
+            --msg.info("Loading yt-dlp file name...")
+            --command = { "yt-dlp", user_opts.ytdlpQuality, "--no-download", "-O%(filename)s", path}
+            --exec_fileName(command)
+        end
         
         if user_opts.showdescription then
-            msg.info("Loading description...")
+            msg.info("WEB: Loading description...")
             local command = { "yt-dlp", "--no-download", "--get-description", path}
             exec_title(command)
         end
@@ -1073,18 +1118,18 @@ function checkWebLink()
 end
 
 function exec(args, callback)
-    print("Running: " .. table.concat(args, " "))
+    msg.info("WEB: Running: " .. table.concat(args, " "))
     local ret = mp.command_native_async({
         name = "subprocess",
         args = args,
         capture_stdout = true,
         capture_stderr = true
     }, callback)
+    msg.info("WEB: Download complete.")
     return ret.status
 end
 
 function exec_title(args, result)
-    print("Running: " .. table.concat(args, " "))
     local ret = mp.command_native_async({
         name = "subprocess",
         args = args,
@@ -1095,16 +1140,58 @@ function exec_title(args, result)
         -- replace actual linebreaks with ASS linebreaks
         state.videoDescription = string.gsub(state.videoDescription, '\n', '\\N')
         state.descriptionLoaded = true
-        msg.info("Loaded video description")
-        msg.info(state.videoDescription)
+        msg.info("WEB: Loaded video description")
         if (state.videoDescription == '' or state.videoDescription == '\\N') then
             state.videoDescription = "No description"
         end
     end)
 end
 
+function exec_filesize(args, result)
+    local function formatBytes(numberBytes)
+        local suffixes = {"B", "KB", "MB", "GB"}
+        local index = 1
+        while numberBytes >= 1024 and index < #suffixes do
+            numberBytes = numberBytes / 1024
+            index = index + 1
+        end
+        return string.format("%.2f %s", numberBytes, suffixes[index])
+    end
+
+    local ret = mp.command_native_async({
+        name = "subprocess",
+        args = args,
+        capture_stdout = true,
+        capture_stderr = true
+    }, function(res, val, err)
+        local fileSizeString = val.stdout
+        state.fileSizeBytes = tonumber(fileSizeString)
+        if type(state.fileSizeBytes) ~= "number" then
+            state.fileSizeNormalised = "Can't download"
+            state.downloadedOnce = true
+        else
+            state.fileSizeNormalised = "Size: ~" .. formatBytes(state.fileSizeBytes)
+            msg.info("WEB: File size: " .. state.fileSizeBytes .. " B / " .. state.fileSizeNormalised)
+        end
+        request_tick()
+    end)
+end
+
+function exec_fileName(args, result)
+    local ret = mp.command_native_async({
+        name = "subprocess",
+        args = args,
+        capture_stdout = true,
+        capture_stderr = true
+    }, function(res, val, err)
+        state.downloadFileName = val.stdout
+        msg.info(state.downloadFileName)
+    end)
+end
+
 function downloadDone()
     show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/downloads"}))
+    state.downloadedOnce = true
     state.downloading = false
 end
 
@@ -1151,6 +1238,9 @@ function get_chapterlist()
 end
 
 function show_message(text, duration)
+    if state.showingDescription then
+        destroyscrollingkeys()
+    end
     if duration == nil then
         duration = tonumber(mp.get_property('options/osd-duration')) / 1000
     elseif not type(duration) == 'number' then
@@ -1175,10 +1265,80 @@ function show_message(text, duration)
     request_tick()
 end
 
+function bind_keys(keys, name, func, opts)
+    if not keys then
+        mp.add_forced_key_binding(keys, name, func, opts)
+        return
+    end
+    local i = 1
+    for key in keys:gmatch("[^%s]+") do
+        local prefix = i == 1 and '' or i
+        mp.add_forced_key_binding(key, name .. prefix, func, opts)
+        i = i + 1
+    end
+end
+
+function unbind_keys(keys, name)
+    if not keys then
+        mp.remove_key_binding(name)
+        return
+    end
+    local i = 1
+    for key in keys:gmatch("[^%s]+") do
+        local prefix = i == 1 and '' or i
+        mp.remove_key_binding(name .. prefix)
+        i = i + 1
+    end
+end
+
+function destroyscrollingkeys()
+    state.showingDescription = false
+    state.scrolledlines = 25
+    show_message("",0.01) -- dirty way to clear text
+    unbind_keys("UP WHEEL_UP", "move_up")
+    unbind_keys("DOWN WHEEL_DOWN", "move_down")
+    unbind_keys("ENTER MBTN_LEFT", "select")
+    unbind_keys("ESC MBTN_RIGHT", "close")
+end
+
+function show_description(text)
+    duration = 10
+    text = string.gsub(text, '\n', '\\N')
+
+    -- enable scrolling of menu --
+    bind_keys("UP WHEEL_UP", "move_up", function() 
+        state.scrolledlines = state.scrolledlines + user_opts.scrollingSpeed
+        if (state.scrolledlines > 25) then 
+            state.scrolledlines = 25 
+        end
+        state.message_hide_timer:kill()
+        state.message_hide_timer.timeout = duration
+        state.message_hide_timer:resume()
+        request_tick()
+    end, { repeatable = true })
+    bind_keys("DOWN WHEEL_DOWN", "move_down", function() 
+        state.scrolledlines = state.scrolledlines - user_opts.scrollingSpeed 
+        state.message_hide_timer:kill()
+        state.message_hide_timer.timeout = duration
+        state.message_hide_timer:resume()
+        request_tick()
+    end, { repeatable = true })
+    bind_keys("ENTER MBTN_LEFT", "select", destroyscrollingkeys)
+    bind_keys("ESC MBTN_RIGHT", "close", destroyscrollingkeys) --close menu using ESC
+
+    state.message_text = text
+
+    if not state.message_hide_timer then
+        state.message_hide_timer = mp.add_timeout(0, request_tick)
+    end
+    state.message_hide_timer:kill()
+    state.message_hide_timer.timeout = duration
+    state.message_hide_timer:resume()
+    request_tick()
+end
+
 function render_message(ass)
-    if state.message_hide_timer and state.message_hide_timer:is_enabled() and
-       state.message_text
-    then
+    if state.message_hide_timer and state.message_hide_timer:is_enabled() and state.message_text then
         local _, lines = string.gsub(state.message_text, '\\N', '')
 
         local fontsize = tonumber(mp.get_property('options/osd-font-size'))
@@ -1189,13 +1349,26 @@ function render_message(ass)
         fontsize = fontsize * counterscale / math.max(0.65 + math.min(lines/maxlines, 1), 1)
         outline = outline * counterscale / math.max(0.75 + math.min(lines/maxlines, 1)/2, 1)
 
-        local style = '{\\bord' .. outline .. '\\fs' .. fontsize .. '}'
+        if state.showingDescription then
+            ass.text = string.format('{\\pos(0,0)\\an7\\1c&H000000&\\alpha&H%X&}', user_opts.descriptionBoxAlpha)
+            ass:draw_start()
+            ass:rect_cw(0, 0, osc_param.playresx, osc_param.playresy)
+            ass:draw_stop()
+            ass:new_event()
+        end
 
+        local style = '{\\bord' .. outline .. '\\fs' .. fontsize .. '}'
 
         ass:new_event()
         ass:append(style .. state.message_text)
+
+        if state.showingDescription then
+            ass:pos(20, state.scrolledlines)
+            local alpha = 10
+        end
     else
         state.message_text = nil
+        if state.showingDescription then destroyscrollingkeys() end
     end
 end
 
@@ -1268,7 +1441,7 @@ function window_controls()
         y = 30,
         an = 1,
         w = osc_param.playresx,
-        h = 30,
+        h = 30
     }
 
     local controlbox_w = window_control_box_width
@@ -1286,12 +1459,14 @@ function window_controls()
     local lo
 
     -- Background Bar
-    new_element("wcbar", "box")
-    lo = add_layout("wcbar")
-    lo.geometry = wc_geo
-    lo.layer = 10
-    lo.style = osc_styles.wcBar
-    lo.alpha[1] = user_opts.boxalpha    
+    if user_opts.titleBarStrip then
+        new_element("wcbar", "box")
+        lo = add_layout("wcbar")
+        lo.geometry = wc_geo
+        lo.layer = 10
+        lo.style = osc_styles.wcBar
+        lo.alpha[1] = user_opts.boxalpha
+    end
 
     local button_y = wc_geo.y - (wc_geo.h / 2)
     local first_geo =
@@ -1314,7 +1489,7 @@ function window_controls()
             local title = mp.command_native({"expand-text", mp.get_property('title')})
             -- escape ASS, and strip newlines and trailing slashes
             title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
-            local titleval = not (title == "") and title or "mpv"
+            local titleval = not (title == "") and title or "mpv video"
             if (mp.get_property('ontop') == 'yes') then return "📌 " .. titleval end
             return titleval
         end
@@ -1403,7 +1578,7 @@ layouts = function ()
 	lo.layer = 10
 	lo.alpha[3] = 0
 
-    if (not state.border or state.fullscreen and user_opts.showwindowtitle) then
+    if not user_opts.titleBarStrip and not state.border then
         new_element('TitleTransBg', 'box')
         lo = add_layout('TitleTransBg')
         lo.geometry = {x = posX, y = -100, an = 7, w = osc_w, h = -1}
@@ -1446,7 +1621,7 @@ layouts = function ()
     local outeroffset = (showskip and 0 or 100) + (showjump and 0 or 100)
 
     -- Title
-    geo = {x = 25, y = refY - 122 + ((state.isWebVideo and user_opts.showdescription) and -20 or 0), an = 1, w = osc_geo.w - 50, h = 35}
+    geo = {x = 25, y = refY - 122 + (((state.localDescription ~= nil or state.isWebVideo) and user_opts.showdescription) and -20 or 0), an = 1, w = osc_geo.w - 50, h = 35}
     lo = add_layout("title")
     lo.geometry = geo
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.Title,
@@ -1455,11 +1630,12 @@ layouts = function ()
     lo.button.maxchars = geo.w / 13
 
     -- Description
-    if state.isWebVideo and user_opts.showdescription then
-        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w - 50, h = 19}
+    if (state.localDescription ~= nil or state.isWebVideo) and user_opts.showdescription then
+        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w, h = 19}
         lo = add_layout("description")
         lo.geometry = geo
         lo.style = osc_styles.Description
+        lo.alpha[3] = 0
         lo.button.maxchars = geo.w / 8
     end
 
@@ -1607,7 +1783,7 @@ end
 function update_options(list)
     validate_user_opts()
     request_tick()
-    visibility_mode(user_opts.visibility, true)
+    visibility_mode("auto")
     request_init()
 end
 
@@ -1658,8 +1834,8 @@ function osc_init()
 
     if compactmode then nojumpoffset = 100 end
 
-    local outeroffset = (user_opts.showskip and 0 or 100) + (user_opts.showjump and 0 or 100)
-    if compactmode then outeroffset = 100 end
+    local outeroffset = (user_opts.showskip and 0 or 140) + (user_opts.showjump and 0 or 140)
+    if compactmode then outeroffset = 140 end
 
     local ne
 
@@ -1671,7 +1847,7 @@ function osc_init()
                       mp.command_native({"expand-text", user_opts.title})
         -- escape ASS, and strip newlines and trailing slashes
         title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
-        return not (title == "") and title or "mpv"
+        return not (title == "") and title or "mpv video"
     end
     ne.eventresponder["mbtn_left_up"] = function ()
         local title = mp.get_property_osd("media-title")
@@ -1682,19 +1858,43 @@ function osc_init()
 
     -- description
     ne = new_element('description', 'button')
-    ne.visible = state.isWebVideo and user_opts.showdescription
+    ne.visible = (state.localDescription ~= nil or state.isWebVideo) and user_opts.showdescription
     ne.content = function ()
-        local title = "Loading..."
-        if (state.descriptionLoaded) then
-            title = state.videoDescription
+        if state.isWebVideo then
+            local title = "Loading description..."
+            if (state.descriptionLoaded) then
+                title = state.videoDescription:sub(1, 400)
+            end
+            -- get rid of new lines
+            title = string.gsub(title, '\\N', ' ')
+            return not (title == "") and title or "error"
+        else
+            return string.gsub(state.localDescription, '\\N', ' ')
         end
-        -- get rid of new lines
-        title = string.gsub(title, '\\N', ' ')
-        return not (title == "") and title or "error"
     end
     ne.eventresponder['mbtn_left_up'] =
-        function () 
-            show_message("\\N" .. state.videoDescription)
+        function ()
+            if state.descriptionLoaded or state.localDescriptionIsClickable then
+                if state.showingDescription then
+                    state.showingDescription = false
+                    destroyscrollingkeys()
+                else
+                    state.showingDescription = true
+                    if (state.isWebVideo) then
+                        if (state.localDescription ~= nil) then
+                            show_description("\\N" .. state.videoDescription .. "\\N_____\\N\\N\\NUploaded by: " .. state.localDescription)
+                        else
+                            show_description("\\N" .. state.videoDescription)
+                        end
+                    else
+                        if (state.localDescriptionClick == nil) then
+                            show_description("\\N" .. state.localDescription)
+                        else
+                            show_description("\\N" .. state.localDescriptionClick)
+                        end
+                    end
+                end
+            end
         end
 
     -- playlist buttons
@@ -2068,10 +2268,10 @@ function osc_init()
             return (icons.download)
         end
     end
-    ne.visible = (osc_param.playresx >= 900 - outeroffset) and state.isWebVideo
+    ne.visible = (osc_param.playresx >= 900 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100) - (user_opts.showinfo and 0 or 100)) and state.isWebVideo
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = "Download file"
+		local msg = state.fileSizeNormalised
         if (state.downloading)then
             msg = "Downloading..."
         end
@@ -2079,23 +2279,49 @@ function osc_init()
     end
     ne.eventresponder['mbtn_left_up'] =
         function ()
-            if state.downloading then
-                show_message("\\N{\\an9}Already downloading...")
+            local localpath = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
+            localpath = localpath:gsub("/", "\\")
+            if state.downloadedOnce then
+                show_message("\\N{\\an9}Already downloaded")
+
+                local function file_exists(name)
+                    local f=io.open(name,"r")
+                    if f~=nil then io.close(f) return true else return false end
+                end
+
+                local cmd = "start $path\\"
+                cmd = cmd:gsub("$path", localpath)
+                -- local fullFilePath = localpath .. "\\" .. state.downloadFileName
+                -- if file_exists(fullFilePath) then
+                --     cmd = "explorer /select,$path\\"
+                --     cmd = cmd:gsub("$path", localpath..state.downloadFileName)
+                --     print(cmd)
+                -- else
+                --     cmd = cmd:gsub("$path", localpath)
+                -- end
+                os.execute(cmd)
                 return
             end
-            local localpath = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
-            msg.info(localpath)
-            local command = { "yt-dlp", "-S res,ext:mp4:m4a", "--add-metadata", "--write-auto-subs", "--embed-subs", "-P " .. localpath, state.path }
+
+            if state.downloading then
+                show_message("\\N{\\an9}Already downloading...")
+                
+                local cmd = "start $path\\"
+                cmd = cmd:gsub("$path", localpath)
+                os.execute(cmd)
+                return
+            end
 
             show_message("\\N{\\an9}Downloading...")
             state.downloading = true
+            local command = { "yt-dlp", user_opts.ytdlpQuality, "--add-metadata", "--write-auto-subs", "--embed-subs", "-o%(title)s", "-P " .. localpath, state.path }
             local status = exec(command, downloadDone)
         end
 
     --tog_info
     ne = new_element('tog_info', 'button')
     ne.content = icons.info
-    ne.visible = (osc_param.playresx >= 800 - outeroffset)
+    ne.visible = (osc_param.playresx >= 800 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100))
     ne.eventresponder['mbtn_left_up'] =
         function () mp.commandv('script-binding', 'stats/display-stats-toggle') end
 
@@ -2116,7 +2342,7 @@ function osc_init()
         end
         return msg
     end
-    ne.visible = (osc_param.playresx >= 700 - outeroffset)
+    ne.visible = (osc_param.playresx >= 700 - outeroffset - (user_opts.showloop and 0 or 100))
     ne.eventresponder['mbtn_left_up'] =
         function () 
             mp.commandv('cycle', 'ontop') 
@@ -2395,11 +2621,10 @@ function pause_state(name, enabled)
     state.paused = enabled
     if user_opts.showonpause then
 		if enabled then
-			state.lastvisibility = user_opts.visibility
-			visibility_mode("always", true)
+			visibility_mode("auto")
 			show_osc()
 		else
-			visibility_mode(state.lastvisibility, true)
+			visibility_mode("auto")
 		end
 	end
     request_tick()
@@ -2846,6 +3071,19 @@ mp.observe_property("chapter-list", "native", function(_, list) -- chapter list 
 end)
 
 mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
+mp.add_key_binding("p", "pinwindow", function()
+    mp.commandv('cycle', 'ontop')
+    if (state.initialborder == 'yes') then
+        if (mp.get_property('ontop') == 'yes') then
+            show_message("Pinned window")
+            mp.commandv('set', 'border', "no")
+
+        else
+            show_message("Unpinned window")
+            mp.commandv('set', 'border', "yes")
+        end
+    end
+end);
 
 mp.observe_property('fullscreen', 'bool',
     function(name, val)
@@ -2867,13 +3105,6 @@ mp.observe_property('loop-file', 'bool',
         end
     end
 )
-if user_opts.showwindowtitle then
-    mp.observe_property('title', 'string',
-        function(name, val)
-            state.windowtitle = val
-        end
-    )
-end
 mp.observe_property('border', 'bool',
     function(name, val)
         state.border = val
@@ -2945,9 +3176,6 @@ mp.set_key_bindings({
 mp.enable_key_bindings('window-controls')
 
 function get_hidetimeout()
-    if user_opts.visibility == 'always' then
-        return -1 -- disable autohide
-    end
     return user_opts.hidetimeout
 end
 
@@ -2963,37 +3191,12 @@ end
 
 -- mode can be auto/always/never/cycle
 -- the modes only affect internal variables and not stored on its own.
-function visibility_mode(mode, no_osd)
-    if mode == "cycle" then
-        if not state.enabled then
-            mode = "auto"
-        elseif user_opts.visibility ~= "always" then
-            mode = "always"
-        else
-            mode = "never"
-        end
-    end
+function visibility_mode(mode)
+    always_on(false)
+    enable_osc(true)
 
-    if mode == 'auto' then
-        always_on(false)
-        enable_osc(true)
-    elseif mode == 'always' then
-        enable_osc(true)
-        always_on(true)
-    elseif mode == 'never' then
-        enable_osc(false)
-    else
-        msg.warn('Ignoring unknown visibility mode \"' .. mode .. '\"')
-        return
-    end
-
-	user_opts.visibility = mode
     utils.shared_script_property_set("osc-visibility", mode)
     mp.set_property_native("user-data/osc/visibility", mode)
-
-    if not no_osd and tonumber(mp.get_property('osd-level')) >= 1 then
-        mp.osd_message('OSC visibility: ' .. mode)
-    end
 
     -- Reset the input state on a mode change. The input state will be
     -- recalcuated on the next render cycle, except in 'never' mode where it
@@ -3003,8 +3206,6 @@ function visibility_mode(mode, no_osd)
     state.input_enabled = false
     request_tick()
 end
-
-visibility_mode(user_opts.visibility, true)
 
 mp.register_script_message("thumbfast-info", function(json)
     local data = utils.parse_json(json)
