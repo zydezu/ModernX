@@ -33,9 +33,9 @@ Then place the two fonts in the `fonts/` folder. `Material-Design-Iconic-Font.tt
 
 ### mpv.conf
 Add the following lines to your `mpv.conf` file.
-```
-osc = no
-border = no # Optional, but recommended
+```editorconfig
+osc=no
+border=no #optional - if you don't want to see the OS border
 ```
 
 
@@ -52,18 +52,18 @@ This option may vary depending on your system.
 
 # Configuration
 
-Create an `osc.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora options can be changed, so refer to the table of configurable `user_opts` parameters below for details.
+Create an `osc.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
 
 
 ### Example
 
-Here is an example of a configuration file, in `script-opts/osc.conf`:
+Here is an example of a configuration file, which would be placed in `script-opts/osc.conf`:
 
-```
+```editorconfig
 compactmode=no
-showloop=no
 showinfo=yes
 titlefontsize=20
+seekbarhandlesize=0
 ```
 
 ### Configurable Options
@@ -71,9 +71,8 @@ titlefontsize=20
 | Option   | Description |
 | -------------- | --------------- |
 | language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d) |
-| welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen |
-| visibility | The visiblity mode of the UI |
-| windowcontrols | Whether to show window controls |
+| welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen <br> ![mpv_DuuCGjbj16](https://github.com/zydezu/ModernX/assets/50119098/ac70f973-023a-4f7b-afd6-66751c8e4992) |
+| windowcontrols | Whether to show OSC window controls, 'auto' will only show them in fullscreen or when borderless, 'yes' always shows them and 'no' never shows them |
 | showwindowed | Whether to show the OSC when windowed |
 | showfullscreen | Whether to show the OSC when in fullscreen |
 | noxmas | Disable showing the santa hat in December |
@@ -85,20 +84,22 @@ titlefontsize=20
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
-| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons) <br> **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
+| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons at the top if visible) <br> **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
 | raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
 | showtitle | Whether to show the title in the OSC |
-| showdescription | Whether to show video description on web videos |
+| showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![mpv_SDXBkAeLwN](https://github.com/zydezu/ModernX/assets/50119098/cce97c08-c626-4953-bfcc-68a1d3a20ae4) |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
+| titleBarStrip | Whether to make the title bar a singular bar, instead of a black fade at the top of the screen |
 | dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
 | title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
 | titlefontsize | The size of the title text |
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
-| osc_color | The colour of the OSC and title bar
-| blur_intensity | The strenght of the blur on the OSC
+| osc_color | The colour of the OSC and title bar |
+| OSCfadealpha | Alpha of the background box for the OSC |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
+| descriptionBoxAlpha | Alpha of the description background box |
 | seekbarfg_color | Colour of current seekbar progress and the handle
 | seekbarbg_color | Colour of the remaining seekbar
 | seekbarkeyframes | Whether to use keyframes when dragging the seekbar |
@@ -122,6 +123,10 @@ titlefontsize=20
 | showontop | Whether to show the pin window on top button |
 | showinfo | Whether to show the info button |
 | downloadbutton | Whether to show download button for web videos |
+| ytdlpQuality | What quality of video the download button uses (a max quality mp4 by is downloaded by default) |
+
+
+The default options are shown below:
 
 ```lua
 -- Parameters
@@ -131,11 +136,10 @@ local user_opts = {
     -- general settings --
     language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
     welcomescreen = true,           -- show the mpv 'play files' screen upon open
-    visibility = 'auto',            -- only used at init to set visibility_mode(...)
-    windowcontrols = 'auto',        -- whether to show window controls
+    windowcontrols = 'auto',        -- whether to show OSC window controls, 'auto', 'yes' or 'no'
     showwindowed = true,            -- show OSC when windowed?
     showfullscreen = true,          -- show OSC when fullscreen?
-    noxmas = false,                 -- disable santa hat
+    noxmas = false,                 -- disable santa hat in December
     
     -- scaling settings --
     vidscale = false,               -- whether to scale the controller with the video
@@ -147,6 +151,7 @@ local user_opts = {
     hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
+    scrollingSpeed = 40,            -- the speed of scrolling text in menus
     showonpause = true,             -- whether to disable the hide timeout on pause
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
@@ -154,8 +159,9 @@ local user_opts = {
 
     -- title and chapter settings --
     showtitle = true,		        -- show title in OSC
-    showdescription = false,        -- show video description on web videos
+    showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     font = 'mpv-osd-symbols',	    -- default osc font
@@ -164,16 +170,17 @@ local user_opts = {
     titlefontsize = 28,             -- the font size of the title text
     chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
     osc_color = '000000',           -- accent of the OSC and the title bar
-    blur_intensity = 150,           -- alpha of the background box for the OSC
-    boxalpha = 100,                 -- alpha of the window title bar
+    OSCfadealpha = 150,             -- alpha of the background box for the OSC
+    boxalpha = 75,                  -- alpha of the window title bar
+    descriptionBoxAlpha = 100,      -- alpha of the description background box
 
     -- seekbar settings --
     seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
-    seekbarhandlesize = 1.0,	    -- size ratio of the slider handle, range 0 ~ 1
+    seekbarhandlesize = 0.8,	    -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,		        -- show seekrange overlay
-    seekrangealpha = 64,      	    -- transparency of seekranges
+    seekrangealpha = 150,      	    -- transparency of seekranges
     iconstyle = 'round',            -- icon style, 'solid' or 'round'
     hovereffect = true,             -- whether buttons have a glowing effect when hovered over
 
@@ -193,12 +200,13 @@ local user_opts = {
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
                                     -- skipping a chapter
-    showloop = true,                -- show the loop button
+    showloop = false,               -- show the loop button
     loopinpause = true,             -- activate looping by right clicking pause
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
-}
+    ytdlpQuality = "-S res,ext:mp4:m4a" -- what quality of video the download button uses (max quality mp4 by default)
+}}
 ```
 
 ### Compact Mode
