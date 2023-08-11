@@ -123,6 +123,8 @@ titlefontsize=20
 | showinfo | Whether to show the info button |
 | downloadbutton | Whether to show download button for web videos |
 
+The default options are shown below:
+
 ```lua
 -- Parameters
 -- default user option values
