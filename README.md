@@ -110,6 +110,7 @@ seekbarhandlesize=0
 | hovereffect | Whether buttons emit a glowing effect when hovered over
 | timetotal | Whether to display the total time instead of remaining time |
 | timems | Whether to display time in milliseconds |
+| timefontsize | The font size of the time |
 | jumpamount | How many seconds the jump buttons jump by |
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
 | jumpmode | What kind of seeking mode is used for the jump buttons |
