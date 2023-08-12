@@ -228,7 +228,7 @@ Please note that this option will override the `showjump` option.
 
 ### Thumbnails
 
-To enable thumbnails in timeline, install [thumbfast](https://github.com/po5/thumbfast). No other step necessary.
+To enable thumbnails on the seekbar, install [thumbfast](https://github.com/po5/thumbfast). No other step necessary.
 
 ![mpv_UzSC2z3vIt](https://user-images.githubusercontent.com/50119098/236636833-8bd0a665-7230-496f-89e8-0209de59c530.png)
 
@@ -247,7 +247,7 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 * `Left mouse button` show the full media title
 * `Right mouse button` show the full filename
 ### Description (only on web videos)
-* `Left mouse button` show the full description
+* `Left mouse button` show the full description, use `up arrow`, `down arrow` or `scroll wheel` to scroll through it
 ### Playback time
 * `Left mouse button` display time in milliseconds
 ### Duration
@@ -262,7 +262,6 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 * `Right mouse button` show chapter list
 * `Shift + Left mouse button` go to previous/next chapter and show playlist
 * `Shift + Right mouse button` show chapter list
-* `TAB` show chapter list
 ### Jump back/forward buttons
 * `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
 * `Right mouse button` jumps forwards/backwards by 1 minute
@@ -277,3 +276,8 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 ### Volume
 * `Left mouse button` mute/unmute video
 * `Scroll wheel` change volume
+### Other
+* `X` cycle through audio tracks
+* `C` cycle through subtitle tracks
+* `P` pin or unpin the window
+* `TAB` show chapter list
