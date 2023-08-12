@@ -70,7 +70,7 @@ seekbarhandlesize=0
 
 | Option   | Description |
 | -------------- | --------------- |
-| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d) |
+| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_rWXEhJCgFO](https://github.com/zydezu/ModernX/assets/50119098/c09eb0c6-e67a-4b01-b48b-311d421a0490) |
 | welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen <br> ![mpv_DuuCGjbj16](https://github.com/zydezu/ModernX/assets/50119098/ac70f973-023a-4f7b-afd6-66751c8e4992) |
 | windowcontrols | Whether to show OSC window controls, 'auto' will only show them in fullscreen or when borderless, 'yes' always shows them and 'no' never shows them |
 | showwindowed | Whether to show the OSC when windowed |
