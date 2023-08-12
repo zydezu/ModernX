@@ -52,12 +52,12 @@ This option may vary depending on your system.
 
 # Configuration
 
-Create an `osc.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
+Create an `modernx.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
 
 
 ### Example
 
-Here is an example of a configuration file, which would be placed in `script-opts/osc.conf`:
+Here is an example of a configuration file, which would be placed in `script-opts/modernx.conf`:
 
 ```editorconfig
 compactmode=no
@@ -70,7 +70,7 @@ seekbarhandlesize=0
 
 | Option   | Description |
 | -------------- | --------------- |
-| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_2W4iPpqSKy](https://github.com/zydezu/ModernX/assets/50119098/19e517a5-4123-4d78-8113-b66a419b6e8d) |
+| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_rWXEhJCgFO](https://github.com/zydezu/ModernX/assets/50119098/c09eb0c6-e67a-4b01-b48b-311d421a0490) |
 | welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen <br> ![mpv_DuuCGjbj16](https://github.com/zydezu/ModernX/assets/50119098/ac70f973-023a-4f7b-afd6-66751c8e4992) |
 | windowcontrols | Whether to show OSC window controls, 'auto' will only show them in fullscreen or when borderless, 'yes' always shows them and 'no' never shows them |
 | showwindowed | Whether to show the OSC when windowed |
@@ -110,6 +110,7 @@ seekbarhandlesize=0
 | hovereffect | Whether buttons emit a glowing effect when hovered over
 | timetotal | Whether to display the total time instead of remaining time |
 | timems | Whether to display time in milliseconds |
+| timefontsize | The font size of the time |
 | jumpamount | How many seconds the jump buttons jump by |
 | jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
 | jumpmode | What kind of seeking mode is used for the jump buttons |
