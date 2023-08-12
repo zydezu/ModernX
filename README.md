@@ -52,12 +52,12 @@ This option may vary depending on your system.
 
 # Configuration
 
-Create an `mpv.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
+Create an `modernx.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
 
 
 ### Example
 
-Here is an example of a configuration file, which would be placed in `script-opts/mpv.conf`:
+Here is an example of a configuration file, which would be placed in `script-opts/modernx.conf`:
 
 ```editorconfig
 compactmode=no
