@@ -52,12 +52,12 @@ This option may vary depending on your system.
 
 # Configuration
 
-Create an `osc.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
+Create an `mpv.conf` file and place it in the `script-opts/` folder (create the folder if you haven't already). A plethora of options can be changed, so please refer to the table of configurable `user_opts` parameters below for detailed explanations of settings.
 
 
 ### Example
 
-Here is an example of a configuration file, which would be placed in `script-opts/osc.conf`:
+Here is an example of a configuration file, which would be placed in `script-opts/mpv.conf`:
 
 ```editorconfig
 compactmode=no
