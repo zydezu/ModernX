@@ -293,6 +293,7 @@ local state = {
     localDescription = nil,
     localDescriptionClick = nil,
     localDescriptionIsClickable = false,
+    videoCantBeDownloaded = false,
 }
 
 local thumbfast = {
@@ -1031,7 +1032,6 @@ end
 -- downloading --
 
 function startupevents()
-    show_osc() -- when changing playlist items with keyboard buttons, show OSC briefly
     checktitle()
     checkWebLink()
 end
@@ -1117,6 +1117,7 @@ function checktitle()
 end
 
 function checkWebLink()
+    state.isWebVideo = false
     local path = mp.get_property("path")
     if not path then return nil end
 
@@ -1206,8 +1207,8 @@ function exec_filesize(args, result)
         local fileSizeString = val.stdout
         state.fileSizeBytes = tonumber(fileSizeString)
         if type(state.fileSizeBytes) ~= "number" then
-            state.fileSizeNormalised = "Can't download"
-            state.downloadedOnce = true
+            state.fileSizeNormalised = "Unknown..."
+            -- state.videoCantBeDownloaded = true
         else
             state.fileSizeNormalised = "Size: ~" .. formatBytes(state.fileSizeBytes)
             msg.info("WEB: File size: " .. state.fileSizeBytes .. " B / " .. state.fileSizeNormalised)
@@ -2318,30 +2319,34 @@ function osc_init()
     end
     ne.eventresponder['mbtn_left_up'] =
         function ()
-            local localpathnormal = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
-            local localpath = localpathnormal:gsub("/", "\\")
-            if state.downloadedOnce then
-                show_message("\\N{\\an9}Already downloaded")
+            if (not state.videoCantBeDownloaded) then
+                local localpathnormal = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
+                local localpath = localpathnormal:gsub("/", "\\")
+                if state.downloadedOnce then
+                    show_message("\\N{\\an9}Already downloaded")
 
-                local cmd = "start $path\\"
-                cmd = cmd:gsub("$path", localpath)
-                os.execute(cmd)
-                return
+                    local cmd = "start $path\\"
+                    cmd = cmd:gsub("$path", localpath)
+                    os.execute(cmd)
+                    return
+                end
+
+                if state.downloading then
+                    show_message("\\N{\\an9}Already downloading...")
+                    
+                    local cmd = "start $path\\"
+                    cmd = cmd:gsub("$path", localpath)
+                    os.execute(cmd)
+                    return
+                end
+
+                show_message("\\N{\\an9}Downloading...")
+                state.downloading = true
+                local command = { "yt-dlp", user_opts.ytdlpQuality, "--add-metadata", "--write-auto-subs", "--embed-subs", "-o%(title)s", "-P " .. localpathnormal, state.path }
+                local status = exec(command, downloadDone)
+            else
+                show_message("\\N{\\an9}Can't be downloaded")
             end
-
-            if state.downloading then
-                show_message("\\N{\\an9}Already downloading...")
-                
-                local cmd = "start $path\\"
-                cmd = cmd:gsub("$path", localpath)
-                os.execute(cmd)
-                return
-            end
-
-            show_message("\\N{\\an9}Downloading...")
-            state.downloading = true
-            local command = { "yt-dlp", user_opts.ytdlpQuality, "--add-metadata", "--write-auto-subs", "--embed-subs", "-o%(title)s", "-P " .. localpathnormal, state.path }
-            local status = exec(command, downloadDone)
         end
 
     --tog_info
