@@ -854,14 +854,6 @@ function render_elements(master_ass)
                             tx = tx + 10
                         end
                     end
-
-                    -- tooltip label
-                    elem_ass:new_event()
-                    elem_ass:pos(tx, ty)
-                    elem_ass:an(an)
-                    elem_ass:append(slider_lo.tooltip_style)
-                    ass_append_alpha(elem_ass, slider_lo.alpha, 0)
-                    elem_ass:append(tooltiplabel)
                     
                     -- thumbfast
                     if element.thumbnailable and not thumbfast.disabled then
@@ -886,6 +878,10 @@ function render_elements(master_ass)
                             elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
                             elem_ass:draw_stop()
 
+                            -- force tooltip to be centered on the thumb, even at far left/right of screen
+                            tx = (thumbX + thumbfast.width / 2) * r_w
+                            an = 2
+
                             mp.commandv("script-message-to", "thumbfast", "thumb",
                                 hover_sec, thumbX, thumbY)
 
@@ -908,6 +904,14 @@ function render_elements(master_ass)
                             end
                         end
                     end
+
+                    -- tooltip label
+                    elem_ass:new_event()
+                    elem_ass:pos(tx, ty)
+                    elem_ass:an(an)
+                    elem_ass:append(slider_lo.tooltip_style)
+                    ass_append_alpha(elem_ass, slider_lo.alpha, 0)
+                    elem_ass:append(tooltiplabel)
                 elseif element.thumbnailable and thumbfast.available then
                     mp.commandv("script-message-to", "thumbfast", "clear")
                 end
