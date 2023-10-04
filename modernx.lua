@@ -233,7 +233,7 @@ local osc_styles = {
     Ctrl2Flip = '{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fn' .. iconfont .. '\\fry180',
     Ctrl3 = '{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fn' .. iconfont .. '}',
     Time = '{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs' .. user_opts.timefontsize .. '\\fn' .. user_opts.font .. '}',
-    Tooltip = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs18\\fn' .. user_opts.font .. '}',
+    Tooltip = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs' .. user_opts.timefontsize .. '\\fn' .. user_opts.font .. '}',
     Title = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. user_opts.titlefontsize ..'\\q2\\fn' .. user_opts.font .. '}',
     WindowTitle = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
     Description = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
@@ -854,14 +854,6 @@ function render_elements(master_ass)
                             tx = tx + 10
                         end
                     end
-
-                    -- tooltip label
-                    elem_ass:new_event()
-                    elem_ass:pos(tx, ty)
-                    elem_ass:an(an)
-                    elem_ass:append(slider_lo.tooltip_style)
-                    ass_append_alpha(elem_ass, slider_lo.alpha, 0)
-                    elem_ass:append(tooltiplabel)
                     
                     -- thumbfast
                     if element.thumbnailable and not thumbfast.disabled then
@@ -870,10 +862,9 @@ function render_elements(master_ass)
 
                         if osd_w then
                             local hover_sec = mp.get_property_number("duration") * sliderpos / 100
-                            local tooltip_font_size = 18
                             local thumbPad = user_opts.thumbnailborder
                             local thumbMarginX = 18 / r_w
-                            local thumbMarginY = tooltip_font_size + thumbPad + 2 / r_h
+                            local thumbMarginY = user_opts.timefontsize + thumbPad + 2 / r_h
                             local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
                             local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
 
@@ -887,6 +878,10 @@ function render_elements(master_ass)
                             elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
                             elem_ass:draw_stop()
 
+                            -- force tooltip to be centered on the thumb, even at far left/right of screen
+                            tx = (thumbX + thumbfast.width / 2) * r_w
+                            an = 2
+
                             mp.commandv("script-message-to", "thumbfast", "thumb",
                                 hover_sec, thumbX, thumbY)
 
@@ -899,7 +894,7 @@ function render_elements(master_ass)
                                     local ch = get_chapter(possec)
                                     if ch and ch.title and ch.title ~= "" then
                                         elem_ass:new_event()
-                                        elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - tooltip_font_size)
+                                        elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - user_opts.timefontsize)
                                         elem_ass:an(an)
                                         elem_ass:append(slider_lo.tooltip_style)
                                         ass_append_alpha(elem_ass, slider_lo.alpha, 0)
@@ -909,6 +904,14 @@ function render_elements(master_ass)
                             end
                         end
                     end
+
+                    -- tooltip label
+                    elem_ass:new_event()
+                    elem_ass:pos(tx, ty)
+                    elem_ass:an(an)
+                    elem_ass:append(slider_lo.tooltip_style)
+                    ass_append_alpha(elem_ass, slider_lo.alpha, 0)
+                    elem_ass:append(tooltiplabel)
                 elseif element.thumbnailable and thumbfast.available then
                     mp.commandv("script-message-to", "thumbfast", "clear")
                 end
