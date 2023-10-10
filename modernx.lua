@@ -3134,7 +3134,6 @@ mp.add_key_binding("p", "pinwindow", function()
         if (mp.get_property('ontop') == 'yes') then
             show_message("Pinned window")
             mp.commandv('set', 'border', "no")
-
         else
             show_message("Unpinned window")
             mp.commandv('set', 'border', "yes")
@@ -3165,6 +3164,7 @@ mp.observe_property('loop-file', 'bool',
 mp.observe_property('border', 'bool',
     function(name, val)
         state.border = val
+        request_init_resize()
     end
 )
 mp.observe_property('window-maximized', 'bool',
