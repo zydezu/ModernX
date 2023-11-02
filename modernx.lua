@@ -4,9 +4,9 @@
 
 -- fork by cyl0 - https://github.com/cyl0/ModernX/
 
--- added some changes from dexeonify - https://github.com/dexeonify/mpv-config#difference-between-upstream-modernx
-
 -- further fork by zydezu
+
+-- added some changes from dexeonify - https://github.com/dexeonify/mpv-config#difference-between-upstream-modernx
 
 local assdraw = require 'mp.assdraw'
 local msg = require 'mp.msg'
@@ -1056,18 +1056,12 @@ function checktitle()
     end
 
     -- fake description using metadata
-
     state.localDescription = nil
     state.localDescriptionClick = nil
     local artist = mp.get_property("filtered-metadata/by-key/Artist") or mp.get_property("filtered-metadata/by-key/Album_Artist") or mp.get_property("filtered-metadata/by-key/Uploader")
     local album = mp.get_property("filtered-metadata/by-key/Album")
     local description = mp.get_property("filtered-metadata/by-key/Description")
     local date = mp.get_property("filtered-metadata/by-key/Date")
-
-    -- print(artist)
-    -- print(album)
-    -- print(description)
-    -- print(date)
 
     if (description ~= nil) then
         description = string.gsub(description, '\n', '\\N')
@@ -1080,8 +1074,8 @@ function checktitle()
             state.localDescriptionClick = artist
             state.localDescriptionIsClickable = true
         else
-            state.localDescriptionClick = state.localDescription .. "\\N_____\\N\\N\\NBy: " .. artist
-            state.localDescription = state.localDescription:sub(1, 300) .. "... | By: " .. artist
+            state.localDescriptionClick = state.localDescription .. "\\N_____\\N\\N\\N" .. artist
+            state.localDescription = state.localDescription:sub(1, 300) .. "... | " .. artist
         end
     end
     if (album ~= nil) then
@@ -1240,7 +1234,6 @@ function downloadDone()
 end
 
 -- playlist and chapters --
-
 function get_playlist()
     local pos = mp.get_property_number('playlist-pos', 0) + 1
     local count, limlist = limited_list('playlist', pos)
@@ -1957,11 +1950,6 @@ function osc_init()
     ne.eventresponder['mbtn_right_up'] =
         function () show_message(get_playlist()) end
     ne.eventresponder['shift+mbtn_left_down'] =
-        function ()
-            mp.commandv('playlist-prev', 'weak')
-            show_message(get_playlist()) 
-        end
-    ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_playlist()) end
 
     --next
@@ -1979,13 +1967,7 @@ function osc_init()
     ne.eventresponder['mbtn_right_up'] =
         function () show_message(get_playlist()) end
     ne.eventresponder['shift+mbtn_left_down'] =
-        function () 
-            mp.commandv('playlist-next', 'weak')
-            show_message(get_playlist())
-        end
-    ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_playlist()) end
-
 
     --play control buttons
     --playpause
@@ -2037,12 +2019,10 @@ function osc_init()
         ne.content = icons[1]
         ne.eventresponder['mbtn_left_down'] =
             function () mp.commandv('seek', -jumpamount, jumpmode) end
-        ne.eventresponder['enter'] =
-            function () mp.commandv('seek', -jumpamount, jumpmode) end
-        ne.eventresponder['shift+mbtn_left_down'] =
-            function () mp.commandv('frame-back-step') end
         ne.eventresponder['mbtn_right_down'] =
             function () mp.commandv('seek', -60, jumpmode) end
+        ne.eventresponder['shift+mbtn_left_down'] =
+            function () mp.commandv('frame-back-step') end
 
 
         --jumpfrwd
@@ -2052,12 +2032,10 @@ function osc_init()
         ne.content = icons[2]
         ne.eventresponder['mbtn_left_down'] =
             function () mp.commandv('seek', jumpamount, jumpmode) end
-        ne.eventresponder['enter'] =
-            function () mp.commandv('seek', jumpamount, jumpmode) end
-        ne.eventresponder['shift+mbtn_left_down'] =
-            function () mp.commandv('frame-step') end
         ne.eventresponder['mbtn_right_down'] =
             function () mp.commandv('seek', 60, jumpmode) end
+        ne.eventresponder['shift+mbtn_left_down'] =
+            function () mp.commandv('frame-step') end
     end
     
 
@@ -2078,29 +2056,19 @@ function osc_init()
                 mp.commandv("add", "chapter", -1)
             end
         end
-    ne.eventresponder['enter'] =
-        function ()
-            if compactmode then
-                mp.commandv('seek', -jumpamount, jumpmode)
-            else
+    ne.eventresponder['mbtn_right_down'] =
+        function () 
+            if compactmode then     
                 mp.commandv("add", "chapter", -1)
                 show_message(get_chapterlist())
                 show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function
-            end
-        end
-    ne.eventresponder['mbtn_right_down'] =
-        function () 
-            if compactmode then
-                mp.commandv('seek', -60, jumpmode)
             else
                 show_message(get_chapterlist())
             end
         end
     ne.eventresponder['shift+mbtn_left_down'] =
         function ()
-            mp.commandv("add", "chapter", -1)
-            show_message(get_chapterlist())
-            show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function
+            mp.commandv('seek', -60, jumpmode)
         end
     ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_chapterlist()) end
@@ -2120,29 +2088,19 @@ function osc_init()
                 mp.commandv("add", "chapter", 1)
             end
         end
-    ne.eventresponder['enter'] =
-        function ()
-            if compactmode then
-                mp.commandv('seek', jumpamount, jumpmode)
-            else
-                mp.commandv("add", "chapter", 1)
-                show_message(get_chapterlist())
-                show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function
-            end
-        end
     ne.eventresponder['mbtn_right_down'] =
         function ()
             if compactmode then
-                mp.commandv('seek', 60, jumpmode)
+                mp.commandv("add", "chapter", 1)
+                show_message(get_chapterlist())
+                show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function    
             else
                 show_message(get_chapterlist())
             end
         end
     ne.eventresponder['shift+mbtn_left_down'] =
         function ()
-            mp.commandv("add", "chapter", 1)
-            show_message(get_chapterlist())
-            show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function
+            mp.commandv('seek', 60, jumpmode)
         end
     ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_chapterlist()) end
@@ -2236,7 +2194,7 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 700 - outeroffset) and user_opts.volumecontrol
     ne.content = function ()
         local volume = mp.get_property_number("volume", 0)
-        if volume == 0 or state.mute then
+        if state.mute then
             return icons.volumemute
         else
             if volume > 85 then
@@ -2249,22 +2207,17 @@ function osc_init()
     ne.eventresponder['mbtn_left_up'] =
         function () 
             mp.commandv('cycle', 'mute')
-            if (mp.get_property_number('volume', nil) == 0) then
-                mp.commandv("osd-auto", "add", "volume", 20)
-            else
-                mp.commandv("set", "volume", 0)
-            end
         end
     ne.eventresponder["wheel_up_press"] =
         function () 
-            if (state.mute) then
-                mp.commandv('cycle', 'mute')
-                mp.commandv('set', 'volume', 0)
-            end
+            if (state.mute) then mp.commandv('cycle', 'mute') end
             mp.commandv("osd-auto", "add", "volume", 5)
         end
     ne.eventresponder["wheel_down_press"] =
-        function () mp.commandv("osd-auto", "add", "volume", -5) end
+        function () 
+            if (state.mute) then mp.commandv('cycle', 'mute') end
+            mp.commandv("osd-auto", "add", "volume", -5)
+        end
     
     --tog_fs
     ne = new_element('tog_fs', 'button')
@@ -2910,7 +2863,7 @@ function process_event(source, what)
 
     if what == 'down' or what == 'press' then
 
-        state.showtime = mp.get_time() -- clicking resets the hideosc timer
+        resetTimeout() -- clicking resets the hideosc timer
 
         for n = 1, #elements do
 
@@ -3119,6 +3072,29 @@ mp.observe_property("chapter-list", "native", function(_, list) -- chapter list 
     state.chapter_list = list
     request_init()
 end)
+mp.observe_property('seeking', nil, function()
+    resetTimeout()
+end)
+
+-- chapter scrubbing
+mp.add_key_binding("CTRL+LEFT", "prevchapter", function()
+    changeChapter(-1)
+end);
+mp.add_key_binding("CTRL+RIGHT", "nextchapter", function()
+    changeChapter(1)
+end);
+mp.add_key_binding("SHIFT+LEFT", "prevchapter2", function()
+    changeChapter(-1)
+end);
+mp.add_key_binding("SHIFT+RIGHT", "nextchapter2", function()
+    changeChapter(1)
+end);
+
+function changeChapter(number)
+    mp.commandv("add", "chapter", number)
+    resetTimeout()
+    show_message(get_chapterlist())
+end
 
 -- extra key bindings
 mp.add_key_binding("x", "cycleaudiotracks", function()
@@ -3233,6 +3209,10 @@ mp.enable_key_bindings('window-controls')
 
 function get_hidetimeout()
     return user_opts.hidetimeout
+end
+
+function resetTimeout()
+    state.showtime = mp.get_time() 
 end
 
 function always_on(val)
