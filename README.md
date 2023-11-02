@@ -3,10 +3,8 @@ A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-mo
 
 ![image](preview.png)
 
-# mpvconfig
-
-This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig). Check that repository for a full mpv configuration.
-
+> [!NOTE]
+> This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig), check that repository for a full mpv configuration
 
 # Additional Features
 This fork changes the following:
@@ -26,7 +24,10 @@ This fork changes the following:
 
 Locate your MPV folder. It is typically located at `\%APPDATA%\mpv\` on Windows and `~/.config/mpv/` on Linux/MacOS. See the [Files section](https://mpv.io/manual/master/#files) in mpv's manual for more info.
 
-Place `modernx.lua` into your mpv `scripts/` folder. Create the `scripts/` folder if you don't already have one and remove any other OSC scripts.
+> [!NOTE]
+> Create these folders if you don't have them already
+
+Place `modernx.lua` into your mpv `scripts/` folder, remove any previous OSC scripts.
 
 Then place the two fonts in the `fonts/` folder. `Material-Design-Iconic-Font.ttf` can be downloaded [Material-Design-Iconic-Font.ttf](Material-Design-Iconic-Font.ttf) and `Material-Design-Iconic-Round.ttf` also [Material-Design-Iconic-Round.ttf](Material-Design-Iconic-Round.ttf).
 
@@ -47,8 +48,8 @@ This is what disabling and enabling the border looks like:
 | -------------- | --------------- |
 | ![mpv_tkhXHUKNNt](https://github.com/zydezu/ModernX/assets/50119098/d2c3eb4e-5c7d-45df-ab35-6a0903c9c075) | ![mpv_rrIXTdX0Sx](https://github.com/zydezu/ModernX/assets/50119098/5573c30b-d57e-434a-b189-71dfb94b70bb) |
 
-This option may vary depending on your system.
-
+> [!NOTE]
+> This option may vary depending on your system.
 
 # Configuration
 
@@ -218,14 +219,14 @@ Compact mode is a setting you can enable in the configuration, it removes the sk
 | -------------- | --------------- |
 | ![mpv_EIgoJwS7WX](https://user-images.githubusercontent.com/50119098/236636371-99c17ce7-443c-466e-a442-47bc3a6db573.png) | ![mpv_au7Au4oZso](https://user-images.githubusercontent.com/50119098/236636421-c247d9af-d982-4aba-9171-a4f8103eec16.png) |
 
-This changes the actions of the playlist back/forward buttons in the following way:
 
-* `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
-* `Right mouse button` jumps forwards/backwards by 1 minute
-* `Shift + Left mouse button` play previous/next file and show playlist
-* `Shift + Right mouse button` show playlist
-
-Please note that this option will override the `showjump` option.
+> [!IMPORTANT]
+> This changes the actions of the chapter back/forward buttons in the following way:
+> * `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
+> * `Right mouse button` play previous/next chapter and show the chapter list
+> * `Shift + Left mouse button` jumps forwards/backwards by 1 minute
+> * `Shift + Right mouse button` show playlist
+> Please note that this option will override the `showjump` option.
 
 ### Thumbnails
 
@@ -234,21 +235,21 @@ To enable thumbnails on the seekbar, install [thumbfast](https://github.com/po5/
 ![mpv_UzSC2z3vIt](https://user-images.githubusercontent.com/50119098/236636833-8bd0a665-7230-496f-89e8-0209de59c530.png)
 
 
-
 # Buttons
 
 Like the built-in script, some buttons may accept multiple mouse actions, here is a list:
 
-_Note: Middle clicking performs the same function as Shift + Left Clicking, allowing for one handed use._
+> [!NOTE]
+> Middle clicking performs the same function as Shift + Left Clicking, allowing for one handed use
 
-### Seekbar
-* `Left mouse button` seek to chosen position
-* `Right mouse button` seek to the head of chosen chapter
 ### Title
 * `Left mouse button` show the full media title
 * `Right mouse button` show the full filename
 ### Description (only on web videos)
 * `Left mouse button` show the full description, use `up arrow`, `down arrow` or `scroll wheel` to scroll through it
+### Seekbar
+* `Left mouse button` seek to chosen position
+* `Right mouse button` seek to the head of chosen chapter
 ### Playback time
 * `Left mouse button` display time in milliseconds
 ### Duration
@@ -282,3 +283,5 @@ _Note: Middle clicking performs the same function as Shift + Left Clicking, allo
 * `C` cycle through subtitle tracks
 * `P` pin or unpin the window
 * `TAB` show chapter list
+* `CTRL/Shift + Left` jump to the previous chapter
+* `CTRL/Shift + Right` jump to the next chapter
