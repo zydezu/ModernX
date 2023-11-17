@@ -1,6 +1,9 @@
 # ModernX
 A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-modern/)), that aims to mirror the functionality of MPV's stock OSC while with a more modern-looking interface.
 
+> [!IMPORTANT]
+> This script is updated most frequently at [mpvconfig](https://github.com/zydezu/mpvconfig), stable builds are released here in the [releases](https://github.com/zydezu/ModernX/releases) tab.
+
 ![image](preview.png)
 
 > [!NOTE]
