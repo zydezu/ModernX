@@ -11,12 +11,10 @@ This fork changes the following:
 - Adds compact mode and reorganises some features
 - Added loop and pin window buttons
 - Adds a download button for web videos
-- Displays descriptions from web videos
-- Made elements being unavailable vs being turned off (audio tracks and subtitles) more distinguishable
+- Displays descriptions, likes and dislike counts from web videos
 - Added shift+left clicking and shift+right clicking the audio/subtitles button for a list of tracks are shown and traversed through
 - Pressing TAB shows a list of chapters
 - Added dynamic title changing depending on the file/source being played
-- Changed icon visibility range to prevent them from overlapping
 - Many more configurable options
 - Various bug fixes
 
@@ -97,6 +95,7 @@ seekbarhandlesize=0
 | title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
 | titlefontsize | The size of the title text |
 | chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
+| dateformat | how dates should be formatted, when read from metadata (uses standard lua date formatting) <br> ![2023-11-17_00-21-51_818_mpv](https://github.com/zydezu/ModernX/assets/50119098/0c14ab2d-ce30-46a7-9a60-71bad7deb976) |
 | osc_color | The colour of the OSC and title bar |
 | OSCfadealpha | Alpha of the background box for the OSC |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
@@ -171,6 +170,8 @@ local user_opts = {
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata
+                                    -- (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
