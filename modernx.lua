@@ -53,6 +53,8 @@ local user_opts = {
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
+                                    -- (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
@@ -1036,6 +1038,8 @@ end
 -- downloading --
 
 function startupevents()
+    state.videoDescription = "Loading description..."
+    state.fileSizeNormalised = "Approximating size..."
     checktitle()
     checkWebLink()
 end
@@ -1058,11 +1062,13 @@ function checktitle()
     -- fake description using metadata
     state.localDescription = nil
     state.localDescriptionClick = nil
+    local title = mp.get_property("media-title")
     local artist = mp.get_property("filtered-metadata/by-key/Artist") or mp.get_property("filtered-metadata/by-key/Album_Artist") or mp.get_property("filtered-metadata/by-key/Uploader")
     local album = mp.get_property("filtered-metadata/by-key/Album")
     local description = mp.get_property("filtered-metadata/by-key/Description")
     local date = mp.get_property("filtered-metadata/by-key/Date")
 
+    state.localDescriptionClick = title .. "\\N----------\\N"
     if (description ~= nil) then
         description = string.gsub(description, '\n', '\\N')
         state.localDescription = description
@@ -1070,12 +1076,16 @@ function checktitle()
     end
     if (artist ~= nil) then
         if (state.localDescription == nil) then
-            state.localDescription = artist
-            state.localDescriptionClick = artist
+            state.localDescription = "By: " .. artist
+            if (state.localDescriptionClick ~= nil) then
+                state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+            else
+                state.localDescriptionClick = "By: " .. artist
+            end
             state.localDescriptionIsClickable = true
         else
-            state.localDescriptionClick = state.localDescription .. "\\N_____\\N\\N\\N" .. artist
-            state.localDescription = state.localDescription:sub(1, 300) .. "... | " .. artist
+            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription .. "\\N----------\\NBy: " .. artist
+            state.localDescription = state.localDescription:sub(1, 120) .. " | By: " .. artist
         end
     end
     if (album ~= nil) then
@@ -1083,35 +1093,37 @@ function checktitle()
             state.localDescription = album
         else -- append to other metadata
             if (state.localDescriptionClick ~= nil) then 
-                state.localDescriptionClick = state.localDescriptionClick .. " - " .. album
+                state.localDescriptionClick = state.localDescriptionClick .. " / " .. album
             else
                 state.localDescriptionClick = album
                 state.localDescriptionIsClickable = true
             end
-            state.localDescription = state.localDescription .. " - " .. album
+            state.localDescription = state.localDescription .. " / " .. album
         end
     end
     if (date ~= nil) then
-        local datenormal = ""
-        if (#date > 4) then -- YYYYMMDD
-            datenormal = date:sub(1,4) .. "-" .. date:sub(5,6) .. "-" .. date:sub(7,8)
-            print(datenormal)
-        else -- YYYY
-            datenormal = date
-        end
+        local datenormal = normaliseDate(date)
         if (state.localDescription == nil) then -- only metadata
             state.localDescription = datenormal
         else -- append to other metadata
             if (state.localDescriptionClick ~= nil) then
-                state.localDescriptionClick = state.localDescriptionClick .. " (" .. datenormal .. ")"
+                state.localDescriptionClick = state.localDescriptionClick .. "\\NDate: " .. datenormal
             else
                 state.localDescriptionClick = datenormal
                 state.localDescriptionIsClickable = true
             end
-            state.localDescription = state.localDescription .. " (" .. datenormal .. ")"
+            state.localDescription = state.localDescription .. " / Date: " .. datenormal
         end
     end
+end
 
+function normaliseDate(date)
+    if (#date > 4) then -- YYYYMMDD
+        local dateTable = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
+        return os.date(user_opts.dateformat, os.time(dateTable))
+    else -- YYYY
+        return date
+    end
 end
 
 function checkWebLink()
@@ -1146,11 +1158,14 @@ function checkWebLink()
             --command = { "yt-dlp", user_opts.ytdlpQuality, "--no-download", "-O%(filename)s", path}
             --exec_fileName(command)
         end
+
+        state.dislikes = ""
+        exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId="..string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) -- API get probably windows only right now
         
         if user_opts.showdescription then
             msg.info("WEB: Loading description...")
-            local command = { "yt-dlp", "--no-download", "--get-description", path}
-            exec_title(command)
+            local command = { "yt-dlp", "--no-download", "-O %(title)s\\N----------\\N%(description)s\\N----------\\NUploaded by: %(uploader)s\nUploaded on: %(upload_date>".. user_opts.dateformat ..")s\nLikes: %(like_count)s", path}
+            exec_description(command)
         end
     end
 end
@@ -1167,20 +1182,56 @@ function exec(args, callback)
     return ret.status
 end
 
-function exec_title(args, result)
+function exec_description(args, result)
     local ret = mp.command_native_async({
         name = "subprocess",
         args = args,
         capture_stdout = true,
         capture_stderr = true
     }, function(res, val, err)
-        state.videoDescription = val.stdout
         -- replace actual linebreaks with ASS linebreaks
-        state.videoDescription = string.gsub(state.videoDescription, '\n', '\\N')
+        state.localDescriptionClick = string.gsub(val.stdout .. state.dislikes, '\n', "\\N")
+
+        -- check if description exists, if it doesn't get rid of the extra "----------"
+        local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
+        if (descriptionText == '' or descriptionText == '\\N') then
+            state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
+        end
+
+        -- segment localDescriptionClick parts with " - "
+        local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
+        beforeLastPattern = beforeLastPattern:sub(1, 120)
+        state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " / ")
+
+        local startPos, endPos = state.videoDescription:find("\\N----------\\N")
+        state.videoDescription = string.gsub(state.videoDescription:sub(endPos + 1), "\\N----------\\N", " | ")
+
         state.descriptionLoaded = true
         msg.info("WEB: Loaded video description")
-        if (state.videoDescription == '' or state.videoDescription == '\\N') then
-            state.videoDescription = "No description"
+
+    end)
+end
+
+function exec_dislikes(args, result)
+    local ret = mp.command_native_async({
+        name = "subprocess",
+        args = args,
+        capture_stdout = true,
+        capture_stderr = true
+    }, function(res, val, err)
+        local dislikes = val.stdout
+        dislikes = tonumber(dislikes:match('"dislikes":(%d+)'))
+
+        if dislikes then
+            state.dislikes = "Dislikes: " .. dislikes
+            msg.info("WEB: Fetched dislike count")
+        else
+            state.dislikes = ""
+        end
+
+        if (not state.descriptionLoaded) then
+            state.localDescriptionClick = state.localDescriptionClick .. state.dislikes
+            state.videoDescription = state.localDescriptionClick
         end
     end)
 end
@@ -1212,18 +1263,6 @@ function exec_filesize(args, result)
             msg.info("WEB: File size: " .. state.fileSizeBytes .. " B / " .. state.fileSizeNormalised)
         end
         request_tick()
-    end)
-end
-
-function exec_fileName(args, result)
-    local ret = mp.command_native_async({
-        name = "subprocess",
-        args = args,
-        capture_stdout = true,
-        capture_stderr = true
-    }, function(res, val, err)
-        state.downloadFileName = val.stdout
-        msg.info(state.downloadFileName)
     end)
 end
 
@@ -1918,16 +1957,12 @@ function osc_init()
                 else
                     state.showingDescription = true
                     if (state.isWebVideo) then
-                        if (state.localDescription ~= nil) then
-                            show_description("\\N" .. state.videoDescription .. "\\N_____\\N\\N\\NUploaded by: " .. state.localDescription)
-                        else
-                            show_description("\\N" .. state.videoDescription)
-                        end
+                        show_description(state.localDescriptionClick)
                     else
                         if (state.localDescriptionClick == nil) then
-                            show_description("\\N" .. state.localDescription)
+                            show_description(state.localDescription)
                         else
-                            show_description("\\N" .. state.localDescriptionClick)
+                            show_description(state.localDescriptionClick)
                         end
                     end
                 end
