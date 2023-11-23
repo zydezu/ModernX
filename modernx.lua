@@ -10,7 +10,6 @@
 
 local assdraw = require 'mp.assdraw'
 local msg = require 'mp.msg'
-local opt = require 'mp.options'
 local utils = require 'mp.utils'
 
 -- Parameters
@@ -32,7 +31,7 @@ local user_opts = {
     scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
 
     -- interface settings --
-    hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
+    hidetimeout = 2000,             -- duration in ms until OSC hides if no mouse movement
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
     scrollingSpeed = 40,            -- the speed of scrolling text in menus
@@ -46,13 +45,13 @@ local user_opts = {
     showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
     titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
+    title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     font = 'mpv-osd-symbols',	    -- default osc font
-    title = '${media-title}',       -- string compatible with property-expansion
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
-    chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
+    chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
     dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
                                     -- (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
@@ -71,7 +70,7 @@ local user_opts = {
     hovereffect = true,             -- whether buttons have a glowing effect when hovered over
 
     -- button settings --
-    timetotal = true,          	    -- display total time instead of remaining time?
+    timetotal = true,          	    -- display total time instead of remaining time by default
     timems = false,                 -- show time as milliseconds by default
     timefontsize = 17,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
@@ -81,8 +80,6 @@ local user_opts = {
     volumecontrol = true,           -- whether to show mute button and volume slider
     volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
     showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
-                                    -- shift+left-click to step 1 frame and 
-                                    -- right-click to jump 1 minute
     showskip = true,                -- show the skip back and forward (chapter) buttons
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
@@ -92,7 +89,7 @@ local user_opts = {
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
-    ytdlpQuality = "-S res,ext:mp4:m4a" -- what quality of video the download button uses (max quality mp4 by default)
+    ytdlpQuality = '-S res,ext:mp4:m4a' -- what quality of video the download button uses (max quality mp4 by default)
 }
 
 -- Icons for jump button depending on jumpamount 
@@ -108,7 +105,7 @@ local icons = {
   next = '\239\142\180',
   play = '\239\142\170',
   pause = '\239\142\167',
-  replay = '',
+  replay = '', -- copied private use character
   backward = '\239\142\160',
   forward = '\239\142\159',
   audio = '',
@@ -119,7 +116,7 @@ local icons = {
   minimize = '',
   fullscreen = '',  
   loopoff = '',
-  loopon = '', -- copied private use character
+  loopon = '', 
   info = '',
   download = '',
   downloading = '',
@@ -211,7 +208,7 @@ local language = {
     }
 }
 -- read options from config and command-line
-opt.read_options(user_opts, 'modernx', function(list) update_options(list) end)
+(require 'mp.options').read_options(user_opts, 'modernx', function(list) update_options(list) end)
 -- apply lang opts
 local texts = language[user_opts.language]
 local osc_param = {                         -- calculated by osc_init()
@@ -750,13 +747,13 @@ function render_elements(master_ass)
     -- because thumbfast will render it above the thumbnail instead
     if thumbfast.disabled then
         local se, ae = state.slider_element, elements[state.active_element]
-        if user_opts.chapter_fmt ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+        if user_opts.chapterformat ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
             local dur = mp.get_property_number("duration", 0)
             if dur > 0 then
                 local possec = get_slider_value(se) * dur / 100 -- of mouse pos
                 local ch = get_chapter(possec)
                 if ch and ch.title and ch.title ~= "" then
-                    state.forced_title = string.format(user_opts.chapter_fmt, ch.title)
+                    state.forced_title = string.format(user_opts.chapterformat, ch.title)
                 end
             end
         end
@@ -890,7 +887,7 @@ function render_elements(master_ass)
 
                             -- chapter title
                             local se, ae = state.slider_element, elements[state.active_element]
-                            if user_opts.chapter_fmt ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+                            if user_opts.chapterformat ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
                                 local dur = mp.get_property_number("duration", 0)
                                 if dur > 0 then
                                     local possec = get_slider_value(se) * dur / 100 -- of mouse pos
@@ -901,7 +898,7 @@ function render_elements(master_ass)
                                         elem_ass:an(an)
                                         elem_ass:append(slider_lo.tooltip_style)
                                         ass_append_alpha(elem_ass, slider_lo.alpha, 0)
-                                        elem_ass:append(string.format(user_opts.chapter_fmt, ch.title))
+                                        elem_ass:append(string.format(user_opts.chapterformat, ch.title))
                                     end
                                 end
                             end
@@ -1055,8 +1052,6 @@ function checktitle()
         else
             user_opts.title = "${filename}" -- audio with the same title (without file extension) and filename
         end
-    else
-        user_opts.title = "${media-title}"
     end
 
     -- fake description using metadata
@@ -1152,19 +1147,28 @@ function checkWebLink()
 
         if user_opts.downloadbutton then
             msg.info("WEB: Loading filesize...")
-            local command = { "yt-dlp", "--no-download", "-O%(filesize,filesize_approx)s", path}
+            local command = { 
+                "yt-dlp", 
+                "--no-download", 
+                "-O%(filesize,filesize_approx)s", 
+                path
+            }
             exec_filesize(command)
-            --msg.info("Loading yt-dlp file name...")
-            --command = { "yt-dlp", user_opts.ytdlpQuality, "--no-download", "-O%(filename)s", path}
-            --exec_fileName(command)
         end
 
+        -- Youtube Return Dislike API
+        -- API get probably windows only right now
         state.dislikes = ""
-        exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId="..string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) -- API get probably windows only right now
+        exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId="..string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) 
         
         if user_opts.showdescription then
             msg.info("WEB: Loading description...")
-            local command = { "yt-dlp", "--no-download", "-O %(title)s\\N----------\\N%(description)s\\N----------\\NUploaded by: %(uploader)s\nUploaded on: %(upload_date>".. user_opts.dateformat ..")s\nLikes: %(like_count)s", path}
+            local command = { 
+                "yt-dlp", 
+                "--no-download", 
+                "-O %(title)s\\N----------\\N%(description)s\\N----------\\NUploaded by: %(uploader)s\nUploaded on: %(upload_date>".. user_opts.dateformat ..")s\nLikes: %(like_count)s", 
+                path
+            }
             exec_description(command)
         end
     end
@@ -1180,6 +1184,16 @@ function exec(args, callback)
     }, callback)
     msg.info("WEB: Download complete.")
     return ret.status
+end
+
+function downloadDone(success, result, error)
+    if success then
+        show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/downloads"}))
+        state.downloadedOnce = true
+    else
+        show_message("\\N{\\an9}WEB: Download failed - " .. (error or "Unknown error"))
+    end
+    state.downloading = false
 end
 
 function exec_description(args, result)
@@ -1264,12 +1278,6 @@ function exec_filesize(args, result)
         end
         request_tick()
     end)
-end
-
-function downloadDone()
-    show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/downloads"}))
-    state.downloadedOnce = true
-    state.downloading = false
 end
 
 -- playlist and chapters --
@@ -2317,6 +2325,7 @@ function osc_init()
                 if state.downloadedOnce then
                     show_message("\\N{\\an9}Already downloaded")
 
+                    -- open file system
                     local cmd = "start $path\\"
                     cmd = cmd:gsub("$path", localpath)
                     os.execute(cmd)
@@ -2326,6 +2335,7 @@ function osc_init()
                 if state.downloading then
                     show_message("\\N{\\an9}Already downloading...")
                     
+                    -- open file system
                     local cmd = "start $path\\"
                     cmd = cmd:gsub("$path", localpath)
                     os.execute(cmd)
@@ -2334,7 +2344,16 @@ function osc_init()
 
                 show_message("\\N{\\an9}Downloading...")
                 state.downloading = true
-                local command = { "yt-dlp", user_opts.ytdlpQuality, "--add-metadata", "--write-auto-subs", "--embed-subs", "-o%(title)s", "-P " .. localpathnormal, state.path }
+                local command = { 
+                    "yt-dlp",
+                    user_opts.ytdlpQuality,
+                    "--add-metadata",
+                    "--console-title",
+                    "--embed-subs",
+                    "-o%(title)s",
+                    "-P " .. localpathnormal,
+                    state.path 
+                }
                 local status = exec(command, downloadDone)
             else
                 show_message("\\N{\\an9}Can't be downloaded")
@@ -3135,10 +3154,13 @@ end
 mp.add_key_binding("x", "cycleaudiotracks", function()
     set_track('audio', 1) show_message(get_tracklist('audio'))
 end);
+
 mp.add_key_binding("c", "cyclecaptions", function()
     set_track('sub', 1) show_message(get_tracklist('sub'))
 end);
+
 mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
+
 mp.add_key_binding("p", "pinwindow", function()
     mp.commandv('cycle', 'ontop')
     if (state.initialborder == 'yes') then
@@ -3250,23 +3272,11 @@ function resetTimeout()
     state.showtime = mp.get_time() 
 end
 
-function always_on(val)
-    if state.enabled then
-        if val then
-            show_osc()
-        else
-            hide_osc()
-        end
-    end
-end
-
 -- mode can be auto/always/never/cycle
 -- the modes only affect internal variables and not stored on its own.
 function visibility_mode(mode)
-    always_on(false)
     enable_osc(true)
 
-    utils.shared_script_property_set("osc-visibility", mode)
     mp.set_property_native("user-data/osc/visibility", mode)
 
     -- Reset the input state on a mode change. The input state will be
