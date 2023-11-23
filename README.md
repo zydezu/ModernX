@@ -285,5 +285,7 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 * `C` cycle through subtitle tracks
 * `P` pin or unpin the window
 * `TAB` show chapter list
-* `CTRL/Shift + Left` jump to the previous chapter
-* `CTRL/Shift + Right` jump to the next chapter
+* `Shift+Left` go to the previous chapter
+* `Shift+Right` go to the next chapter
+* `Ctrl+Left` go to the previous file (in playlist)
+* `Ctrl+Right` go to the next file (in playlist)
