@@ -152,7 +152,7 @@ local user_opts = {
     scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
 
     -- interface settings --
-    hidetimeout = 1500,             -- duration in ms until OSC hides if no mouse movement
+    hidetimeout = 2000,             -- duration in ms until OSC hides if no mouse movement
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
     scrollingSpeed = 40,            -- the speed of scrolling text in menus
@@ -166,14 +166,14 @@ local user_opts = {
     showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
     titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
+    title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     font = 'mpv-osd-symbols',	    -- default osc font
-    title = '${media-title}',       -- string compatible with property-expansion
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
-    chapter_fmt = 'Chapter: %s',    -- chapter print format for seekbar-hover. "no" to disable
-    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata
+    chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
                                     -- (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
@@ -191,8 +191,9 @@ local user_opts = {
     hovereffect = true,             -- whether buttons have a glowing effect when hovered over
 
     -- button settings --
-    timetotal = true,          	    -- display total time instead of remaining time?
+    timetotal = true,          	    -- display total time instead of remaining time by default
     timems = false,                 -- show time as milliseconds by default
+    timefontsize = 17,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
     jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
     jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
@@ -200,8 +201,6 @@ local user_opts = {
     volumecontrol = true,           -- whether to show mute button and volume slider
     volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
     showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
-                                    -- shift+left-click to step 1 frame and 
-                                    -- right-click to jump 1 minute
     showskip = true,                -- show the skip back and forward (chapter) buttons
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
@@ -211,8 +210,8 @@ local user_opts = {
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
-    ytdlpQuality = "-S res,ext:mp4:m4a" -- what quality of video the download button uses (max quality mp4 by default)
-}}
+    ytdlpQuality = '-S res,ext:mp4:m4a' -- what quality of video the download button uses (max quality mp4 by default)
+}
 ```
 
 ### Compact Mode
