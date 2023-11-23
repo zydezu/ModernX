@@ -4,7 +4,7 @@ A fork of mpvX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-mo
 > [!IMPORTANT]
 > This script is updated most frequently at [mpvconfig](https://github.com/zydezu/mpvconfig), stable builds are released here in the [releases](https://github.com/zydezu/ModernX/releases) tab.
 
-![image](preview.png)
+![image](preview.jpg)
 
 > [!NOTE]
 > This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig), check that repository for a full mpv configuration
