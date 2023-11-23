@@ -97,7 +97,7 @@ seekbarhandlesize=0
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
 | title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
 | titlefontsize | The size of the title text |
-| chapter_fmt | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
+| chapterformat | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | dateformat | how dates should be formatted, when read from metadata (uses standard lua date formatting) <br> ![2023-11-17_00-21-51_818_mpv](https://github.com/zydezu/ModernX/assets/50119098/0c14ab2d-ce30-46a7-9a60-71bad7deb976) |
 | osc_color | The colour of the OSC and title bar |
 | OSCfadealpha | Alpha of the background box for the OSC |
