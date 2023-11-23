@@ -133,7 +133,6 @@ seekbarhandlesize=0
 The default options are shown below:
 
 ```lua
--- Parameters
 -- default user option values
 -- may change them in osc.conf
 local user_opts = {
