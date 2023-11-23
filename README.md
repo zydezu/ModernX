@@ -93,9 +93,9 @@ seekbarhandlesize=0
 | showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![mpv_SDXBkAeLwN](https://github.com/zydezu/ModernX/assets/50119098/cce97c08-c626-4953-bfcc-68a1d3a20ae4) |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
 | titleBarStrip | Whether to make the title bar a singular bar, instead of a black fade at the top of the screen |
+| title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties - turn off dynamictitle for this option to be respected |
 | dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
-| title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties |
 | titlefontsize | The size of the title text |
 | chapterformat | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
 | dateformat | how dates should be formatted, when read from metadata (uses standard lua date formatting) <br> ![2023-11-17_00-21-51_818_mpv](https://github.com/zydezu/ModernX/assets/50119098/0c14ab2d-ce30-46a7-9a60-71bad7deb976) |
