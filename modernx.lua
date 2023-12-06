@@ -2667,7 +2667,7 @@ function adjustSubtitles(visible)
         if h > 0 then
             mp.commandv('set', 'sub-pos', math.floor((osc_param.playresy - 175)/osc_param.playresy*100)) -- percentage
         end
-	else
+	elseif user_opts.raisesubswithosc then
 		mp.commandv('set', 'sub-pos', 100)
 	end	
 end
