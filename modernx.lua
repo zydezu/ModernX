@@ -35,7 +35,8 @@ local user_opts = {
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
     scrollingSpeed = 40,            -- the speed of scrolling text in menus
-    showonpause = true,             -- whether to disable the hide timeout on pause
+    showonpause = true,             -- whether to show to osc when paused
+    donttimeoutonpause = true,      -- whether to disable the hide timeout on pause
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
@@ -1039,19 +1040,26 @@ function startupevents()
     state.fileSizeNormalised = "Approximating size..."
     checktitle()
     checkWebLink()
+    destroyscrollingkeys() -- close description
 end
 
 function checktitle()
     local mediatitle = mp.get_property("media-title")
+
+    -- print(mediatitle)
+    -- print(mp.get_property("filename"))
+    -- print(mp.get_property("filename/no-ext"))
+
     if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamictitle then
         if (string.find(mp.get_property("path"), "watch?")) then
             user_opts.title = "${media-title}" -- youtube videos
         elseif mp.get_property("filename/no-ext") ~= mediatitle then
-            msg.info("Changing title to include filename")
             user_opts.title = "${media-title} | ${filename}" -- {filename/no-ext}
         else
             user_opts.title = "${filename}" -- audio with the same title (without file extension) and filename
         end
+    else
+        user_opts.title = "${media-title}"
     end
 
     -- fake description using metadata
@@ -1066,6 +1074,7 @@ function checktitle()
     state.localDescriptionClick = title .. "\\N----------\\N"
     if (description ~= nil) then
         description = string.gsub(description, '\n', '\\N')
+        description = string.gsub(description, '\r', '\\N') -- old youtube videos seem to use /r
         state.localDescription = description
         state.localDescriptionIsClickable = true
     end
@@ -1098,21 +1107,26 @@ function checktitle()
     end
     if (date ~= nil) then
         local datenormal = normaliseDate(date)
+        local datetext = "Year"
+        if (#datenormal > 4) then
+            datetext = "Date"
+        end
         if (state.localDescription == nil) then -- only metadata
-            state.localDescription = datenormal
+            state.localDescription = datetext .. ": " .. datenormal
         else -- append to other metadata
             if (state.localDescriptionClick ~= nil) then
-                state.localDescriptionClick = state.localDescriptionClick .. "\\NDate: " .. datenormal
+                state.localDescriptionClick = state.localDescriptionClick .. "\\N" .. datetext .. ": " .. datenormal
             else
                 state.localDescriptionClick = datenormal
                 state.localDescriptionIsClickable = true
             end
-            state.localDescription = state.localDescription .. " / Date: " .. datenormal
+            state.localDescription = state.localDescription .. " / " ..  datetext .. ": " .. datenormal
         end
     end
 end
 
 function normaliseDate(date)
+    date = string.gsub(date, "-", "")
     if (#date > 4) then -- YYYYMMDD
         local dateTable = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
         return os.date(user_opts.dateformat, os.time(dateTable))
@@ -1157,7 +1171,6 @@ function checkWebLink()
         end
 
         -- Youtube Return Dislike API
-        -- API get probably windows only right now
         state.dislikes = ""
         exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId="..string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) 
         
@@ -1166,7 +1179,7 @@ function checkWebLink()
             local command = { 
                 "yt-dlp", 
                 "--no-download", 
-                "-O %(title)s\\N----------\\N%(description)s\\N----------\\NUploaded by: %(uploader)s\nUploaded on: %(upload_date>".. user_opts.dateformat ..")s\nLikes: %(like_count)s", 
+                "-O %(title)s\\N----------\\N%(description)s\\N----------\\NViews: %(view_count)s\nUploaded by: %(uploader)s\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
                 path
             }
             exec_description(command)
@@ -1203,8 +1216,8 @@ function exec_description(args, result)
         capture_stdout = true,
         capture_stderr = true
     }, function(res, val, err)
-        -- replace actual linebreaks with ASS linebreaks
-        state.localDescriptionClick = string.gsub(val.stdout .. state.dislikes, '\n', "\\N")
+        state.localDescriptionClick = string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', "\\N")
+        addLikeCountToTitle()
 
         -- check if description exists, if it doesn't get rid of the extra "----------"
         local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
@@ -1214,15 +1227,14 @@ function exec_description(args, result)
 
         -- segment localDescriptionClick parts with " - "
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
-        beforeLastPattern = beforeLastPattern:sub(1, 120)
-        state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " / ")
+        beforeLastPattern = beforeLastPattern:sub(1, 160) .. '...'
+        state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")
 
         local startPos, endPos = state.videoDescription:find("\\N----------\\N")
         state.videoDescription = string.gsub(state.videoDescription:sub(endPos + 1), "\\N----------\\N", " | ")
 
         state.descriptionLoaded = true
         msg.info("WEB: Loaded video description")
-
     end)
 end
 
@@ -1235,6 +1247,7 @@ function exec_dislikes(args, result)
     }, function(res, val, err)
         local dislikes = val.stdout
         dislikes = tonumber(dislikes:match('"dislikes":(%d+)'))
+        state.dislikecount = dislikes
 
         if dislikes then
             state.dislikes = "Dislikes: " .. dislikes
@@ -1246,8 +1259,20 @@ function exec_dislikes(args, result)
         if (not state.descriptionLoaded) then
             state.localDescriptionClick = state.localDescriptionClick .. state.dislikes
             state.videoDescription = state.localDescriptionClick
+        else
+            addLikeCountToTitle()
         end
     end)
+end
+
+function addLikeCountToTitle()
+    if (user_opts.dynamictitle) then
+        state.viewcount = tonumber(state.localDescriptionClick:match('Views: (%d+)')) 
+        state.likecount = tonumber(state.localDescriptionClick:match('Likes: (%d+)'))
+        if (state.viewcount and state.likecount and state.dislikecount) then
+            mp.set_property("title", mp.get_property("media-title") .. " | 👁️" .. state.viewcount .. " | 👍" .. state.likecount .. " | 👎" .. state.dislikecount)
+        end    
+    end
 end
 
 function exec_filesize(args, result)
@@ -1407,8 +1432,8 @@ function show_description(text)
         state.message_hide_timer:resume()
         request_tick()
     end, { repeatable = true })
-    bind_keys("ENTER MBTN_LEFT", "select", destroyscrollingkeys)
-    bind_keys("ESC MBTN_RIGHT", "close", destroyscrollingkeys) --close menu using ESC
+    bind_keys("ENTER", "select", destroyscrollingkeys)
+    bind_keys("ESC", "close", destroyscrollingkeys) --close menu using ESC
 
     state.message_text = text
 
@@ -1984,10 +2009,14 @@ function osc_init()
     ne.content = icons.previous
     ne.enabled = (pl_pos > 1) or (loop ~= 'no')
     ne.eventresponder['mbtn_left_up'] =
-        function ()mp.commandv('playlist-prev', 'weak') end
+        function ()
+            mp.commandv('playlist-prev', 'weak')
+            destroyscrollingkeys()
+        end
     ne.eventresponder['enter'] =
         function ()
             mp.commandv('playlist-prev', 'weak')
+            destroyscrollingkeys()
             show_message(get_playlist()) 
         end
     ne.eventresponder['mbtn_right_up'] =
@@ -2001,10 +2030,14 @@ function osc_init()
     ne.content = icons.next
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= 'no')
     ne.eventresponder['mbtn_left_up'] =
-        function () mp.commandv('playlist-next', 'weak') end
+        function () 
+            mp.commandv('playlist-next', 'weak') 
+            destroyscrollingkeys()
+        end
     ne.eventresponder['enter'] =
         function () 
             mp.commandv('playlist-next', 'weak')
+            destroyscrollingkeys()
             show_message(get_playlist())
         end
     ne.eventresponder['mbtn_right_up'] =
@@ -2870,7 +2903,9 @@ function render()
         local timeout = state.showtime + (get_hidetimeout()/1000) - now
         if timeout <= 0 then
             if (state.active_element == nil) and (user_opts.bottomhover or not (mouse_over_osc)) then
-                hide_osc()
+                if (not user_opts.donttimeoutonpause) then
+                    hide_osc()
+                end
             end
         else
             -- the timer is only used to recheck the state and to possibly run
@@ -3131,16 +3166,18 @@ mp.observe_property('seeking', nil, function()
 end)
 
 -- chapter scrubbing
-mp.add_key_binding("CTRL+LEFT", "prevchapter", function()
+mp.add_key_binding("CTRL+LEFT", "prevfile", function()
+    mp.commandv('playlist-prev', 'weak')
+    destroyscrollingkeys()
+end);
+mp.add_key_binding("CTRL+RIGHT", "nextfile", function()
+    mp.commandv('playlist-next', 'weak')
+    destroyscrollingkeys()
+end);
+mp.add_key_binding("SHIFT+LEFT", "prevchapter", function()
     changeChapter(-1)
 end);
-mp.add_key_binding("CTRL+RIGHT", "nextchapter", function()
-    changeChapter(1)
-end);
-mp.add_key_binding("SHIFT+LEFT", "prevchapter2", function()
-    changeChapter(-1)
-end);
-mp.add_key_binding("SHIFT+RIGHT", "nextchapter2", function()
+mp.add_key_binding("SHIFT+RIGHT", "nextchapter", function()
     changeChapter(1)
 end);
 
