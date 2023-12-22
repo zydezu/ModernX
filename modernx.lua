@@ -36,10 +36,11 @@ local user_opts = {
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
     scrollingSpeed = 40,            -- the speed of scrolling text in menus
     showonpause = true,             -- whether to show to osc when paused
-    donttimeoutonpause = true,      -- whether to disable the hide timeout on pause
+    donttimeoutonpause = false,     -- whether to disable the hide timeout on pause
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
+    persistantprogress = false,     -- always show a small progress line at the bottom of the screen
 
     -- title and chapter settings --
     showtitle = true,		        -- show title in OSC
@@ -1703,18 +1704,27 @@ layouts = function ()
     -- Seekbar
     new_element('seekbarbg', 'box')
     lo = add_layout('seekbarbg')
-    lo.geometry = {x = refX , y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 2}
+    lo.geometry = {x = refX , y = refY - 100, an = 5, w = osc_geo.w - 50, h = 2}
     lo.layer = 13
     lo.style = osc_styles.SeekbarBg
     lo.alpha[1] = 128
     lo.alpha[3] = 128
 
     lo = add_layout('seekbar')
-    lo.geometry = {x = refX, y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 16}
+    lo.geometry = {x = refX, y = refY - 100, an = 5, w = osc_geo.w - 50, h = 16}
 	lo.style = osc_styles.SeekbarFg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
+
+    if (user_opts.persistantprogress) then
+        lo = add_layout('persistantseekbar')
+        lo.geometry = {x = refX, y = refY - 200 ,an = 5, w = osc_geo.w - 50, h = 16}
+        lo.style = osc_styles.SeekbarFg
+        lo.slider.gap = 7
+        lo.slider.tooltip_style = osc_styles.Tooltip
+        lo.slider.tooltip_an = 2    
+    end
 
     local showjump = user_opts.showjump
     local showskip = user_opts.showskip
@@ -2554,6 +2564,46 @@ function osc_init()
             end
         end
 
+    --persistant seekbar
+    if (user_opts.persistantprogress) then
+        ne = new_element('persistantseekbar', 'slider')
+        ne.enabled = not (mp.get_property('percent-pos') == nil)
+        state.slider_element = ne.enabled and ne or nil  -- used for forced_title
+        ne.slider.markerF = function ()
+            return {}
+        end
+        ne.slider.posF =
+            function () return mp.get_property_number('percent-pos', nil) end
+        ne.slider.tooltipF = function()
+            return ""
+        end
+        ne.slider.seekRangesF = function()
+            if not user_opts.seekrange then
+                return nil
+            end
+            local cache_state = state.cache_state
+            if not cache_state then
+                return nil
+            end
+            local duration = mp.get_property_number('duration', nil)
+            if (duration == nil) or duration <= 0 then
+                return nil
+            end
+            local ranges = cache_state['seekable-ranges']
+            if #ranges == 0 then
+                return nil
+            end
+            local nranges = {}
+            for _, range in pairs(ranges) do
+                nranges[#nranges + 1] = {
+                    ['start'] = 100 * range['start'] / duration,
+                    ['end'] = 100 * range['end'] / duration,
+                }
+            end
+            return nranges
+        end
+    end
+
     --volumebar
     ne = new_element('volumebar', 'slider')
     ne.visible = (osc_param.playresx >= 900 - outeroffset) and user_opts.volumecontrol
@@ -2903,7 +2953,7 @@ function render()
         local timeout = state.showtime + (get_hidetimeout()/1000) - now
         if timeout <= 0 then
             if (state.active_element == nil) and (user_opts.bottomhover or not (mouse_over_osc)) then
-                if (not user_opts.donttimeoutonpause) then
+                if (not (state.paused and user_opts.donttimeoutonpause)) then
                     hide_osc()
                 end
             end
@@ -2930,6 +2980,9 @@ function render()
     -- actual OSC
     if state.osc_visible then
         render_elements(ass)
+    end
+    if user_opts.persistantprogress then
+        -- render_persistantprogressbar(ass)
     end
 
     -- submit
