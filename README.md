@@ -85,10 +85,13 @@ seekbarhandlesize=0
 | hidetimeout | Duration in ms until the OSC hides when there is no mouse movement |
 | fadeduration | Duration in ms of the fade effect the OSC exihibts |
 | minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
+| scrollingSpeed | The speed of scrolling text in menus |
 | showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
 | bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons at the top if visible) <br> **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
 | raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
+| persistentprogress | Whether to always show a small progress line at the bottom of the screen |
+| persistentbuffer | Whether, on web videos to show the buffer on the persistent progress line |
 | showtitle | Whether to show the title in the OSC |
 | showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![mpv_SDXBkAeLwN](https://github.com/zydezu/ModernX/assets/50119098/cce97c08-c626-4953-bfcc-68a1d3a20ae4) |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
@@ -155,10 +158,13 @@ local user_opts = {
     fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
     minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
     scrollingSpeed = 40,            -- the speed of scrolling text in menus
-    showonpause = true,             -- whether to disable the hide timeout on pause
+    showonpause = true,             -- whether to show to osc when paused
+    donttimeoutonpause = false,     -- whether to disable the hide timeout on pause
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
+    persistentprogress = false,     -- always show a small progress line at the bottom of the screen
+    persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
 
     -- title and chapter settings --
     showtitle = true,		        -- show title in OSC
