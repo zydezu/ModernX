@@ -40,7 +40,8 @@ local user_opts = {
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
-    persistantprogress = false,     -- always show a small progress line at the bottom of the screen
+    persistentprogress = false,     -- always show a small progress line at the bottom of the screen
+    persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
 
     -- title and chapter settings --
     showtitle = true,		        -- show title in OSC
@@ -124,6 +125,13 @@ local icons = {
   downloading = '',
   ontopon = '',
   ontopoff = '',
+}
+
+local emoticon = {
+    view = "👁️",
+    comment = "💬",
+    like = "👍",
+    dislike = "👎"
 }
 
 -- Localization
@@ -462,13 +470,17 @@ function add_area(name, x1, y1, x2, y2)
     table.insert(osc_param.areas[name], {x1=x1, y1=y1, x2=x2, y2=y2})
 end
 
-function ass_append_alpha(ass, alpha, modifier)
+function ass_append_alpha(ass, alpha, modifier, inverse)
     local ar = {}
 
     for ai, av in pairs(alpha) do
         av = mult_alpha(av, modifier)
         if state.animation then
-            av = mult_alpha(av, state.animation)
+            local animpos = state.animation
+            if inverse then
+                animpos = 255 - animpos
+            end
+            av = mult_alpha(av, animpos)
         end
         ar[ai] = av
     end
@@ -739,6 +751,58 @@ function get_chapter(possec)
     end
 end
 
+function render_persistentprogressbar(master_ass)
+    for n=1, #elements do
+        local element = elements[n]
+        if (element.name == "persistentseekbar") then
+            local style_ass = assdraw.ass_new()
+            style_ass:merge(element.style_ass)
+            ass_append_alpha(style_ass, element.layout.alpha, 0, true)
+            
+            if not state.animation and state.osc_visible then
+                ass_append_alpha(style_ass, element.layout.alpha, 255)
+            end
+            
+            local elem_ass = assdraw.ass_new()
+            elem_ass:merge(style_ass)
+            if not (element.type == 'button') then
+                elem_ass:merge(element.static_ass)
+            end
+
+            local slider_lo = element.layout.slider
+            local elem_geo = element.layout.geometry
+            local s_min = element.slider.min.value
+            local s_max = element.slider.max.value
+            -- draw pos marker
+            local pos = element.slider.posF()
+            local seekRanges = element.slider.seekRangesF()
+            local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
+            local xp
+                
+            if pos then
+                xp = get_slider_ele_pos_for(element, pos)
+                ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
+                elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+            end
+
+            if user_opts.persistentbuffer and seekRanges then
+                elem_ass:draw_stop()
+                elem_ass:merge(element.style_ass)
+                ass_append_alpha(elem_ass, element.layout.alpha, user_opts.seekrangealpha, true)
+                elem_ass:merge(element.static_ass)
+                for _,range in pairs(seekRanges) do
+                    local pstart = get_slider_ele_pos_for(element, range['start'])
+                    local pend = get_slider_ele_pos_for(element, range['end'])
+                    elem_ass:rect_cw(pstart - rh, slider_lo.gap, pend + rh, elem_geo.h - slider_lo.gap)
+                end
+            end
+
+            elem_ass:draw_stop()
+            master_ass:merge(elem_ass)
+        end
+    end
+end
+
 function render_elements(master_ass)
     -- when the slider is dragged or hovered and we have a target chapter name
     -- then we use it instead of the normal title. we calculate it before the
@@ -794,128 +858,129 @@ function render_elements(master_ass)
         end
 
         if (element.type == 'slider') then
-
-            local slider_lo = element.layout.slider
-            local elem_geo = element.layout.geometry
-            local s_min = element.slider.min.value
-            local s_max = element.slider.max.value
-            -- draw pos marker
-            local pos = element.slider.posF()
-            local seekRanges = element.slider.seekRangesF()
-			local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
-            local xp
-            
-            if pos then
-                xp = get_slider_ele_pos_for(element, pos)
-                ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
-                elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
-            end
-
-            if seekRanges then
-				elem_ass:draw_stop()
-				elem_ass:merge(element.style_ass)
-				ass_append_alpha(elem_ass, element.layout.alpha, user_opts.seekrangealpha)
-				elem_ass:merge(element.static_ass)
-
-                for _,range in pairs(seekRanges) do
-                    local pstart = get_slider_ele_pos_for(element, range['start'])
-                    local pend = get_slider_ele_pos_for(element, range['end'])
-					elem_ass:rect_cw(pstart - rh, slider_lo.gap, pend + rh, elem_geo.h - slider_lo.gap)
+            if (element.name ~= "persistentseekbar") then
+                local slider_lo = element.layout.slider
+                local elem_geo = element.layout.geometry
+                local s_min = element.slider.min.value
+                local s_max = element.slider.max.value
+                -- draw pos marker
+                local pos = element.slider.posF()
+                local seekRanges = element.slider.seekRangesF()
+                local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
+                local xp
+                
+                if pos then
+                    xp = get_slider_ele_pos_for(element, pos)
+                    ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
+                    elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
                 end
-            end
 
-            elem_ass:draw_stop()
-            
-            -- add tooltip
-            if not (element.slider.tooltipF == nil) then
-                if mouse_hit(element) then
-                    local sliderpos = get_slider_value(element)
-                    local tooltiplabel = element.slider.tooltipF(sliderpos)
-                    local an = slider_lo.tooltip_an
-                    local ty
-                    if (an == 2) then
-                        ty = element.hitbox.y1
-                    else
-                        ty = element.hitbox.y1 + elem_geo.h/2
+                if seekRanges then
+                    elem_ass:draw_stop()
+                    elem_ass:merge(element.style_ass)
+                    ass_append_alpha(elem_ass, element.layout.alpha, user_opts.seekrangealpha)
+                    elem_ass:merge(element.static_ass)
+
+                    for _,range in pairs(seekRanges) do
+                        local pstart = get_slider_ele_pos_for(element, range['start'])
+                        local pend = get_slider_ele_pos_for(element, range['end'])
+                        elem_ass:rect_cw(pstart - rh, slider_lo.gap, pend + rh, elem_geo.h - slider_lo.gap)
                     end
+                end
 
-                    local tx = get_virt_mouse_pos()
-                    if (slider_lo.adjust_tooltip) then
+                elem_ass:draw_stop()
+                
+                -- add tooltip
+                if not (element.slider.tooltipF == nil) then
+                    if mouse_hit(element) then
+                        local sliderpos = get_slider_value(element)
+                        local tooltiplabel = element.slider.tooltipF(sliderpos)
+                        local an = slider_lo.tooltip_an
+                        local ty
                         if (an == 2) then
-                            if (sliderpos < (s_min + 3)) then
-                                an = an - 1
-                            elseif (sliderpos > (s_max - 3)) then
-                                an = an + 1
-                            end
-                        elseif (sliderpos > (s_max-s_min)/2) then
-                            an = an + 1
-                            tx = tx - 5
+                            ty = element.hitbox.y1
                         else
-                            an = an - 1
-                            tx = tx + 10
+                            ty = element.hitbox.y1 + elem_geo.h/2
                         end
-                    end
-                    
-                    -- thumbfast
-                    if element.thumbnailable and not thumbfast.disabled then
-                        local osd_w = mp.get_property_number("osd-width")
-                        local r_w, r_h = get_virt_scale_factor()
 
-                        if osd_w then
-                            local hover_sec = 0
-                            if (mp.get_property_number("duration")) then hover_sec = mp.get_property_number("duration") * sliderpos / 100 end
-                            local thumbPad = user_opts.thumbnailborder
-                            local thumbMarginX = 18 / r_w
-                            local thumbMarginY = user_opts.timefontsize + thumbPad + 2 / r_h
-                            local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
-                            local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
+                        local tx = get_virt_mouse_pos()
+                        if (slider_lo.adjust_tooltip) then
+                            if (an == 2) then
+                                if (sliderpos < (s_min + 3)) then
+                                    an = an - 1
+                                elseif (sliderpos > (s_max - 3)) then
+                                    an = an + 1
+                                end
+                            elseif (sliderpos > (s_max-s_min)/2) then
+                                an = an + 1
+                                tx = tx - 5
+                            else
+                                an = an - 1
+                                tx = tx + 10
+                            end
+                        end
+                        
+                        -- thumbfast
+                        if element.thumbnailable and not thumbfast.disabled then
+                            local osd_w = mp.get_property_number("osd-width")
+                            local r_w, r_h = get_virt_scale_factor()
 
-                            thumbX = math.floor(thumbX + 0.5)
-                            thumbY = math.floor(thumbY + 0.5)
+                            if osd_w then
+                                local hover_sec = 0
+                                if (mp.get_property_number("duration")) then hover_sec = mp.get_property_number("duration") * sliderpos / 100 end
+                                local thumbPad = user_opts.thumbnailborder
+                                local thumbMarginX = 18 / r_w
+                                local thumbMarginY = user_opts.timefontsize + thumbPad + 2 / r_h
+                                local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
+                                local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
 
-                            elem_ass:new_event()
-                            elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
-                            elem_ass:append(osc_styles.Tooltip)
-                            elem_ass:draw_start()
-                            elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
-                            elem_ass:draw_stop()
+                                thumbX = math.floor(thumbX + 0.5)
+                                thumbY = math.floor(thumbY + 0.5)
 
-                            -- force tooltip to be centered on the thumb, even at far left/right of screen
-                            tx = (thumbX + thumbfast.width / 2) * r_w
-                            an = 2
+                                elem_ass:new_event()
+                                elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
+                                elem_ass:append(osc_styles.Tooltip)
+                                elem_ass:draw_start()
+                                elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
+                                elem_ass:draw_stop()
 
-                            mp.commandv("script-message-to", "thumbfast", "thumb",
-                                hover_sec, thumbX, thumbY)
+                                -- force tooltip to be centered on the thumb, even at far left/right of screen
+                                tx = (thumbX + thumbfast.width / 2) * r_w
+                                an = 2
 
-                            -- chapter title
-                            local se, ae = state.slider_element, elements[state.active_element]
-                            if user_opts.chapterformat ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
-                                local dur = mp.get_property_number("duration", 0)
-                                if dur > 0 then
-                                    local possec = get_slider_value(se) * dur / 100 -- of mouse pos
-                                    local ch = get_chapter(possec)
-                                    if ch and ch.title and ch.title ~= "" then
-                                        elem_ass:new_event()
-                                        elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - user_opts.timefontsize)
-                                        elem_ass:an(an)
-                                        elem_ass:append(slider_lo.tooltip_style)
-                                        ass_append_alpha(elem_ass, slider_lo.alpha, 0)
-                                        elem_ass:append(string.format(user_opts.chapterformat, ch.title))
+                                mp.commandv("script-message-to", "thumbfast", "thumb",
+                                    hover_sec, thumbX, thumbY)
+
+                                -- chapter title
+                                local se, ae = state.slider_element, elements[state.active_element]
+                                if user_opts.chapterformat ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+                                    local dur = mp.get_property_number("duration", 0)
+                                    if dur > 0 then
+                                        local possec = get_slider_value(se) * dur / 100 -- of mouse pos
+                                        local ch = get_chapter(possec)
+                                        if ch and ch.title and ch.title ~= "" then
+                                            elem_ass:new_event()
+                                            elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - user_opts.timefontsize)
+                                            elem_ass:an(an)
+                                            elem_ass:append(slider_lo.tooltip_style)
+                                            ass_append_alpha(elem_ass, slider_lo.alpha, 0)
+                                            elem_ass:append(string.format(user_opts.chapterformat, ch.title))
+                                        end
                                     end
                                 end
                             end
                         end
-                    end
 
-                    -- tooltip label
-                    elem_ass:new_event()
-                    elem_ass:pos(tx, ty)
-                    elem_ass:an(an)
-                    elem_ass:append(slider_lo.tooltip_style)
-                    ass_append_alpha(elem_ass, slider_lo.alpha, 0)
-                    elem_ass:append(tooltiplabel)
-                elseif element.thumbnailable and thumbfast.available then
-                    mp.commandv("script-message-to", "thumbfast", "clear")
+                        -- tooltip label
+                        elem_ass:new_event()
+                        elem_ass:pos(tx, ty)
+                        elem_ass:an(an)
+                        elem_ass:append(slider_lo.tooltip_style)
+                        ass_append_alpha(elem_ass, slider_lo.alpha, 0)
+                        elem_ass:append(tooltiplabel)
+                    elseif element.thumbnailable and thumbfast.available then
+                        mp.commandv("script-message-to", "thumbfast", "clear")
+                    end
                 end
             end
 
@@ -1082,11 +1147,7 @@ function checktitle()
     if (artist ~= nil) then
         if (state.localDescription == nil) then
             state.localDescription = "By: " .. artist
-            if (state.localDescriptionClick ~= nil) then
-                state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
-            else
-                state.localDescriptionClick = "By: " .. artist
-            end
+            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
             state.localDescriptionIsClickable = true
         else
             state.localDescriptionClick = state.localDescriptionClick .. state.localDescription .. "\\N----------\\NBy: " .. artist
@@ -1095,25 +1156,27 @@ function checktitle()
     end
     if (album ~= nil) then
         if (state.localDescription == nil) then -- only metadata
-            state.localDescription = album
+            state.localDescription = "Album: " .. album
+            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+            state.localDescriptionIsClickable = true
         else -- append to other metadata
             if (state.localDescriptionClick ~= nil) then 
-                state.localDescriptionClick = state.localDescriptionClick .. " / " .. album
+                state.localDescriptionClick = state.localDescriptionClick .. " - " .. album
             else
                 state.localDescriptionClick = album
                 state.localDescriptionIsClickable = true
             end
-            state.localDescription = state.localDescription .. " / " .. album
+            state.localDescription = state.localDescription .. " - " .. album
         end
     end
     if (date ~= nil) then
         local datenormal = normaliseDate(date)
         local datetext = "Year"
-        if (#datenormal > 4) then
-            datetext = "Date"
-        end
+        if (#datenormal > 4) then datetext = "Date" end
         if (state.localDescription == nil) then -- only metadata
             state.localDescription = datetext .. ": " .. datenormal
+            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+            state.localDescriptionIsClickable = true
         else -- append to other metadata
             if (state.localDescriptionClick ~= nil) then
                 state.localDescriptionClick = state.localDescriptionClick .. "\\N" .. datetext .. ": " .. datenormal
@@ -1121,14 +1184,39 @@ function checktitle()
                 state.localDescriptionClick = datenormal
                 state.localDescriptionIsClickable = true
             end
-            state.localDescription = state.localDescription .. " / " ..  datetext .. ": " .. datenormal
+            state.localDescription = state.localDescription .. " | " ..  datetext .. ": " .. datenormal
+        end
+    end
+
+    local function format_file_size(file_size)
+        local units = {"bytes", "KB", "MB", "GB", "TB"}
+        local unit_index = 1
+        while file_size >= 1024 and unit_index < #units do
+            file_size = file_size / 1024
+            unit_index = unit_index + 1
+        end
+        return string.format("%.2f %s", file_size, units[unit_index])
+    end
+
+    file_size = mp.get_property_native("file-size")
+    if (file_size ~= nil) then
+        file_size = format_file_size(file_size)
+        if (state.localDescription == nil) then -- only metadata
+            state.localDescription = "Size: " .. file_size
+            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+            state.localDescriptionIsClickable = true
+        else
+            state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size
         end
     end
 end
 
 function normaliseDate(date)
-    date = string.gsub(date, "-", "")
-    if (#date > 4) then -- YYYYMMDD
+    date = string.gsub(date:gsub("/", ""), "-", "")
+    if (#date > 8) then -- YYYYMMDD HHMMSS (plus a time)
+        local dateTable = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
+        return os.date(user_opts.dateformat, os.time(dateTable)) .. date:sub(9)
+    elseif (#date > 4) then -- YYYYMMDD
         local dateTable = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
         return os.date(user_opts.dateformat, os.time(dateTable))
     else -- YYYY
@@ -1171,16 +1259,18 @@ function checkWebLink()
             exec_filesize(command)
         end
 
-        -- Youtube Return Dislike API
+        -- Youtube Return Dislike API  
         state.dislikes = ""
-        exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId="..string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) 
-        
+        if path:find('youtu%.?be') then
+            exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId=" .. 
+            string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) 
+        end
         if user_opts.showdescription then
-            msg.info("WEB: Loading description...")
+            msg.info("WEB: Loading video information...")
             local command = { 
-                "yt-dlp", 
+                "yt-dlp",
                 "--no-download", 
-                "-O %(title)s\\N----------\\N%(description)s\\N----------\\NViews: %(view_count)s\nUploaded by: %(uploader)s\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
+                "-O \\N----------\\N%(description)s\\N----------\\NUploaded by: %(uploader)s\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nViews: %(view_count)s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
                 path
             }
             exec_description(command)
@@ -1210,29 +1300,58 @@ function downloadDone(success, result, error)
     state.downloading = false
 end
 
+function dump(o)
+    if type(o) == 'table' then
+       local s = '{ '
+       for k,v in pairs(o) do
+          if type(k) ~= 'number' then k = '"'..k..'"' end
+          s = s .. '['..k..'] = ' .. dump(v) .. ','
+       end
+       return s .. '} '
+    else
+       return tostring(o)
+    end
+ end
+ 
+
 function exec_description(args, result)
     local ret = mp.command_native_async({
         name = "subprocess",
         args = args,
         capture_stdout = true,
-        capture_stderr = true
+        capture_stderr = true,
     }, function(res, val, err)
-        state.localDescriptionClick = string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', "\\N")
+        state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', "\\N")
         addLikeCountToTitle()
 
         -- check if description exists, if it doesn't get rid of the extra "----------"
         local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
-        if (descriptionText == '' or descriptionText == '\\N') then
+        if (descriptionText == '' or descriptionText == '\\N' or descriptionText == 'NA') then
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Views: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
 
-        -- segment localDescriptionClick parts with " - "
+        -- segment localDescriptionClick parts with " | "
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
-        beforeLastPattern = beforeLastPattern:sub(1, 160) .. '...'
-        state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")
-
-        local startPos, endPos = state.videoDescription:find("\\N----------\\N")
-        state.videoDescription = string.gsub(state.videoDescription:sub(endPos + 1), "\\N----------\\N", " | ")
+        if beforeLastPattern then
+            beforeLastPattern = beforeLastPattern:sub(1, 160) .. '...'
+            afterLastPattern = afterLastPattern:gsub("Views:", emoticon.view):gsub("Comments:", emoticon.comment):gsub("Likes:", emoticon.like):gsub("Dislikes:", emoticon.dislike)  -- replace with icons
+            state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")
+            local startPos, endPos = state.videoDescription:find("\\N----------\\N")
+            state.videoDescription = state.videoDescription:sub(endPos + 1):gsub("\\N----------\\N", " | ")
+        end
+        
+        if afterLastPattern then
+            if (select(2, afterLastPattern:gsub("\\N", "")) == 1) then -- get rid of last | if there's only one item
+                print("Erasing last item")
+                state.videoDescription = state.videoDescription:gsub(" | ", "")
+            end
+        end
 
         state.descriptionLoaded = true
         msg.info("WEB: Loaded video description")
@@ -1271,7 +1390,14 @@ function addLikeCountToTitle()
         state.viewcount = tonumber(state.localDescriptionClick:match('Views: (%d+)')) 
         state.likecount = tonumber(state.localDescriptionClick:match('Likes: (%d+)'))
         if (state.viewcount and state.likecount and state.dislikecount) then
-            mp.set_property("title", mp.get_property("media-title") .. " | 👁️" .. state.viewcount .. " | 👍" .. state.likecount .. " | 👎" .. state.dislikecount)
+            mp.set_property("title", mp.get_property("media-title") .. 
+            " | " .. emoticon.view .. state.viewcount .. 
+            " | " .. emoticon.like .. state.likecount .. 
+            " | " .. emoticon.dislike .. state.dislikecount)
+        elseif (state.viewcount and state.likecount) then
+            mp.set_property("title", mp.get_property("media-title") .. 
+            " | " .. emoticon.view .. state.viewcount .. 
+            " | " .. emoticon.like .. state.likecount)
         end    
     end
 end
@@ -1716,14 +1842,13 @@ layouts = function ()
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
-
-    if (user_opts.persistantprogress) then
-        lo = add_layout('persistantseekbar')
-        lo.geometry = {x = refX, y = refY - 200 ,an = 5, w = osc_geo.w - 50, h = 16}
+    
+    if (user_opts.persistentprogress) then
+        lo = add_layout('persistentseekbar')
+        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = 16}
         lo.style = osc_styles.SeekbarFg
         lo.slider.gap = 7
-        lo.slider.tooltip_style = osc_styles.Tooltip
-        lo.slider.tooltip_an = 2    
+        lo.slider.tooltip_an = 0   
     end
 
     local showjump = user_opts.showjump
@@ -1980,7 +2105,7 @@ function osc_init()
     ne.visible = (state.localDescription ~= nil or state.isWebVideo) and user_opts.showdescription
     ne.content = function ()
         if state.isWebVideo then
-            local title = "Loading description..."
+            local title = "Loading video information..."
             if (state.descriptionLoaded) then
                 title = state.videoDescription:sub(1, 300)
             end
@@ -2364,40 +2489,53 @@ function osc_init()
         function ()
             if (not state.videoCantBeDownloaded) then
                 local localpathnormal = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
-                local localpath = localpathnormal:gsub("/", "\\")
+                local localpath = localpathnormal
+
+                local function openFolder()
+                    local function is_macos()
+                        local a=os.getenv("HOME")if a~=nil and string.sub(a,1,6)=="/Users"then return true else return false end
+                    end
+
+                    local function is_windows()
+                        local a=os.getenv("windir")if a~=nil then return true else return false end
+                    end
+
+                    local command = "dbus-send --print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file:$path\" string:\"\""
+                    local windowscmd = "start $path\\"
+                    local macoscmd = "open -a Finder -R \"$path\""
+
+                    if is_windows() then
+                        localpath = localpath:gsub("/", "\\")
+                        command = windowscmd
+                    elseif is_macos() then
+                        command = macoscmd
+                    end
+                    command = command:gsub("$path", localpath)
+
+                    os.execute(command)
+                end
+
                 if state.downloadedOnce then
                     show_message("\\N{\\an9}Already downloaded")
-
-                    -- open file system
-                    local cmd = "start $path\\"
-                    cmd = cmd:gsub("$path", localpath)
-                    os.execute(cmd)
-                    return
-                end
-
-                if state.downloading then
+                    openFolder()
+                elseif state.downloading then
                     show_message("\\N{\\an9}Already downloading...")
-                    
-                    -- open file system
-                    local cmd = "start $path\\"
-                    cmd = cmd:gsub("$path", localpath)
-                    os.execute(cmd)
-                    return
+                    openFolder()
+                else
+                    show_message("\\N{\\an9}Downloading...")
+                    state.downloading = true
+                    local command = { 
+                        "yt-dlp",
+                        user_opts.ytdlpQuality,
+                        "--add-metadata",
+                        "--console-title",
+                        "--embed-subs",
+                        "-o%(title)s",
+                        "-P " .. localpathnormal,
+                        state.path 
+                    }
+                    local status = exec(command, downloadDone)
                 end
-
-                show_message("\\N{\\an9}Downloading...")
-                state.downloading = true
-                local command = { 
-                    "yt-dlp",
-                    user_opts.ytdlpQuality,
-                    "--add-metadata",
-                    "--console-title",
-                    "--embed-subs",
-                    "-o%(title)s",
-                    "-P " .. localpathnormal,
-                    state.path 
-                }
-                local status = exec(command, downloadDone)
             else
                 show_message("\\N{\\an9}Can't be downloaded")
             end
@@ -2464,8 +2602,10 @@ function osc_init()
             return {}
         end
     end
-    ne.slider.posF =
-        function () return mp.get_property_number('percent-pos', nil) end
+    ne.slider.posF = function () 
+            if mp.get_property_bool("eof-reached") then return 100 end
+            return mp.get_property_number('percent-pos', nil) 
+        end
     ne.slider.tooltipF = function (pos)
         local duration = mp.get_property_number('duration', nil)
         if not ((duration == nil) or (pos == nil)) then
@@ -2564,43 +2704,48 @@ function osc_init()
             end
         end
 
-    --persistant seekbar
-    if (user_opts.persistantprogress) then
-        ne = new_element('persistantseekbar', 'slider')
+    --persistent seekbar
+    if (user_opts.persistentprogress) then
+        ne = new_element('persistentseekbar', 'slider')
         ne.enabled = not (mp.get_property('percent-pos') == nil)
         state.slider_element = ne.enabled and ne or nil  -- used for forced_title
         ne.slider.markerF = function ()
             return {}
         end
-        ne.slider.posF =
-            function () return mp.get_property_number('percent-pos', nil) end
+        ne.slider.posF = function () 
+            if mp.get_property_bool("eof-reached") then return 100 end
+            return mp.get_property_number('percent-pos', nil) 
+        end 
         ne.slider.tooltipF = function()
             return ""
         end
         ne.slider.seekRangesF = function()
-            if not user_opts.seekrange then
-                return nil
+            if user_opts.persistentbuffer then
+                if not user_opts.seekrange then
+                    return nil
+                end
+                local cache_state = state.cache_state
+                if not cache_state then
+                    return nil
+                end
+                local duration = mp.get_property_number('duration', nil)
+                if (duration == nil) or duration <= 0 then
+                    return nil
+                end
+                local ranges = cache_state['seekable-ranges']
+                if #ranges == 0 then
+                    return nil
+                end
+                local nranges = {}
+                for _, range in pairs(ranges) do
+                    nranges[#nranges + 1] = {
+                        ['start'] = 100 * range['start'] / duration,
+                        ['end'] = 100 * range['end'] / duration,
+                    }
+                end
+                return nranges
             end
-            local cache_state = state.cache_state
-            if not cache_state then
-                return nil
-            end
-            local duration = mp.get_property_number('duration', nil)
-            if (duration == nil) or duration <= 0 then
-                return nil
-            end
-            local ranges = cache_state['seekable-ranges']
-            if #ranges == 0 then
-                return nil
-            end
-            local nranges = {}
-            for _, range in pairs(ranges) do
-                nranges[#nranges + 1] = {
-                    ['start'] = 100 * range['start'] / duration,
-                    ['end'] = 100 * range['end'] / duration,
-                }
-            end
-            return nranges
+            return nil
         end
     end
 
@@ -2981,8 +3126,8 @@ function render()
     if state.osc_visible then
         render_elements(ass)
     end
-    if user_opts.persistantprogress then
-        -- render_persistantprogressbar(ass)
+    if user_opts.persistentprogress then
+        render_persistentprogressbar(ass)
     end
 
     -- submit
@@ -3315,7 +3460,6 @@ mp.observe_property('osd-dimensions', 'native', function(name, val)
     --  we might have to worry about property update ordering)
     request_init_resize()
 end)
-
 -- mouse show/hide bindings
 mp.set_key_bindings({
     {'mouse_move',              function(e) process_event('mouse_move', nil) end},
