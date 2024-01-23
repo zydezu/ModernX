@@ -91,6 +91,7 @@ seekbarhandlesize=0
 | raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
 | thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
 | persistentprogress | Whether to always show a small progress line at the bottom of the screen |
+| persistentprogressheight | The height of the persistentprogress bar |
 | persistentbuffer | Whether, on web videos to show the buffer on the persistent progress line |
 | showtitle | Whether to show the title in the OSC |
 | showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![mpv_SDXBkAeLwN](https://github.com/zydezu/ModernX/assets/50119098/cce97c08-c626-4953-bfcc-68a1d3a20ae4) |
@@ -98,6 +99,7 @@ seekbarhandlesize=0
 | titleBarStrip | Whether to make the title bar a singular bar, instead of a black fade at the top of the screen |
 | title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties - turn off dynamictitle for this option to be respected |
 | dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
+| updatetitleyoutubestats | Whether to update the window/OSC title bar with YouTube video stats (views, likes, dislikes) |
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
 | titlefontsize | The size of the title text |
 | chapterformat | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
@@ -130,6 +132,7 @@ seekbarhandlesize=0
 | showontop | Whether to show the pin window on top button |
 | showinfo | Whether to show the info button |
 | downloadbutton | Whether to show download button for web videos |
+| downloadpath | The download path for videos |
 | ytdlpQuality | What quality of video the download button uses (a max quality mp4 by is downloaded by default) |
 
 
@@ -164,6 +167,7 @@ local user_opts = {
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
     persistentprogress = false,     -- always show a small progress line at the bottom of the screen
+    persistentprogressheight = 18,  -- the height of the persistentprogress bar
     persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
 
     -- title and chapter settings --
@@ -174,6 +178,7 @@ local user_opts = {
     title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
+    updatetitleyoutubestats = false,-- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
     font = 'mpv-osd-symbols',	    -- default osc font
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
@@ -215,7 +220,8 @@ local user_opts = {
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
-    ytdlpQuality = '-S res,ext:mp4:m4a' -- what quality of video the download button uses (max quality mp4 by default)
+    downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
+    ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
 }
 ```
 

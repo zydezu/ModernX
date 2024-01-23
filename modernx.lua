@@ -41,6 +41,7 @@ local user_opts = {
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
     persistentprogress = false,     -- always show a small progress line at the bottom of the screen
+    persistentprogressheight = 18,  -- the height of the persistentprogress bar
     persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
 
     -- title and chapter settings --
@@ -51,6 +52,7 @@ local user_opts = {
     title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
+    updatetitleyoutubestats = false,-- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
     font = 'mpv-osd-symbols',	    -- default osc font
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
@@ -92,7 +94,8 @@ local user_opts = {
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
-    ytdlpQuality = '-S res,ext:mp4:m4a' -- what quality of video the download button uses (max quality mp4 by default)
+    downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
+    ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
 }
 
 -- Icons for jump button depending on jumpamount 
@@ -565,11 +568,14 @@ end
     --(+1 -> next, -1 -> previous)
 function set_track(type, next)
     local current_track_mpv, current_track_osc
+    current_track_osc = 0
     if (mp.get_property(type) == 'no') then
         current_track_osc = 0
     else
         current_track_mpv = tonumber(mp.get_property(type))
-        current_track_osc = tracks_mpv[type][current_track_mpv].osc_id
+        if (tracks_mpv[type][current_track_mpv]) then
+            current_track_osc = tracks_mpv[type][current_track_mpv].osc_id
+        end
     end
     local new_track_osc = (current_track_osc + next) % (#tracks_osc[type] + 1)
     local new_track_mpv
@@ -939,6 +945,7 @@ function render_elements(master_ass)
 
                                 elem_ass:new_event()
                                 elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
+                                elem_ass:an(7)
                                 elem_ass:append(osc_styles.Tooltip)
                                 elem_ass:draw_start()
                                 elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
@@ -1117,7 +1124,7 @@ function checktitle()
     -- print(mp.get_property("filename/no-ext"))
 
     if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamictitle then
-        if (string.find(mp.get_property("path"), "watch?")) then
+        if mp.get_property("path"):find('youtu%.?be') then
             user_opts.title = "${media-title}" -- youtube videos
         elseif mp.get_property("filename/no-ext") ~= mediatitle then
             user_opts.title = "${media-title} | ${filename}" -- {filename/no-ext}
@@ -1259,11 +1266,23 @@ function checkWebLink()
             exec_filesize(command)
         end
 
-        -- Youtube Return Dislike API  
+        -- Youtube Return Dislike API
         state.dislikes = ""
         if path:find('youtu%.?be') then
-            exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId=" .. 
-            string.gsub(mp.get_property_osd("filename"), "watch%?v=", "")}) 
+            msg.info("WEB: Loading dislike count...")
+            local filename = mp.get_property_osd("filename")
+            local pattern = "v=([^&]+)"
+            local match = string.match(filename, pattern)
+            if match then
+                exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId=" .. match})
+            else
+                local _, _, videoID = string.find(filename, "([%w_-]+)%?si=")
+                if videoID then
+                    exec_dislikes({"curl","https://returnyoutubedislikeapi.com/votes?videoId=" .. videoID})
+                else
+                    msg.info("WEB: Failed to fetch dislikes")
+                end
+            end
         end
         if user_opts.showdescription then
             msg.info("WEB: Loading video information...")
@@ -1322,6 +1341,10 @@ function exec_description(args, result)
         capture_stderr = true,
     }, function(res, val, err)
         state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', "\\N")
+        if (state.dislikes == "") then
+            state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N'), '\n', "\\N")
+            state.localDescriptionClick = state.localDescriptionClick:sub(1, #state.localDescriptionClick - 2)
+        end
         addLikeCountToTitle()
 
         -- check if description exists, if it doesn't get rid of the extra "----------"
@@ -1377,7 +1400,7 @@ function exec_dislikes(args, result)
         end
 
         if (not state.descriptionLoaded) then
-            state.localDescriptionClick = state.localDescriptionClick .. state.dislikes
+            state.localDescriptionClick = state.localDescriptionClick .. '\\N' .. state.dislikes
             state.videoDescription = state.localDescriptionClick
         else
             addLikeCountToTitle()
@@ -1386,7 +1409,7 @@ function exec_dislikes(args, result)
 end
 
 function addLikeCountToTitle()
-    if (user_opts.dynamictitle) then
+    if (user_opts.updatetitleyoutubestats) then
         state.viewcount = tonumber(state.localDescriptionClick:match('Views: (%d+)')) 
         state.likecount = tonumber(state.localDescriptionClick:match('Likes: (%d+)'))
         if (state.viewcount and state.likecount and state.dislikecount) then
@@ -1845,7 +1868,7 @@ layouts = function ()
     
     if (user_opts.persistentprogress) then
         lo = add_layout('persistentseekbar')
-        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = 16}
+        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistentprogressheight}
         lo.style = osc_styles.SeekbarFg
         lo.slider.gap = 7
         lo.slider.tooltip_an = 0   
@@ -2488,7 +2511,7 @@ function osc_init()
     ne.eventresponder['mbtn_left_up'] =
         function ()
             if (not state.videoCantBeDownloaded) then
-                local localpathnormal = mp.command_native({"expand-path", "~~desktop/mpv/downloads"})
+                local localpathnormal = mp.command_native({"expand-path", user_opts.downloadpath})
                 local localpath = localpathnormal
 
                 local function openFolder()
