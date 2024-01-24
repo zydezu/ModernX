@@ -1131,8 +1131,6 @@ function checktitle()
         else
             user_opts.title = "${filename}" -- audio with the same title (without file extension) and filename
         end
-    else
-        user_opts.title = "${media-title}"
     end
 
     -- fake description using metadata
