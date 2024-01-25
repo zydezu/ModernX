@@ -14,7 +14,7 @@ local utils = require 'mp.utils'
 
 -- Parameters
 -- default user option values
--- may change them in osc.conf
+-- Change them using osc.conf
 local user_opts = {
     -- general settings --
     language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
