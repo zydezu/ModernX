@@ -95,8 +95,23 @@ local user_opts = {
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
     downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
+    showyoutubecomments = false,    -- EXPERIMENTAL - not ready
+    commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
     ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
 }
+
+function dump(o)
+    if type(o) == 'table' then
+       local s = '{ '
+       for k,v in pairs(o) do
+          if type(k) ~= 'number' then k = '"'..k..'"' end
+          s = s .. '['..k..'] = ' .. dump(v) .. ','
+       end
+       return s .. '} '
+    else
+       return tostring(o)
+    end
+ end 
 
 -- Icons for jump button depending on jumpamount 
 local jumpicons = { 
@@ -306,6 +321,8 @@ local state = {
     localDescriptionClick = nil,
     localDescriptionIsClickable = false,
     videoCantBeDownloaded = false,
+    youtubeuploader = "",
+    youtubecomments = {},
 }
 
 local thumbfast = {
@@ -1108,6 +1125,12 @@ end
 
 -- downloading --
 
+function newfilereset()
+    request_init()
+    state.videoDescription = "Loading description..."
+    state.fileSizeNormalised = "Approximating size..."
+end
+
 function startupevents()
     state.videoDescription = "Loading description..."
     state.fileSizeNormalised = "Approximating size..."
@@ -1116,12 +1139,21 @@ function startupevents()
     destroyscrollingkeys() -- close description
 end
 
+function dump(o)
+    if type(o) == 'table' then
+       local s = '{ '
+       for k,v in pairs(o) do
+          if type(k) ~= 'number' then k = '"'..k..'"' end
+          s = s .. '['..k..'] = ' .. dump(v) .. ','
+       end
+       return s .. '} '
+    else
+       return tostring(o)
+    end
+end 
+
 function checktitle()
     local mediatitle = mp.get_property("media-title")
-
-    -- print(mediatitle)
-    -- print(mp.get_property("filename"))
-    -- print(mp.get_property("filename/no-ext"))
 
     if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamictitle then
         if mp.get_property("path"):find('youtu%.?be') then
@@ -1131,8 +1163,6 @@ function checktitle()
         else
             user_opts.title = "${filename}" -- audio with the same title (without file extension) and filename
         end
-    else
-        user_opts.title = "${media-title}"
     end
 
     -- fake description using metadata
@@ -1143,6 +1173,11 @@ function checktitle()
     local album = mp.get_property("filtered-metadata/by-key/Album")
     local description = mp.get_property("filtered-metadata/by-key/Description")
     local date = mp.get_property("filtered-metadata/by-key/Date")
+
+    state.youtubeuploader = artist
+    state.ytdescription = mp.get_property_native('metadata').ytdl_description or ""
+
+    print(dump(mp.get_property_native('metadata')))
 
     state.localDescriptionClick = title .. "\\N----------\\N"
     if (description ~= nil) then
@@ -1284,16 +1319,80 @@ function checkWebLink()
                 end
             end
         end
+
         if user_opts.showdescription then
             msg.info("WEB: Loading video information...")
+            local uploader = (state.youtubeuploader and '\\N\\M') or "%(uploader)s"
+            local description = (state.ytdescription and '\\N\\M\\M\\N') or "%(description)s"
             local command = { 
                 "yt-dlp",
                 "--no-download", 
-                "-O \\N----------\\N%(description)s\\N----------\\NUploaded by: %(uploader)s\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nViews: %(view_count)s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
+                "-O \\N----------\\N" .. description .. "\\N----------\\NUploaded by: " .. uploader .. "\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nViews: %(view_count)s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
                 path
             }
             exec_description(command)
         end
+
+        checkcomments()
+    end
+end
+
+function checkcomments()
+    if user_opts.showyoutubecomments then
+        function file_exists(file)
+            local f = io.open(file, "rb")
+            if f then f:close() end
+            return f ~= nil
+          end              
+
+        function lines_from(file)
+            if not file_exists(file) then return {} end
+            local lines = {}
+            for line in io.lines(file) do 
+              lines[#lines + 1] = line
+            end
+            return lines
+          end              
+
+        local ret = mp.command_native_async({
+            name = "subprocess",
+            args = { 
+                "yt-dlp",
+                "--skip-download",
+                "--write-comments",
+                "-o%(title)s",
+                "-P " .. mp.command_native({"expand-path", user_opts.commentsdownloadpath}),
+                state.path 
+            },
+            capture_stdout = true,
+            capture_stderr = true
+        }, function() 
+            msg.info("WEB: Downloaded comments")
+            local filename = mp.command_native({"expand-path", user_opts.commentsdownloadpath .. '/'}) .. mp.get_property("media-title") .. ".info.json"
+            print(filename)
+            local lines = lines_from(filename)
+            local jsoncomments = utils.parse_json(lines[1]).comments
+
+            state.localDescriptionClick = state.localDescriptionClick .. '\\N----------\\N'
+            for i=1, #jsoncomments do
+                local comment = jsoncomments[i]
+                local commentconstruction = comment.author .. ' | '
+                if (comment.like_count) then
+                    commentconstruction = commentconstruction .. comment.like_count .. " likes"
+                else
+                    commentconstruction = commentconstruction .. "0 likes"
+                end
+                if (comment.is_favorited) then
+                    commentconstruction = commentconstruction .. (comment.is_favorited and ' | Favorited ♡\\N')
+                else
+                    commentconstruction = commentconstruction .. '\\N'
+                end
+                commentconstruction = commentconstruction .. comment.text .. '\\N-----\\N'
+                print(commentconstruction)
+                state.youtubecomments[i] = commentconstruction
+                state.localDescriptionClick = state.localDescriptionClick .. commentconstruction
+            end
+        end )
     end
 end
 
@@ -1311,27 +1410,13 @@ end
 
 function downloadDone(success, result, error)
     if success then
-        show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", "~~desktop/mpv/downloads"}))
+        show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", user_opts.downloadpath}))
         state.downloadedOnce = true
     else
         show_message("\\N{\\an9}WEB: Download failed - " .. (error or "Unknown error"))
     end
     state.downloading = false
 end
-
-function dump(o)
-    if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
-    else
-       return tostring(o)
-    end
- end
- 
 
 function exec_description(args, result)
     local ret = mp.command_native_async({
@@ -1349,12 +1434,17 @@ function exec_description(args, result)
 
         -- check if description exists, if it doesn't get rid of the extra "----------"
         local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
-        if (descriptionText == '' or descriptionText == '\\N' or descriptionText == 'NA') then
+        state.localDescriptionClick = state.localDescriptionClick:gsub('\\N\\M\\M\\N', state.ytdescription:gsub('\r', '\\N'):gsub('\n', "\\N"))
+        if (descriptionText == '' or descriptionText == '\\N' or descriptionText == 'NA' or #descriptionText < 4) then
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
+
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: \\N\\M", "Uploaded by: " .. state.youtubeuploader)
+
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Views: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Comments: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
@@ -1362,7 +1452,12 @@ function exec_description(args, result)
         -- segment localDescriptionClick parts with " | "
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
         if beforeLastPattern then
-            beforeLastPattern = beforeLastPattern:sub(1, 160) .. '...'
+            local maxdescsize = 120
+            if #beforeLastPattern > maxdescsize then
+                beforeLastPattern = beforeLastPattern:sub(1, maxdescsize) .. '...'
+            else
+                beforeLastPattern = beforeLastPattern:sub(1, maxdescsize)
+            end
             afterLastPattern = afterLastPattern:gsub("Views:", emoticon.view):gsub("Comments:", emoticon.comment):gsub("Likes:", emoticon.like):gsub("Dislikes:", emoticon.dislike)  -- replace with icons
             state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")
             local startPos, endPos = state.videoDescription:find("\\N----------\\N")
@@ -2557,7 +2652,7 @@ function osc_init()
                         "-P " .. localpathnormal,
                         state.path 
                     }
-                    local status = exec(command, downloadDone)
+                    local status = exec(command, downloadDone)                
                 end
             else
                 show_message("\\N{\\an9}Can't be downloaded")
@@ -3372,7 +3467,7 @@ end
 
 validate_user_opts()
 
-mp.register_event('start-file', request_init)
+mp.register_event('start-file', newfilereset)
 mp.register_event("file-loaded", startupevents)
 mp.observe_property('track-list', nil, request_init)
 mp.observe_property('playlist', nil, request_init)
