@@ -133,14 +133,17 @@ seekbarhandlesize=0
 | showinfo | Whether to show the info button |
 | downloadbutton | Whether to show download button for web videos |
 | downloadpath | The download path for videos |
+| showyoutubecomments | EXPERIMENTAL - not ready, show YouTube comments below the clickable description |
+| commentsdownloadpath | The download path for the comment JSON file |
 | ytdlpQuality | What quality of video the download button uses (a max quality mp4 by is downloaded by default) |
 
 
 The default options are shown below:
 
 ```lua
+-- Parameters
 -- default user option values
--- may change them in osc.conf
+-- Change them using osc.conf
 local user_opts = {
     -- general settings --
     language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
@@ -221,6 +224,8 @@ local user_opts = {
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
     downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
+    showyoutubecomments = false,    -- EXPERIMENTAL - not ready
+    commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
     ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
 }
 ```
