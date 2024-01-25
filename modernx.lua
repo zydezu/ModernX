@@ -1139,19 +1139,6 @@ function startupevents()
     destroyscrollingkeys() -- close description
 end
 
-function dump(o)
-    if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
-    else
-       return tostring(o)
-    end
-end 
-
 function checktitle()
     local mediatitle = mp.get_property("media-title")
 
@@ -1177,7 +1164,7 @@ function checktitle()
     state.youtubeuploader = artist
     state.ytdescription = mp.get_property_native('metadata').ytdl_description or ""
 
-    print(dump(mp.get_property_native('metadata')))
+    print(utils.to_string(mp.get_property_native('metadata')))
 
     state.localDescriptionClick = title .. "\\N----------\\N"
     if (description ~= nil) then
@@ -1322,8 +1309,8 @@ function checkWebLink()
 
         if user_opts.showdescription then
             msg.info("WEB: Loading video information...")
-            local uploader = (state.youtubeuploader and '\\N\\M') or "%(uploader)s"
-            local description = (state.ytdescription and '\\N\\M\\M\\N') or "%(description)s"
+            local uploader = (state.youtubeuploader and '<$\\N!uploader!\\N$>') or "%(uploader)s"
+            local description = (state.ytdescription and '<$\\N!desc!\\N$>') or "%(description)s"
             local command = { 
                 "yt-dlp",
                 "--no-download", 
@@ -1418,6 +1405,42 @@ function downloadDone(success, result, error)
     state.downloading = false
 end
 
+function splitUTF8(str, maxLength)
+    local result = {}
+    local currentIndex = 1
+    local length = #str
+    local lastchar = 0
+    while currentIndex <= length do
+        lastchar = lastchar + 1
+        local byte = string.byte(str, currentIndex)
+        local charLength
+        if byte >= 0 and byte <= 127 then
+            charLength = 1
+        elseif byte >= 192 and byte <= 223 then
+            charLength = 2
+        elseif byte >= 224 and byte <= 239 then
+            charLength = 3
+        elseif byte >= 240 and byte <= 247 then
+            charLength = 4
+        else
+            -- Unsupported UTF-8 sequence, handle as needed
+            print("Unsupported UTF-8 sequence detected.")
+            break
+        end
+        local currentPart = string.sub(str, currentIndex, currentIndex + charLength - 1)
+        if #result > 0 and #result[#result] + #currentPart <= maxLength then
+            result[#result] = result[#result] .. currentPart
+        else
+            result[#result + 1] = currentPart
+        end
+        currentIndex = currentIndex + charLength
+        if #result > 0 and #result[#result] >= maxLength then
+            break
+        end
+    end
+    return result[1], lastchar
+end
+
 function exec_description(args, result)
     local ret = mp.command_native_async({
         name = "subprocess",
@@ -1425,21 +1448,22 @@ function exec_description(args, result)
         capture_stdout = true,
         capture_stderr = true,
     }, function(res, val, err)
-        state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', "\\N")
+        state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', '\\N')
         if (state.dislikes == "") then
-            state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N'), '\n', "\\N")
+            state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N'), '\n', '\\N')
             state.localDescriptionClick = state.localDescriptionClick:sub(1, #state.localDescriptionClick - 2)
         end
         addLikeCountToTitle()
 
         -- check if description exists, if it doesn't get rid of the extra "----------"
         local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
-        state.localDescriptionClick = state.localDescriptionClick:gsub('\\N\\M\\M\\N', state.ytdescription:gsub('\r', '\\N'):gsub('\n', "\\N"))
+        state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N')
+        state.localDescriptionClick = state.localDescriptionClick:gsub('<$\\N!desc!\\N$>', state.ytdescription)
         if (descriptionText == '' or descriptionText == '\\N' or descriptionText == 'NA' or #descriptionText < 4) then
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
 
-        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: \\N\\M", "Uploaded by: " .. state.youtubeuploader)
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: " .. state.youtubeuploader)
 
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded: NA\\N", "")
@@ -1449,19 +1473,34 @@ function exec_description(args, result)
         state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
 
+        local maxdescsize = 120
+        local utf8split, lastchar = splitUTF8(state.ytdescription, maxdescsize)
+        
         -- segment localDescriptionClick parts with " | "
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
         if beforeLastPattern then
-            local maxdescsize = 120
-            if #beforeLastPattern > maxdescsize then
-                beforeLastPattern = beforeLastPattern:sub(1, maxdescsize) .. '...'
-            else
-                beforeLastPattern = beforeLastPattern:sub(1, maxdescsize)
+            local desc = string.match(beforeLastPattern, "\\N----------\\N(.*)")
+
+            if desc then
+                if utf8split then
+                    if #utf8split == #state.ytdescription then
+                        desc = utf8split
+                    else
+                        desc = utf8split .. '...'
+                    end
+                else
+                    if #desc > maxdescsize then
+                        desc = desc:sub(1, maxdescsize) .. '...'
+                    else
+                        desc = desc:sub(1, maxdescsize)
+                    end
+                end
+
+                afterLastPattern = afterLastPattern:gsub("Views:", emoticon.view):gsub("Comments:", emoticon.comment):gsub("Likes:", emoticon.like):gsub("Dislikes:", emoticon.dislike)  -- replace with icons
+                state.videoDescription = desc  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")            
+                local startPos, endPos = state.videoDescription:find("\\N----------\\N")
+                state.videoDescription = state.videoDescription:gsub("\\N----------\\N", " | ")
             end
-            afterLastPattern = afterLastPattern:gsub("Views:", emoticon.view):gsub("Comments:", emoticon.comment):gsub("Likes:", emoticon.like):gsub("Dislikes:", emoticon.dislike)  -- replace with icons
-            state.videoDescription = beforeLastPattern  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")
-            local startPos, endPos = state.videoDescription:find("\\N----------\\N")
-            state.videoDescription = state.videoDescription:sub(endPos + 1):gsub("\\N----------\\N", " | ")
         end
         
         if afterLastPattern then
@@ -1998,7 +2037,7 @@ layouts = function ()
         lo.geometry = geo
         lo.style = osc_styles.Description
         lo.alpha[3] = 0
-        lo.button.maxchars = geo.w / 8
+        lo.button.maxchars = geo.w / 5
     end
 
     -- Volumebar
