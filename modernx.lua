@@ -1459,17 +1459,22 @@ function exec_description(args, result)
         local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
         state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N')
         state.localDescriptionClick = state.localDescriptionClick:gsub('<$\\N!desc!\\N$>', state.ytdescription)
-        if (descriptionText == '' or descriptionText == '\\N' or descriptionText == 'NA' or #descriptionText < 4) then
+        if (state.ytdescription == '' or state.ytdescription == '\\N' or state.ytdescription == 'NA' or #state.ytdescription < 4) then
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
-
-        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: " .. state.youtubeuploader)
+        
+        if state.youtubeuploader then
+            state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: " .. state.youtubeuploader)
+        else
+            state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: ")
+        end
 
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Views: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Comments: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
 
@@ -1498,8 +1503,9 @@ function exec_description(args, result)
 
                 afterLastPattern = afterLastPattern:gsub("Views:", emoticon.view):gsub("Comments:", emoticon.comment):gsub("Likes:", emoticon.like):gsub("Dislikes:", emoticon.dislike)  -- replace with icons
                 state.videoDescription = desc  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")            
-                local startPos, endPos = state.videoDescription:find("\\N----------\\N")
                 state.videoDescription = state.videoDescription:gsub("\\N----------\\N", " | ")
+            else
+                state.videoDescription = afterLastPattern:gsub("\\N", " | ")
             end
         end
         
