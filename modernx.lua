@@ -41,13 +41,14 @@ local user_opts = {
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
     thumbnailborder = 2,            -- the width of the thumbnail border
     persistentprogress = false,     -- always show a small progress line at the bottom of the screen
-    persistentprogressheight = 18,  -- the height of the persistentprogress bar
+    persistentprogressheight = 17,  -- the height of the persistentprogress bar
     persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
 
     -- title and chapter settings --
     showtitle = true,		        -- show title in OSC
     showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    showfilesize = true,            -- show the current file's size in the description
     titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
     title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
@@ -799,7 +800,7 @@ function render_persistentprogressbar(master_ass)
             -- draw pos marker
             local pos = element.slider.posF()
             local seekRanges = element.slider.seekRangesF()
-            local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
+            local rh = 0 -- Handle radius
             local xp
                 
             if pos then
@@ -1170,7 +1171,8 @@ function checktitle()
     if (description ~= nil) then
         description = string.gsub(description, '\n', '\\N')
         description = string.gsub(description, '\r', '\\N') -- old youtube videos seem to use /r
-        state.localDescription = description
+        state.localDescription = description:sub(1, 120)
+        state.localDescriptionClick = state.localDescriptionClick .. description .. "\\N----------"
         state.localDescriptionIsClickable = true
     end
     if (artist ~= nil) then
@@ -1179,8 +1181,8 @@ function checktitle()
             state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
             state.localDescriptionIsClickable = true
         else
-            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription .. "\\N----------\\NBy: " .. artist
-            state.localDescription = state.localDescription:sub(1, 120) .. " | By: " .. artist
+            state.localDescriptionClick = state.localDescriptionClick .. "\\NBy: " .. artist
+            state.localDescription = state.localDescription .. " | By: " .. artist
         end
     end
     if (album ~= nil) then
@@ -1227,15 +1229,17 @@ function checktitle()
         return string.format("%.2f %s", file_size, units[unit_index])
     end
 
-    file_size = mp.get_property_native("file-size")
-    if (file_size ~= nil) then
-        file_size = format_file_size(file_size)
-        if (state.localDescription == nil) then -- only metadata
-            state.localDescription = "Size: " .. file_size
-            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
-            state.localDescriptionIsClickable = true
-        else
-            state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size
+    if (user_opts.showfilesize) then
+        file_size = mp.get_property_native("file-size")
+        if (file_size ~= nil) then
+            file_size = format_file_size(file_size)
+            if (state.localDescription == nil) then -- only metadata
+                state.localDescription = "Size: " .. file_size
+                state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+                state.localDescriptionIsClickable = true
+            else
+                state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size
+            end
         end
     end
 end
@@ -2043,7 +2047,7 @@ layouts = function ()
         lo.geometry = geo
         lo.style = osc_styles.Description
         lo.alpha[3] = 0
-        lo.button.maxchars = geo.w / 5
+        lo.button.maxchars = geo.w / 8
     end
 
     -- Volumebar
