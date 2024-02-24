@@ -23,6 +23,7 @@ local user_opts = {
     showwindowed = true,            -- show OSC when windowed?
     showfullscreen = true,          -- show OSC when fullscreen?
     noxmas = false,                 -- disable santa hat in December
+    keybindings = true,             -- register keybindings i.e. chapter scrubbing, pinning window
     
     -- scaling settings --
     vidscale = false,               -- whether to scale the controller with the video
@@ -3530,51 +3531,53 @@ mp.observe_property('seeking', nil, function()
     resetTimeout()
 end)
 
--- chapter scrubbing
-mp.add_key_binding("CTRL+LEFT", "prevfile", function()
-    mp.commandv('playlist-prev', 'weak')
-    destroyscrollingkeys()
-end);
-mp.add_key_binding("CTRL+RIGHT", "nextfile", function()
-    mp.commandv('playlist-next', 'weak')
-    destroyscrollingkeys()
-end);
-mp.add_key_binding("SHIFT+LEFT", "prevchapter", function()
-    changeChapter(-1)
-end);
-mp.add_key_binding("SHIFT+RIGHT", "nextchapter", function()
-    changeChapter(1)
-end);
+if user_opts.keybindings then
+    -- chapter scrubbing
+    mp.add_key_binding("CTRL+LEFT", "prevfile", function()
+        mp.commandv('playlist-prev', 'weak')
+        destroyscrollingkeys()
+    end);
+    mp.add_key_binding("CTRL+RIGHT", "nextfile", function()
+        mp.commandv('playlist-next', 'weak')
+        destroyscrollingkeys()
+    end);
+    mp.add_key_binding("SHIFT+LEFT", "prevchapter", function()
+        changeChapter(-1)
+    end);
+    mp.add_key_binding("SHIFT+RIGHT", "nextchapter", function()
+        changeChapter(1)
+    end);
 
-function changeChapter(number)
-    mp.commandv("add", "chapter", number)
-    resetTimeout()
-    show_message(get_chapterlist())
-end
-
--- extra key bindings
-mp.add_key_binding("x", "cycleaudiotracks", function()
-    set_track('audio', 1) show_message(get_tracklist('audio'))
-end);
-
-mp.add_key_binding("c", "cyclecaptions", function()
-    set_track('sub', 1) show_message(get_tracklist('sub'))
-end);
-
-mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
-
-mp.add_key_binding("p", "pinwindow", function()
-    mp.commandv('cycle', 'ontop')
-    if (state.initialborder == 'yes') then
-        if (mp.get_property('ontop') == 'yes') then
-            show_message("Pinned window")
-            mp.commandv('set', 'border', "no")
-        else
-            show_message("Unpinned window")
-            mp.commandv('set', 'border', "yes")
-        end
+    function changeChapter(number)
+        mp.commandv("add", "chapter", number)
+        resetTimeout()
+        show_message(get_chapterlist())
     end
-end);
+
+    -- extra key bindings
+    mp.add_key_binding("x", "cycleaudiotracks", function()
+        set_track('audio', 1) show_message(get_tracklist('audio'))
+    end);
+
+    mp.add_key_binding("c", "cyclecaptions", function()
+        set_track('sub', 1) show_message(get_tracklist('sub'))
+    end);
+
+    mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
+
+    mp.add_key_binding("p", "pinwindow", function()
+        mp.commandv('cycle', 'ontop')
+        if (state.initialborder == 'yes') then
+            if (mp.get_property('ontop') == 'yes') then
+                show_message("Pinned window")
+                mp.commandv('set', 'border', "no")
+            else
+                show_message("Unpinned window")
+                mp.commandv('set', 'border', "yes")
+            end
+        end
+    end);
+end
 
 mp.observe_property('fullscreen', 'bool',
     function(name, val)
