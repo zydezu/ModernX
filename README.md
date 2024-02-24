@@ -78,6 +78,7 @@ seekbarhandlesize=0
 | showwindowed | Whether to show the OSC when windowed |
 | showfullscreen | Whether to show the OSC when in fullscreen |
 | noxmas | Disable showing the santa hat in December |
+| keybindings | Whether the script should register keybindings for things like chapter scrubbing |
 | vidscale | Whether the OSC scales with the window's size |
 | scalewindowed  | The scaling of the OSC when windowed |
 | scalefullscreen | The scaling of the OSC when in fullscreen |
