@@ -17,7 +17,7 @@ local utils = require 'mp.utils'
 -- change them using osc.conf
 local user_opts = {
     -- general settings --
-    language = 'en',		        -- en:English, chs:Chinese, pl:Polish, jp:Japanese
+    language = 'en',                -- en:English, chs:Chinese, pl:Polish, jp:Japanese
     welcomescreen = true,           -- show the mpv 'play files' screen upon open
     windowcontrols = 'auto',        -- whether to show OSC window controls, 'auto', 'yes' or 'no'
     showwindowed = true,            -- show OSC when windowed?
@@ -45,7 +45,7 @@ local user_opts = {
     persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
 
     -- title and chapter settings --
-    showtitle = true,		        -- show title in OSC
+    showtitle = true,               -- show title in OSC
     showdescription = true,         -- show video description on web videos
     showwindowtitle = true,         -- show window title in borderless/fullscreen mode
     showfilesize = true,            -- show the current file's size in the description
@@ -54,7 +54,7 @@ local user_opts = {
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     updatetitleyoutubestats = false,-- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
-    font = 'mpv-osd-symbols',	    -- default osc font
+    font = 'mpv-osd-symbols',       -- default osc font
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
@@ -69,14 +69,14 @@ local user_opts = {
     seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
-    seekbarhandlesize = 0.8,	    -- size ratio of the slider handle, range 0 ~ 1
-    seekrange = true,		        -- show seekrange overlay
-    seekrangealpha = 150,      	    -- transparency of seekranges
+    seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
+    seekrange = true,               -- show seekrange overlay
+    seekrangealpha = 150,           -- transparency of seekranges
     iconstyle = 'round',            -- icon style, 'solid' or 'round'
     hovereffect = true,             -- whether buttons have a glowing effect when hovered over
 
     -- button settings --
-    timetotal = true,          	    -- display total time instead of remaining time by default
+    timetotal = true,               -- display total time instead of remaining time by default
     timems = false,                 -- show time as milliseconds by default
     timefontsize = 17,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
@@ -119,7 +119,7 @@ local jumpicons = {
     [5] = {'\239\142\177', '\239\142\163'}, 
     [10] = {'\239\142\175', '\239\142\161'}, 
     [30] = {'\239\142\176', '\239\142\162'}, 
-    default = {'\239\142\178	', '\239\142\178'}, -- second icon is mirrored in layout() 
+    default = {'\239\142\178    ', '\239\142\178'}, -- second icon is mirrored in layout() 
 } 
 
 local icons = {
@@ -127,23 +127,23 @@ local icons = {
   next = '\239\142\180',
   play = '\239\142\170',
   pause = '\239\142\167',
-  replay = '', -- copied private use character
+  replay = '\239\142\17', -- copied private use character
   backward = '\239\142\160',
   forward = '\239\142\159',
-  audio = '',
-  volume = '',
-  volumelow = '',
-  volumemute = '',
-  sub = '\239\140\164',
-  minimize = '',
-  fullscreen = '',  
-  loopoff = '',
-  loopon = '', 
-  info = '',
-  download = '',
-  downloading = '',
-  ontopon = '',
-  ontopoff = '',
+  audio = '\239\142\183',
+  volume = '\239\142\188',
+  volumelow = '\239\142\185',
+  volumemute = '\239\142\187',
+  sub = '\239\143\147',
+  minimize = '\239\133\172',
+  fullscreen = '\239\133\173',  
+  loopoff = '\239\142\173',
+  loopon = '\239\142\174', 
+  info = '\239\135\183',
+  download = '\239\136\160',
+  downloading = '\239\134\185',
+  ontopon = '\239\142\150',
+  ontopoff = '\239\142\149',
 }
 
 local emoticon = {
@@ -155,81 +155,81 @@ local emoticon = {
 
 -- Localization
 local language = {
-	['en'] = {
-	    welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}Drop files or URLs to play here.',  -- this text appears when mpv starts
-		off = 'OFF',
-		na = 'n/a',
-		none = 'None available',
-		video = 'Video',
-		audio = 'Audio',
-		subtitle = 'Subtitle',
+    ['en'] = {
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}Drop files or URLs to play here.',  -- this text appears when mpv starts
+        off = 'OFF',
+        na = 'n/a',
+        none = 'None available',
+        video = 'Video',
+        audio = 'Audio',
+        subtitle = 'Subtitle',
         nosub = 'No subtitles available',
         noaudio = 'No audio tracks available',
-		track = ' tracks:',
-		playlist = 'Playlist',
-		nolist = 'Empty playlist.',
-		chapter = 'Chapter',
-		nochapter = 'No chapters.',
+        track = ' tracks:',
+        playlist = 'Playlist',
+        nolist = 'Empty playlist.',
+        chapter = 'Chapter',
+        nochapter = 'No chapters.',
         ontop = 'Pin window',
         ontopdisable = 'Unpin window',
         loopenable = 'Enable looping',
         loopdisable = 'Disable looping',
-	},
-	['chs'] = {
-		welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}将文件或URL放在这里播放',  -- this text appears when mpv starts
-		off = '关闭',
-		na = 'n/a',
-		none = '无数据',
-		video = '视频',
-		audio = '音频',
-		subtitle = '字幕',
+    },
+    ['chs'] = {
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}将文件或URL放在这里播放',  -- this text appears when mpv starts
+        off = '关闭',
+        na = 'n/a',
+        none = '无数据',
+        video = '视频',
+        audio = '音频',
+        subtitle = '字幕',
         nosub = "没有字幕", -- please check these translations
         noaudio = "不提供音轨", -- please check these translations
-		track = '：',
-		playlist = '播放列表',
-		nolist = '无列表信息',
-		chapter = '章节',
-		nochapter = '无章节信息',
+        track = '：',
+        playlist = '播放列表',
+        nolist = '无列表信息',
+        chapter = '章节',
+        nochapter = '无章节信息',
         ontop = '启用窗口停留在顶层',  -- please check these translations
         ontopdisable = '禁用停留在顶层的窗口',  -- please check these translations
         loopenable = '启用循环功能',
         loopdisable = '禁用循环功能',
-	},
-	['pl'] = {
-	    welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}Upuść plik lub łącze URL do odtworzenia.',  -- this text appears when mpv starts
-		off = 'WYŁ.',
-		na = 'n/a',
-		none = 'nic',
-		video = 'Wideo',
-		audio = 'Audio',
-		subtitle = 'Napisy',
+    },
+    ['pl'] = {
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}Upuść plik lub łącze URL do odtworzenia.',  -- this text appears when mpv starts
+        off = 'WYŁ.',
+        na = 'n/a',
+        none = 'nic',
+        video = 'Wideo',
+        audio = 'Audio',
+        subtitle = 'Napisy',
         nosub = 'Brak dostępnych napisów', -- please check these translations
         noaudio = 'Brak dostępnych ścieżek dźwiękowych', -- please check these translations
-		track = ' ścieżki:',
-		playlist = 'Lista odtwarzania',
-		nolist = 'Lista odtwarzania pusta.',
-		chapter = 'Rozdział',
-		nochapter = 'Brak rozdziałów.',
+        track = ' ścieżki:',
+        playlist = 'Lista odtwarzania',
+        nolist = 'Lista odtwarzania pusta.',
+        chapter = 'Rozdział',
+        nochapter = 'Brak rozdziałów.',
         ontop = 'Przypnij okno do góry',
         ontopdisable = 'Odepnij okno od góry',
         loopenable = 'Włączenie zapętlenia',
         loopdisable = 'Wyłączenie zapętlenia',
-	},
+    },
     ['jp'] = {
-	    welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}ファイルやURLのリンクをここにドロップすると再生されます。',  -- this text appears when mpv starts
-		off = 'OFF',
-		na = 'n/a',
-		none = 'なし',
-		video = 'ビデオ',
-		audio = 'オーディオ',
-		subtitle = 'サブタイトル',
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}ファイルやURLのリンクをここにドロップすると再生されます。',  -- this text appears when mpv starts
+        off = 'OFF',
+        na = 'n/a',
+        none = 'なし',
+        video = 'ビデオ',
+        audio = 'オーディオ',
+        subtitle = 'サブタイトル',
         nosub = '字幕はありません',
         noaudio = 'オーディオトラックはありません',
-		track = 'トラック:',
-		playlist = 'プレイリスト',
-		nolist = '空のプレイリスト.',
-		chapter = 'チャプター',
-		nochapter = '利用可能なチャプターはありません.',
+        track = 'トラック:',
+        playlist = 'プレイリスト',
+        nolist = '空のプレイリスト.',
+        chapter = 'チャプター',
+        nochapter = '利用可能なチャプターはありません.',
         ontop = 'ピンウィンドウをトップに表示',
         ontopdisable = 'ウィンドウを上からアンピンする',
         loopenable = 'ループON',
@@ -511,7 +511,7 @@ function ass_append_alpha(ass, alpha, modifier, inverse)
 end
 
 function ass_draw_cir_cw(ass, x, y, r)
-	ass:round_rect_cw(x-r, y-r, x+r, y+r, r)
+    ass:round_rect_cw(x-r, y-r, x+r, y+r, r)
 end
 
 function ass_draw_rr_h_cw(ass, x0, y0, x1, y1, r1, hexagon, r2)
@@ -698,15 +698,15 @@ function prepare_elements()
             --draw static slider parts
             local slider_lo = element.layout.slider
             -- calculate positions of min and max points
-			element.slider.min.ele_pos = user_opts.seekbarhandlesize * elem_geo.h / 2
-			element.slider.max.ele_pos = elem_geo.w - element.slider.min.ele_pos
+            element.slider.min.ele_pos = user_opts.seekbarhandlesize * elem_geo.h / 2
+            element.slider.max.ele_pos = elem_geo.w - element.slider.min.ele_pos
             element.slider.min.glob_pos = element.hitbox.x1 + element.slider.min.ele_pos
             element.slider.max.glob_pos = element.hitbox.x1 + element.slider.max.ele_pos
 
             static_ass:draw_start()
-			-- a hack which prepares the whole slider area to allow center placements such like an=5
-			static_ass:rect_cw(0, 0, elem_geo.w, elem_geo.h)
-			static_ass:rect_ccw(0, 0, elem_geo.w, elem_geo.h)
+            -- a hack which prepares the whole slider area to allow center placements such like an=5
+            static_ass:rect_cw(0, 0, elem_geo.w, elem_geo.h)
+            static_ass:rect_ccw(0, 0, elem_geo.w, elem_geo.h)
             -- marker nibbles
             if not (element.slider.markerF == nil) and (slider_lo.gap > 0) then
                 local markers = element.slider.markerF()
@@ -724,7 +724,7 @@ function prepare_elements()
                             --bottom
                             if (slider_lo.nibbles_bottom) then
                                 static_ass:move_to(s - 3, elem_geo.h - slider_lo.gap + 5)
-								static_ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
+                                static_ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
                                 static_ass:line_to(s + 3, elem_geo.h - slider_lo.gap + 5)
                             end
                         else -- draw 2x1px nibbles
@@ -1038,7 +1038,7 @@ function render_elements(master_ass)
             elem_ass:append(buttontext)
             
             -- add tooltip for audio and subtitle tracks
-			if not (element.tooltipF == nil) then
+            if not (element.tooltipF == nil) then
                 if mouse_hit(element) then
                     local tooltiplabel = element.tooltipF
                     local an = 1
@@ -1071,7 +1071,7 @@ function render_elements(master_ass)
                     elem_ass:append(element.tooltip_style)
                     elem_ass:append(tooltiplabel)
                 end
-			end
+            end
 
             if user_opts.hovereffect == true then
                 -- add hover effect
@@ -1972,14 +1972,14 @@ layouts = function ()
         osc_geo.w, osc_geo.h
 
     -- Controller Background
-	local lo, geo
+    local lo, geo
     
-	new_element('TransBg', 'box')
-	lo = add_layout('TransBg')
-	lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
-	lo.style = osc_styles.TransBg
-	lo.layer = 10
-	lo.alpha[3] = 0
+    new_element('TransBg', 'box')
+    lo = add_layout('TransBg')
+    lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
+    lo.style = osc_styles.TransBg
+    lo.layer = 10
+    lo.alpha[3] = 0
 
     if not user_opts.titleBarStrip and not state.border then
         new_element('TitleTransBg', 'box')
@@ -1989,11 +1989,11 @@ layouts = function ()
         lo.layer = 10
         lo.alpha[3] = 0
     end
-	
+        
     -- Alignment
-	local refX = osc_w / 2
-	local refY = posY
-	
+    local refX = osc_w / 2
+    local refY = posY
+        
     -- Seekbar
     new_element('seekbarbg', 'box')
     lo = add_layout('seekbarbg')
@@ -2005,7 +2005,7 @@ layouts = function ()
 
     lo = add_layout('seekbar')
     lo.geometry = {x = refX, y = refY - 100, an = 5, w = osc_geo.w - 50, h = 16}
-	lo.style = osc_styles.SeekbarFg
+    lo.style = osc_styles.SeekbarFg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
@@ -2066,7 +2066,7 @@ layouts = function ()
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
 
-	-- buttons
+    -- buttons
     lo = add_layout('pl_prev')
     if showskip then
         lo.geometry = {x = refX - 120 - offset, y = refY - 40 , an = 5, w = 30, h = 24}
@@ -2089,7 +2089,7 @@ layouts = function ()
 
     lo = add_layout('playpause')
     lo.geometry = {x = refX, y = refY - 40 , an = 5, w = 45, h = 45}
-    lo.style = osc_styles.Ctrl1	
+    lo.style = osc_styles.Ctrl1
 
     if showjump then
         lo = add_layout('jumpfrwd')
@@ -2102,7 +2102,7 @@ layouts = function ()
     if showskip then
         lo = add_layout('skipfrwd')
         lo.geometry = {x = refX + 60 + offset, y = refY - 40 , an = 5, w = 30, h = 24}
-        lo.style = osc_styles.Ctrl2	
+        lo.style = osc_styles.Ctrl2
     end
 
     lo = add_layout('pl_next')
@@ -2113,21 +2113,21 @@ layouts = function ()
     end
     lo.style = osc_styles.Ctrl2
 
-	-- Time
+    -- Time
     lo = add_layout('tc_left')
     lo.geometry = {x = 25, y = refY - 84, an = 7, w = 64, h = 20}
-    lo.style = osc_styles.Time	
-	
+    lo.style = osc_styles.Time
+        
     lo = add_layout('tc_right')
     lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
-    lo.style = osc_styles.Time	
+    lo.style = osc_styles.Time
 
     -- Audio/Subtitle
     lo = add_layout('cy_audio')
-	lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
     lo.visible = (osc_param.playresx >= 500 - outeroffset)
-	
+
     lo = add_layout('cy_sub')
     lo.geometry = {x = 82, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
@@ -2139,7 +2139,7 @@ layouts = function ()
     lo.visible = (osc_param.playresx >= 700 - outeroffset)
 
     -- Fullscreen/Loop/Info
-	lo = add_layout('tog_fs')
+    lo = add_layout('tog_fs')
     lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
     lo.visible = (osc_param.playresx >= 250 - outeroffset)    
@@ -2494,7 +2494,7 @@ function osc_init()
     ne.content = icons.audio
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = texts.off
+        local msg = texts.off
         if not (get_track('audio') == 0) then
             msg = (texts.audio .. ' [' .. get_track('audio') .. ' ∕ ' .. #tracks_osc.audio .. '] ')
             local prop = mp.get_property('current-tracks/audio/title')
@@ -2503,9 +2503,9 @@ function osc_init()
                 if not prop then
                     prop = texts.na
                 end
-			end
-			msg = msg .. '[' .. prop .. ']'
-			return msg
+            end
+            msg = msg .. '[' .. prop .. ']'
+            return msg
         end
         if not ne.enabled then
             msg = "No audio tracks"
@@ -2540,14 +2540,14 @@ function osc_init()
             msg = (texts.subtitle .. ' [' .. get_track('sub') .. ' ∕ ' .. #tracks_osc.sub .. '] ')
             local prop = mp.get_property('current-tracks/sub/lang')
             if not prop then
-				prop = texts.na
-			end
-			msg = msg .. '[' .. prop .. ']'
-			prop = mp.get_property('current-tracks/sub/title')
-			if prop then
-				msg = msg .. ' ' .. prop
-			end
-			return msg
+                prop = texts.na
+            end
+            msg = msg .. '[' .. prop .. ']'
+            prop = mp.get_property('current-tracks/sub/title')
+            if prop then
+                msg = msg .. ' ' .. prop
+            end
+            return msg
         end
         return msg
     end
@@ -2622,7 +2622,7 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 600 - outeroffset)
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = texts.loopenable
+        local msg = texts.loopenable
         if state.looping then
             msg = texts.loopdisable
         end
@@ -2646,7 +2646,7 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 900 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100) - (user_opts.showinfo and 0 or 100)) and state.isWebVideo
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = state.fileSizeNormalised
+        local msg = state.fileSizeNormalised
         if (state.downloading)then
             msg = "Downloading..."
         end
@@ -2726,7 +2726,7 @@ function osc_init()
     end
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = texts.ontopdisable
+        local msg = texts.ontopdisable
         if mp.get_property('ontop') == 'no' then
             msg = texts.ontop
         end
@@ -2809,7 +2809,7 @@ function osc_init()
     end
     ne.eventresponder['mouse_move'] = --keyframe seeking when mouse is dragged
         function (element)
-			if not element.state.mbtnleft then return end -- allow drag for mbtnleft only!
+            if not element.state.mbtnleft then return end -- allow drag for mbtnleft only!
             -- mouse move events may pile up during seeking and may still get
             -- sent when the user is done seeking, so we need to throw away
             -- identical seeks
@@ -2832,10 +2832,10 @@ function osc_init()
     ne.eventresponder['mbtn_left_down'] = --exact seeks on single clicks
         function (element)
             element.state.mbtnleft = true
-			mp.commandv('seek', get_slider_value(element), 'absolute-percent', 'exact')
-		end
-	ne.eventresponder['mbtn_left_up'] =
-		function (element)
+            mp.commandv('seek', get_slider_value(element), 'absolute-percent', 'exact')
+        end
+    ne.eventresponder['mbtn_left_up'] =
+        function (element)
             element.state.mbtnleft = false
         end
     ne.eventresponder['mbtn_right_down'] = --seeks to chapter start
@@ -2859,7 +2859,7 @@ function osc_init()
                     show_message(get_chapterlist(), 3)
                 end
             end
-		end
+        end
     ne.eventresponder['reset'] =
         function (element)
             element.state.lastseek = nil
@@ -2962,11 +2962,11 @@ function osc_init()
     -- tc_left (current pos)
     ne = new_element('tc_left', 'button')
     ne.content = function ()
-	if (state.fulltime) then
-		return (mp.get_property_osd('playback-time/full'))
-	else
-		return (mp.get_property_osd('playback-time'))
-	end
+    if (state.fulltime) then
+        return (mp.get_property_osd('playback-time/full'))
+    else
+        return (mp.get_property_osd('playback-time'))
+    end
     end
     ne.eventresponder["mbtn_left_up"] = function ()
         state.fulltime = not state.fulltime
@@ -2979,18 +2979,18 @@ function osc_init()
     ne.content = function ()
         if (mp.get_property_number('duration', 0) <= 0) then return '--:--:--' end
         if (state.rightTC_trem) then
-		if (state.fulltime) then
-			return ('-'..mp.get_property_osd('playtime-remaining/full'))
-		else
-			return ('-'..mp.get_property_osd('playtime-remaining'))
-		end
+        if (state.fulltime) then
+            return ('-'..mp.get_property_osd('playtime-remaining/full'))
         else
-		if (state.fulltime) then
-			return (mp.get_property_osd('duration/full'))
-		else
-			return (mp.get_property_osd('duration'))
-		end
-			
+            return ('-'..mp.get_property_osd('playtime-remaining'))
+        end
+        else
+        if (state.fulltime) then
+            return (mp.get_property_osd('duration/full'))
+        else
+            return (mp.get_property_osd('duration'))
+        end
+
         end
     end
     ne.eventresponder['mbtn_left_up'] =
@@ -3062,9 +3062,9 @@ function adjustSubtitles(visible)
         if h > 0 then
             mp.commandv('set', 'sub-pos', math.floor((osc_param.playresy - 175)/osc_param.playresy*100)) -- percentage
         end
-	elseif user_opts.raisesubswithosc then
-		mp.commandv('set', 'sub-pos', 100)
-	end	
+    elseif user_opts.raisesubswithosc then
+        mp.commandv('set', 'sub-pos', 100)
+    end
 end
 
 function pause_state(name, enabled)
@@ -3073,13 +3073,13 @@ function pause_state(name, enabled)
     if (state.playingWhilstSeekingWaitingForEnd) then state.playingWhilstSeekingWaitingForEnd = false return end
     state.paused = enabled
     if user_opts.showonpause then
-		if enabled then
-			visibility_mode("auto")
-			show_osc()
-		else
-			visibility_mode("auto")
-		end
-	end
+        if enabled then
+            visibility_mode("auto")
+            show_osc()
+        else
+            visibility_mode("auto")
+        end
+    end
     request_tick()
 end
 
@@ -3418,7 +3418,7 @@ function tick()
     if (not state.enabled) then return end
 
     if (state.idle) then -- this is the screen mpv opens to (not playing a file directly), or if you quit a video (idle=yes in mpv.conf)
-	   
+
         -- render idle message
         msg.trace('idle message')
         local _, _, display_aspect = mp.get_osd_size()
