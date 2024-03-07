@@ -22,7 +22,7 @@ local user_opts = {
     windowcontrols = 'auto',        -- whether to show OSC window controls, 'auto', 'yes' or 'no'
     showwindowed = true,            -- show OSC when windowed?
     showfullscreen = true,          -- show OSC when fullscreen?
-    noxmas = false,                 -- disable santa hat in December
+    noxmas = true,                  -- disable santa hat in December
     keybindings = true,             -- register keybindings i.e. chapter scrubbing, pinning window
     
     -- scaling settings --
@@ -91,10 +91,10 @@ local user_opts = {
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
                                     -- skipping a chapter
-    showloop = false,               -- show the loop button
+    showloop = true,                -- show the loop button
     loopinpause = true,             -- activate looping by right clicking pause
     showontop = true,               -- show window on top button
-    showinfo = false,               -- show the info button
+    showinfo = true,                -- show the info button
     downloadbutton = true,          -- show download button for web videos
     downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
     showyoutubecomments = false,    -- EXPERIMENTAL - not ready
