@@ -54,7 +54,7 @@ local user_opts = {
     title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
-    updatetitleyoutubestats = false,-- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
+    updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
     font = 'mpv-osd-symbols',       -- default osc font
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
@@ -91,7 +91,7 @@ local user_opts = {
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
                                     -- skipping a chapter
-    showloop = false,               -- show the loop button
+    showloop = true,                -- show the loop button
     loopinpause = true,             -- activate looping by right clicking pause
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
@@ -138,8 +138,8 @@ local icons = {
   sub = '\239\140\164',
   minimize = '\239\133\172',
   fullscreen = '\239\133\173',  
-  loopoff = '\239\142\173',
-  loopon = '\239\142\174', 
+  loopoff = '',
+  loopon = '', 
   info = '\239\135\183',
   download = '\239\136\160',
   downloading = '\239\134\185',
@@ -333,6 +333,8 @@ local thumbfast = {
     disabled = true,
     available = false
 }
+
+local maxdescsize = 120
 
 local window_control_box_width = 138
 local tick_delay = 0.03
@@ -1164,15 +1166,34 @@ function checktitle()
     local date = mp.get_property("filtered-metadata/by-key/Date")
 
     state.youtubeuploader = artist
-    state.ytdescription = mp.get_property_native('metadata').ytdl_description or ""
-
-    print(utils.to_string(mp.get_property_native('metadata')))
+    if mp.get_property_native('metadata') then
+        state.ytdescription = mp.get_property_native('metadata').ytdl_description or ""
+        print("Metadata: " .. utils.to_string(mp.get_property_native('metadata')))
+    else
+        print("Failed to load metadata")
+    end
 
     state.localDescriptionClick = title .. "\\N----------\\N"
     if (description ~= nil) then
-        description = string.gsub(description, '\n', '\\N')
-        description = string.gsub(description, '\r', '\\N') -- old youtube videos seem to use /r
-        state.localDescription = description:sub(1, 120)
+        description = description:gsub('\n', '\\N'):gsub('\r', '\\N') -- old youtube videos seem to use /r
+        
+        local utf8split, lastchar = splitUTF8(description, maxdescsize) -- account for CJK
+        local desc
+        if utf8split then
+            if #utf8split == #description then
+                desc = utf8split
+            else
+                desc = utf8split .. '...'
+            end
+        else
+            if #description > maxdescsize then
+                desc = description:sub(1, maxdescsize) .. '...'
+            else
+                desc = description:sub(1, maxdescsize)
+            end
+        end
+        
+        state.localDescription = desc
         state.localDescriptionClick = state.localDescriptionClick .. description .. "\\N----------"
         state.localDescriptionIsClickable = true
     end
@@ -1396,7 +1417,6 @@ function exec(args, callback)
         capture_stdout = true,
         capture_stderr = true
     }, callback)
-    msg.info("WEB: Download complete.")
     return ret.status
 end
 
@@ -1404,8 +1424,10 @@ function downloadDone(success, result, error)
     if success then
         show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", user_opts.downloadpath}))
         state.downloadedOnce = true
+        msg.info("WEB: Download complete")
     else
         show_message("\\N{\\an9}WEB: Download failed - " .. (error or "Unknown error"))
+        msg.info("WEB: Download failed")
     end
     state.downloading = false
 end
@@ -1424,7 +1446,8 @@ function splitUTF8(str, maxLength)
         elseif byte >= 192 and byte <= 223 then
             charLength = 2
         elseif byte >= 224 and byte <= 239 then
-            charLength = 3
+            charLength = 3 
+            -- CJK
         elseif byte >= 240 and byte <= 247 then
             charLength = 4
         else
@@ -1462,8 +1485,8 @@ function exec_description(args, result)
 
         -- check if description exists, if it doesn't get rid of the extra "----------"
         local descriptionText = state.localDescriptionClick:match("\\N----------\\N(.-)\\N----------\\N")
-        state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N')
-        state.localDescriptionClick = state.localDescriptionClick:gsub('<$\\N!desc!\\N$>', state.ytdescription)
+        state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N'):gsub("%%", "%%%%")
+        state.localDescriptionClick = state.localDescriptionClick:gsub("<$\\N!desc!\\N$>", state.ytdescription)
         if (state.ytdescription == '' or state.ytdescription == '\\N' or state.ytdescription == 'NA' or #state.ytdescription < 4) then
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
@@ -1483,8 +1506,7 @@ function exec_description(args, result)
         state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
 
-        local maxdescsize = 120
-        local utf8split, lastchar = splitUTF8(state.ytdescription, maxdescsize)
+        local utf8split, lastchar = splitUTF8(state.ytdescription, maxdescsize) -- account for CJK
         
         -- segment localDescriptionClick parts with " | "
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
@@ -1493,7 +1515,7 @@ function exec_description(args, result)
 
             if desc then
                 if utf8split then
-                    if #utf8split == #state.ytdescription then
+                    if #utf8split == #desc then
                         desc = utf8split
                     else
                         desc = utf8split .. '...'
@@ -3061,7 +3083,11 @@ function adjustSubtitles(visible)
     if visible and user_opts.raisesubswithosc and state.osc_visible == true and (state.fullscreen == false or user_opts.showfullscreen) then
         local w, h = mp.get_osd_size()
         if h > 0 then
-            mp.commandv('set', 'sub-pos', math.floor((osc_param.playresy - 175)/osc_param.playresy*100)) -- percentage
+            local subpos = math.floor((osc_param.playresy - 175)/osc_param.playresy*100)
+            if subpos < 0 then
+                subpos = 100 -- out of screen, default to original position
+            end
+            mp.commandv('set', 'sub-pos', subpos) -- percentage
         end
     elseif user_opts.raisesubswithosc then
         mp.commandv('set', 'sub-pos', 100)
