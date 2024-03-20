@@ -44,6 +44,7 @@ local user_opts = {
     persistentprogress = false,     -- always show a small progress line at the bottom of the screen
     persistentprogressheight = 17,  -- the height of the persistentprogress bar
     persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
+    persistentprogresstoggle = true,-- enable toggling the persistentprogress bar
 
     -- title and chapter settings --
     showtitle = true,               -- show title in OSC
@@ -325,6 +326,7 @@ local state = {
     videoCantBeDownloaded = false,
     youtubeuploader = "",
     youtubecomments = {},
+    persistentprogresstoggle = user_opts.persistentprogress,
 }
 
 local thumbfast = {
@@ -2033,7 +2035,7 @@ layouts = function ()
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
     
-    if (user_opts.persistentprogress) then
+    if (user_opts.persistentprogress or user_opts.persistentprogresstoggle) then
         lo = add_layout('persistentseekbar')
         lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistentprogressheight}
         lo.style = osc_styles.SeekbarFg
@@ -2895,7 +2897,7 @@ function osc_init()
         end
 
     --persistent seekbar
-    if (user_opts.persistentprogress) then
+    if (user_opts.persistentprogress or user_opts.persistentprogresstoggle) then
         ne = new_element('persistentseekbar', 'slider')
         ne.enabled = not (mp.get_property('percent-pos') == nil)
         state.slider_element = ne.enabled and ne or nil  -- used for forced_title
@@ -3320,7 +3322,7 @@ function render()
     if state.osc_visible then
         render_elements(ass)
     end
-    if user_opts.persistentprogress then
+    if user_opts.persistentprogress or state.persistentprogresstoggle then
         render_persistentprogressbar(ass)
     end
 
@@ -3588,6 +3590,13 @@ if user_opts.keybindings then
     mp.add_key_binding("c", "cyclecaptions", function()
         set_track('sub', 1) show_message(get_tracklist('sub'))
     end);
+
+    if (user_opts.persistentprogresstoggle) then
+        mp.add_key_binding("b", "persistenttoggle", function()
+            state.persistentprogresstoggle = not state.persistentprogresstoggle
+            print("Persistent progress bar toggled")
+        end);
+    end
 
     mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
 
