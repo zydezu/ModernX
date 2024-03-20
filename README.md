@@ -184,7 +184,7 @@ local user_opts = {
     title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
-    updatetitleyoutubestats = false,-- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
+    updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
     font = 'mpv-osd-symbols',	    -- default osc font
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
@@ -221,7 +221,7 @@ local user_opts = {
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
                                     -- buttons will act as jumping, and shift clicking will act as
                                     -- skipping a chapter
-    showloop = false,               -- show the loop button
+    showloop = true,                -- show the loop button
     loopinpause = true,             -- activate looping by right clicking pause
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
