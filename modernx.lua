@@ -103,19 +103,6 @@ local user_opts = {
     ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
 }
 
-function dump(o)
-    if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
-    else
-       return tostring(o)
-    end
- end 
-
 -- Icons for jump button depending on jumpamount 
 local jumpicons = { 
     [5] = {'\239\142\177', '\239\142\163'}, 
@@ -283,6 +270,7 @@ local state = {
     mouse_down_counter = 0,                 -- used for softrepeat
     active_element = nil,                   -- nil = none, 0 = background, 1+ = see elements[]
     active_event_source = nil,              -- the 'button' that issued the current event
+    touchingprogressbar = false,                 -- if the mouse is touching the progress bar
     rightTC_trem = not user_opts.timetotal, -- if the right timecode should display total or remaining time
     mp_screen_sizeX, mp_screen_sizeY,       -- last screen-resolution, to detect resolution changes to issue reINITs
     initREQ = false,                        -- is a re-init request pending?
@@ -842,7 +830,7 @@ function render_elements(master_ass)
     -- because thumbfast will render it above the thumbnail instead
     if thumbfast.disabled then
         local se, ae = state.slider_element, elements[state.active_element]
-        if user_opts.chapterformat ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+        if user_opts.chapterformat ~= "no" and state.touchingprogressbar then
             local dur = mp.get_property_number("duration", 0)
             if dur > 0 then
                 local possec = get_slider_value(se) * dur / 100 -- of mouse pos
@@ -948,6 +936,10 @@ function render_elements(master_ass)
                                 tx = tx + 10
                             end
                         end
+
+                        if (element.name == "seekbar") then
+                            state.touchingprogressbar = true
+                        end    
                         
                         -- thumbfast
                         if element.thumbnailable and not thumbfast.disabled then
@@ -983,14 +975,14 @@ function render_elements(master_ass)
 
                                 -- chapter title
                                 local se, ae = state.slider_element, elements[state.active_element]
-                                if user_opts.chapterformat ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+                                if user_opts.chapterformat ~= "no" and state.touchingprogressbar then
                                     local dur = mp.get_property_number("duration", 0)
                                     if dur > 0 then
                                         local possec = get_slider_value(se) * dur / 100 -- of mouse pos
                                         local ch = get_chapter(possec)
                                         if ch and ch.title and ch.title ~= "" then
                                             elem_ass:new_event()
-                                            elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - user_opts.timefontsize)
+                                            elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - user_opts.timefontsize / 2)
                                             elem_ass:an(an)
                                             elem_ass:append(slider_lo.tooltip_style)
                                             ass_append_alpha(elem_ass, slider_lo.alpha, 0)
@@ -1010,6 +1002,8 @@ function render_elements(master_ass)
                         elem_ass:append(tooltiplabel)
                     elseif element.thumbnailable and thumbfast.available then
                         mp.commandv("script-message-to", "thumbfast", "clear")
+                    else
+                        state.touchingprogressbar = false
                     end
                 end
             end
@@ -1133,6 +1127,7 @@ end
 
 function newfilereset()
     request_init()
+    state.downloadedOnce = false
     state.videoDescription = "Loading description..."
     state.fileSizeNormalised = "Approximating size..."
 end
