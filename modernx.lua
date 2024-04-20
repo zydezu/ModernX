@@ -455,15 +455,19 @@ end
 
 -- translates global (mouse) coordinates to value
 function get_slider_value_at(element, glob_pos)
+    if (element) then    
+        local val = scale_value(
+            element.slider.min.glob_pos, element.slider.max.glob_pos,
+            element.slider.min.value, element.slider.max.value,
+            glob_pos)
+    
+        return limit_range(
+            element.slider.min.value, element.slider.max.value,
+            val)
+    end
 
-    local val = scale_value(
-        element.slider.min.glob_pos, element.slider.max.glob_pos,
-        element.slider.min.value, element.slider.max.value,
-        glob_pos)
-
-    return limit_range(
-        element.slider.min.value, element.slider.max.value,
-        val)
+    -- fall back incase of loading errors
+    return 0
 end
 
 -- get value at current mouse position
@@ -1149,7 +1153,7 @@ function checktitle()
         elseif mp.get_property("filename/no-ext") ~= mediatitle then
             user_opts.title = "${media-title} | ${filename}" -- {filename/no-ext}
         else
-            user_opts.title = "${filename}" -- audio with the same title (without file extension) and filename
+            user_opts.title = "${media-title}" -- audio with the same title (without file extension) and filename
         end
     end
 
@@ -1165,9 +1169,9 @@ function checktitle()
     state.youtubeuploader = artist
     if mp.get_property_native('metadata') then
         state.ytdescription = mp.get_property_native('metadata').ytdl_description or ""
-        print("Metadata: " .. utils.to_string(mp.get_property_native('metadata')))
+        -- print("Metadata: " .. utils.to_string(mp.get_property_native('metadata')))
     else
-        print("Failed to load metadata")
+        -- print("Failed to load metadata")
     end
 
     state.localDescriptionClick = title .. "\\N----------\\N"
@@ -2516,15 +2520,16 @@ function osc_init()
     ne.tooltipF = function ()
         local msg = texts.off
         if not (get_track('audio') == 0) then
-            msg = (texts.audio .. ' [' .. get_track('audio') .. ' ∕ ' .. #tracks_osc.audio .. '] ')
+            msg = (texts.audio .. ' [' .. get_track('audio') .. ' ∕ ' .. #tracks_osc.audio .. ']')
             local prop = mp.get_property('current-tracks/audio/title')
             if not prop then
                 prop = mp.get_property('current-tracks/audio/lang')
                 if not prop then
                     prop = texts.na
+                else
+                    msg = msg .. ' [' .. prop .. ']'
                 end
             end
-            msg = msg .. '[' .. prop .. ']'
             return msg
         end
         if not ne.enabled then
@@ -2557,12 +2562,13 @@ function osc_init()
     ne.tooltipF = function ()
         local msg = texts.off
         if not (get_track('sub') == 0) then
-            msg = (texts.subtitle .. ' [' .. get_track('sub') .. ' ∕ ' .. #tracks_osc.sub .. '] ')
+            msg = (texts.subtitle .. ' [' .. get_track('sub') .. ' ∕ ' .. #tracks_osc.sub .. ']')
             local prop = mp.get_property('current-tracks/sub/lang')
             if not prop then
                 prop = texts.na
+            else
+                msg = msg .. ' [' .. prop .. ']'
             end
-            msg = msg .. '[' .. prop .. ']'
             prop = mp.get_property('current-tracks/sub/title')
             if prop then
                 msg = msg .. ' ' .. prop
@@ -2983,9 +2989,9 @@ function osc_init()
     ne = new_element('tc_left', 'button')
     ne.content = function ()
     if (state.fulltime) then
-        return (mp.get_property_osd('playback-time/full'))
+        return mp.get_property_osd('playback-time/full'):gsub('-', '')
     else
-        return (mp.get_property_osd('playback-time'))
+        return mp.get_property_osd('playback-time'):gsub('-', '')
     end
     end
     ne.eventresponder["mbtn_left_up"] = function ()
@@ -3589,6 +3595,7 @@ if user_opts.keybindings then
     if (user_opts.persistentprogresstoggle) then
         mp.add_key_binding("b", "persistenttoggle", function()
             state.persistentprogresstoggle = not state.persistentprogresstoggle
+            tick()
             print("Persistent progress bar toggled")
         end);
     end
