@@ -337,3 +337,4 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 - `Shift+Right` go to the next chapter
 - `Ctrl+Left` go to the previous file (in playlist)
 - `Ctrl+Right` go to the next file (in playlist)
+- `B` toggle the persistent progress bar if `persistentprogresstoggle ` is enabled
