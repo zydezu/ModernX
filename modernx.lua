@@ -56,7 +56,7 @@ local user_opts = {
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
-    font = 'mpv-osd-symbols',       -- default osc font
+    font = 'mpv-osd-symbols',       -- mpv-osd-symbols = default osc font (or the one set in mpv.conf)
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
@@ -71,6 +71,8 @@ local user_opts = {
     seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
+    automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
+    automatickeyframelimit = 1800,  -- videos of above this length (in seconds) will have seekbarkeyframes on
     seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,               -- show seekrange overlay
     seekrangealpha = 150,           -- transparency of seekranges
@@ -80,7 +82,7 @@ local user_opts = {
     -- button settings --
     timetotal = true,               -- display total time instead of remaining time by default
     timems = false,                 -- show time as milliseconds by default
-    timefontsize = 17,              -- the font size of the time
+    timefontsize = 18,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
     jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
     jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
@@ -1141,6 +1143,13 @@ function startupevents()
     state.fileSizeNormalised = "Approximating size..."
     checktitle()
     checkWebLink()
+    if user_opts.automatickeyframemode then
+        if mp.get_property_number("duration", 0) > user_opts.automatickeyframelimit then
+            user_opts.seekbarkeyframes = true
+        else
+            user_opts.seekbarkeyframes = false
+        end
+    end
     destroyscrollingkeys() -- close description
 end
 
@@ -1148,13 +1157,7 @@ function checktitle()
     local mediatitle = mp.get_property("media-title")
 
     if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamictitle then
-        if mp.get_property("path"):find('youtu%.?be') then
-            user_opts.title = "${media-title}" -- youtube videos
-        elseif mp.get_property("filename/no-ext") ~= mediatitle then
-            user_opts.title = "${media-title} | ${filename}" -- {filename/no-ext}
-        else
-            user_opts.title = "${media-title}" -- audio with the same title (without file extension) and filename
-        end
+        user_opts.title = "${media-title}"
     end
 
     -- fake description using metadata

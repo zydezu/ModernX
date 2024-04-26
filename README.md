@@ -118,6 +118,8 @@ seekbarhandlesize=0
 | seekbarfg_color | Colour of current seekbar progress and the handle |
 | seekbarbg_color | Colour of the remaining seekbar |
 | seekbarkeyframes | Whether to use keyframes when dragging the seekbar |
+| automatickeyframemode | Whether to set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos |
+| automatickeyframelimit | Videos of above this length (in seconds) will have seekbarkeyframes on |
 | seekbarhandlesize | How big the seek bar handle appears, from 0 to 1 |
 | seekrange | Whether to show the buffer range on the seekbar |
 | seekrangealpha | The transparency of seekranges |
@@ -191,7 +193,7 @@ local user_opts = {
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
-    font = 'mpv-osd-symbols',       -- default osc font
+    font = 'mpv-osd-symbols',       -- mpv-osd-symbols = default osc font (or the one set in mpv.conf)
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
@@ -206,6 +208,8 @@ local user_opts = {
     seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
+    automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
+    automatickeyframelimit = 1800,  -- videos of above this length (in seconds) will have seekbarkeyframes on
     seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,               -- show seekrange overlay
     seekrangealpha = 150,           -- transparency of seekranges
@@ -215,7 +219,7 @@ local user_opts = {
     -- button settings --
     timetotal = true,               -- display total time instead of remaining time by default
     timems = false,                 -- show time as milliseconds by default
-    timefontsize = 17,              -- the font size of the time
+    timefontsize = 18,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
     jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
     jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
