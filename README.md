@@ -100,7 +100,7 @@ seekbarhandlesize=0
 | persistentbuffer | Whether, on web videos to show the buffer on the persistent progress line |
 | persistentprogresstoggle | Whether to enable toggling the persistentprogress bar |
 | showtitle | Whether to show the title in the OSC |
-| showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![mpv_SDXBkAeLwN](https://github.com/zydezu/ModernX/assets/50119098/cce97c08-c626-4953-bfcc-68a1d3a20ae4) |
+| showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![2024-04-28_07-34-51_077_mpv](https://github.com/zydezu/ModernX/assets/50119098/f9d2e98f-bf11-40cf-a6b7-72597402c0fd) |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
 | showfilesize | Whether to show the current file's size in the description |
 | titleBarStrip | Whether to make the title bar a singular bar, instead of a black fade at the top of the screen |
