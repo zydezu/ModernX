@@ -278,6 +278,7 @@ local state = {
     mp_screen_sizeX, mp_screen_sizeY,       -- last screen-resolution, to detect resolution changes to issue reINITs
     initREQ = false,                        -- is a re-init request pending?
     last_mouseX, last_mouseY,               -- last mouse position, to detect significant mouse movement
+    sliderpos = 0,
     mouse_in_window = false,
     message_text,
     message_hide_timer,
@@ -458,12 +459,11 @@ end
 
 -- translates global (mouse) coordinates to value
 function get_slider_value_at(element, glob_pos)
-    if (element) then    
+    if (element) then
         local val = scale_value(
             element.slider.min.glob_pos, element.slider.max.glob_pos,
             element.slider.min.value, element.slider.max.value,
             glob_pos)
-    
         return limit_range(
             element.slider.min.value, element.slider.max.value,
             val)
@@ -840,14 +840,14 @@ function render_elements(master_ass)
         if user_opts.chapterformat ~= "no" and state.touchingprogressbar then
             local dur = mp.get_property_number("duration", 0)
             if dur > 0 then
-                local possec = get_slider_value(se) * dur / 100 -- of mouse pos
-                local ch = get_chapter(possec)
+                local ch = get_chapter(state.sliderpos * dur / 100)
                 if ch and ch.title and ch.title ~= "" then
                     state.forced_title = string.format(user_opts.chapterformat, ch.title)
                 end
             end
         end
     end
+    state.touchingprogressbar = false
 
     for n=1, #elements do
         local element = elements[n]
@@ -945,7 +945,7 @@ function render_elements(master_ass)
                         end
 
                         if (element.name == "seekbar") then
-                            state.touchingprogressbar = true
+                            state.sliderpos = sliderpos
                         end    
                         
                         -- thumbfast
@@ -985,8 +985,7 @@ function render_elements(master_ass)
                                 if user_opts.chapterformat ~= "no" and state.touchingprogressbar then
                                     local dur = mp.get_property_number("duration", 0)
                                     if dur > 0 then
-                                        local possec = get_slider_value(se) * dur / 100 -- of mouse pos
-                                        local ch = get_chapter(possec)
+                                        local ch = get_chapter(state.sliderpos * dur / 100)
                                         if ch and ch.title and ch.title ~= "" then
                                             elem_ass:new_event()
                                             elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - user_opts.timefontsize / 2)
@@ -1009,8 +1008,6 @@ function render_elements(master_ass)
                         elem_ass:append(tooltiplabel)
                     elseif element.thumbnailable and thumbfast.available then
                         mp.commandv("script-message-to", "thumbfast", "clear")
-                    else
-                        state.touchingprogressbar = false
                     end
                 end
             end
@@ -2834,6 +2831,7 @@ function osc_init()
             return mp.get_property_number('percent-pos', nil) 
         end
     ne.slider.tooltipF = function (pos)
+        state.touchingprogressbar = true
         local duration = mp.get_property_number('duration', nil)
         if not ((duration == nil) or (pos == nil)) then
             possec = duration * (pos / 100)
