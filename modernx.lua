@@ -58,13 +58,14 @@ local user_opts = {
     updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
     font = 'mpv-osd-symbols',       -- mpv-osd-symbols = default osc font (or the one set in mpv.conf)
                                     -- to be shown as OSC title
-    titlefontsize = 28,             -- the font size of the title text
+    titlefontsize = 30,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
     dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
                                     -- (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
+    descriptionfontsize = 19,       -- alpha of the description background box
     descriptionBoxAlpha = 100,      -- alpha of the description background box
 
     -- seekbar settings --
@@ -255,7 +256,7 @@ local osc_styles = {
     Tooltip = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs' .. user_opts.timefontsize .. '\\fn' .. user_opts.font .. '}',
     Title = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. user_opts.titlefontsize ..'\\q2\\fn' .. user_opts.font .. '}',
     WindowTitle = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
-    Description = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs'.. 18 ..'\\q2\\fn' .. user_opts.font .. '}',
+    Description = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs'.. user_opts.descriptionfontsize ..'\\q2\\fn' .. user_opts.font .. '}',
     WinCtrl = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs20\\fnmpv-osd-symbols}',
     elementDown = '{\\1c&H999999&}',
     elementHover = "{\\blur5\\2c&HFFFFFF&}",
@@ -326,10 +327,10 @@ local thumbfast = {
     available = false
 }
 
-local maxdescsize = 120
+local maxdescsize = 125
 
 local window_control_box_width = 138
-local tick_delay = 0.03
+local tick_delay = 0.01
 
 local is_december = os.date("*t").month == 12
 
@@ -1112,7 +1113,7 @@ function limited_list(prop, pos)
     end
 
     local fs = tonumber(mp.get_property('options/osd-font-size'))
-    local max = math.ceil(osc_param.unscaled_y*0.75 / fs)
+    local max = math.ceil(osc_param.unscaled_y * 1.25 / fs)
     if max % 2 == 0 then
         max = max - 1
     end
@@ -1132,10 +1133,14 @@ end
 -- downloading --
 
 function newfilereset()
+    mp.set_property("title", "Loading...")
     request_init()
     state.downloadedOnce = false
     state.videoDescription = "Loading description..."
     state.fileSizeNormalised = "Approximating size..."
+    state.localDescription = "Loading..."
+    state.localDescriptionIsClickable = false
+    state.localDescriptionClick = "Loading..."
 end
 
 function startupevents()
@@ -1155,6 +1160,7 @@ end
 
 function checktitle()
     local mediatitle = mp.get_property("media-title")
+    mp.set_property("title", mediatitle)
 
     if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamictitle then
         user_opts.title = "${media-title}"
@@ -1177,94 +1183,110 @@ function checktitle()
         -- print("Failed to load metadata")
     end
 
-    if (title) then state.localDescriptionClick = title .. "\\N----------\\N" end
-    if (description ~= nil) then
-        description = description:gsub('\n', '\\N'):gsub('\r', '\\N') -- old youtube videos seem to use /r
-        
-        local utf8split, lastchar = splitUTF8(description, maxdescsize) -- account for CJK
-        local desc
-        if utf8split then
-            if #utf8split == #description then
-                desc = utf8split
+    if user_opts.showdescription then
+        if (title) then
+            if (#state.ytdescription > 1) then
+                state.localDescriptionClick = title .. "\\N----------\\N" .. state.ytdescription .. "\\N----------\\N"
+                
+                local utf8split, lastchar = splitUTF8(state.ytdescription:gsub("\n", " "), maxdescsize)
+                if #utf8split ~= #state.ytdescription then
+                    utf8split = utf8split .. "..."
+                end
+                utf8split = utf8split .. " | " .. "Uploaded by " .. artist
+                state.descriptionLoaded = true
+                state.videoDescription = utf8split
             else
-                desc = utf8split .. '...'
-            end
-        else
-            if #description > maxdescsize then
-                desc = description:sub(1, maxdescsize) .. '...'
-            else
-                desc = description:sub(1, maxdescsize)
+                state.localDescriptionClick = title .. "\\N----------\\N"
             end
         end
-        
-        state.localDescription = desc
-        state.localDescriptionClick = state.localDescriptionClick .. description .. "\\N----------"
-        state.localDescriptionIsClickable = true
-    end
-    if (artist ~= nil) then
-        if (state.localDescription == nil) then
-            state.localDescription = "By: " .. artist
-            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+        if (description ~= nil) then
+            description = description:gsub('\n', '\\N'):gsub('\r', '\\N') -- old youtube videos seem to use /r
+            offlinemaxdescsize = maxdescsize * 1.0
+            local utf8split, lastchar = splitUTF8(description, offlinemaxdescsize) -- account for CJK
+            local desc
+            if utf8split then
+                if #utf8split == #description then
+                    desc = utf8split
+                else
+                    desc = utf8split .. '...'
+                end
+            else
+                if #description > offlinemaxdescsize then
+                    desc = description:sub(1, offlinemaxdescsize) .. '...'
+                else
+                    desc = description:sub(1, offlinemaxdescsize)
+                end
+            end
+            
+            state.localDescription = desc
+            state.localDescriptionClick = state.localDescriptionClick .. description .. "\\N----------"
             state.localDescriptionIsClickable = true
-        else
-            state.localDescriptionClick = state.localDescriptionClick .. "\\NBy: " .. artist
-            state.localDescription = state.localDescription .. " | By: " .. artist
         end
-    end
-    if (album ~= nil) then
-        if (state.localDescription == nil) then -- only metadata
-            state.localDescription = "Album: " .. album
-            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
-            state.localDescriptionIsClickable = true
-        else -- append to other metadata
-            if (state.localDescriptionClick ~= nil) then 
-                state.localDescriptionClick = state.localDescriptionClick .. " - " .. album
-            else
-                state.localDescriptionClick = album
-                state.localDescriptionIsClickable = true
-            end
-            state.localDescription = state.localDescription .. " - " .. album
-        end
-    end
-    if (date ~= nil) then
-        local datenormal = normaliseDate(date)
-        local datetext = "Year"
-        if (#datenormal > 4) then datetext = "Date" end
-        if (state.localDescription == nil) then -- only metadata
-            state.localDescription = datetext .. ": " .. datenormal
-            state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
-            state.localDescriptionIsClickable = true
-        else -- append to other metadata
-            if (state.localDescriptionClick ~= nil) then
-                state.localDescriptionClick = state.localDescriptionClick .. "\\N" .. datetext .. ": " .. datenormal
-            else
-                state.localDescriptionClick = datenormal
-                state.localDescriptionIsClickable = true
-            end
-            state.localDescription = state.localDescription .. " | " ..  datetext .. ": " .. datenormal
-        end
-    end
-
-    local function format_file_size(file_size)
-        local units = {"bytes", "KB", "MB", "GB", "TB"}
-        local unit_index = 1
-        while file_size >= 1024 and unit_index < #units do
-            file_size = file_size / 1024
-            unit_index = unit_index + 1
-        end
-        return string.format("%.2f %s", file_size, units[unit_index])
-    end
-
-    if (user_opts.showfilesize) then
-        file_size = mp.get_property_native("file-size")
-        if (file_size ~= nil) then
-            file_size = format_file_size(file_size)
-            if (state.localDescription == nil) then -- only metadata
-                state.localDescription = "Size: " .. file_size
+        if (artist ~= nil) then
+            if (state.localDescription == nil) then
+                state.localDescription = artist
                 state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
                 state.localDescriptionIsClickable = true
             else
-                state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size
+                state.localDescriptionClick = state.localDescriptionClick .. "\\NBy: " .. artist
+                state.localDescription = state.localDescription .. " | By: " .. artist
+            end
+        end
+        if (album ~= nil) then
+            if (state.localDescription == nil) then -- only metadata
+                state.localDescription = "Album: " .. album
+                state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+                state.localDescriptionIsClickable = true
+            else -- append to other metadata
+                if (state.localDescriptionClick ~= nil) then 
+                    state.localDescriptionClick = state.localDescriptionClick .. " | " .. album
+                else
+                    state.localDescriptionClick = album
+                    state.localDescriptionIsClickable = true
+                end
+                state.localDescription = state.localDescription .. " | " .. album
+            end
+        end
+        if (date ~= nil) then
+            local datenormal = normaliseDate(date)
+            local datetext = "Year"
+            if (#datenormal > 4) then datetext = "Date" end
+            if (state.localDescription == nil) then -- only metadata
+                state.localDescription = datetext .. ": " .. datenormal
+                state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+                state.localDescriptionIsClickable = true
+            else -- append to other metadata
+                if (state.localDescriptionClick ~= nil) then
+                    state.localDescriptionClick = state.localDescriptionClick .. "\\N" .. datetext .. ": " .. datenormal
+                else
+                    state.localDescriptionClick = datenormal
+                    state.localDescriptionIsClickable = true
+                end
+                -- state.localDescription = state.localDescription .. " | " ..  datetext .. ": " .. datenormal
+            end
+        end
+
+        local function format_file_size(file_size)
+            local units = {"bytes", "KB", "MB", "GB", "TB"}
+            local unit_index = 1
+            while file_size >= 1024 and unit_index < #units do
+                file_size = file_size / 1024
+                unit_index = unit_index + 1
+            end
+            return string.format("%.2f %s", file_size, units[unit_index])
+        end
+
+        if (user_opts.showfilesize) then
+            file_size = mp.get_property_native("file-size")
+            if (file_size ~= nil) then
+                file_size = format_file_size(file_size)
+                if (state.localDescription == nil) then -- only metadata
+                    state.localDescription = "Size: " .. file_size
+                    state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+                    state.localDescriptionIsClickable = true
+                else
+                    state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size
+                end
             end
         end
     end
@@ -1338,7 +1360,7 @@ function checkWebLink()
         end
 
         if user_opts.showdescription then
-            msg.info("WEB: Loading video information...")
+            msg.info("WEB: Loading video description...")
             local uploader = (state.youtubeuploader and '<$\\N!uploader!\\N$>') or "%(uploader)s"
             local description = (state.ytdescription and '<$\\N!desc!\\N$>') or "%(description)s"
             local command = { 
@@ -1494,7 +1516,6 @@ function exec_description(args, result)
         if (state.ytdescription == '' or state.ytdescription == '\\N' or state.ytdescription == 'NA' or #state.ytdescription < 4) then
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
-        
         if state.youtubeuploader then
             state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: " .. state.youtubeuploader)
         else
@@ -1508,11 +1529,12 @@ function exec_description(args, result)
         state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
-        state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
+        -- state.localDescriptionClick = state.localDescriptionClick:gsub("NA", "")
 
         local utf8split, lastchar = splitUTF8(state.ytdescription, maxdescsize) -- account for CJK
         
         -- segment localDescriptionClick parts with " | "
+        local tempDesc
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
         if beforeLastPattern then
             local desc = string.match(beforeLastPattern, "\\N----------\\N(.*)")
@@ -1533,21 +1555,25 @@ function exec_description(args, result)
                 end
 
                 afterLastPattern = afterLastPattern:gsub("Views:", emoticon.view):gsub("Comments:", emoticon.comment):gsub("Likes:", emoticon.like):gsub("Dislikes:", emoticon.dislike)  -- replace with icons
-                state.videoDescription = desc  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")            
-                state.videoDescription = state.videoDescription:gsub("\\N----------\\N", " | ")
+                tempDesc = desc  .. "\\N----------\\N" .. afterLastPattern:gsub("\\N", " | ")            
+                tempDesc = tempDesc:gsub("\\N----------\\N", " | ")
             else
-                state.videoDescription = afterLastPattern:gsub("\\N", " | ")
+                tempDesc = afterLastPattern:gsub("\\N", " | ")
             end
         end
         
         if afterLastPattern then
             if (select(2, afterLastPattern:gsub("\\N", "")) == 1) then -- get rid of last | if there's only one item
                 print("Erasing last item")
-                state.videoDescription = state.videoDescription:gsub(" | ", "")
+                tempDesc = tempDesc:gsub(" | ", "")
             end
         end
 
+        -- state.videoDescription = tempDesc
         state.descriptionLoaded = true
+        if state.showingDescription then
+            show_description(state.localDescriptionClick)
+        end
         msg.info("WEB: Loaded video description")
     end)
 end
@@ -1776,8 +1802,13 @@ function render_message(ass)
         local maxlines = math.ceil(osc_param.unscaled_y*0.75 / fontsize)
         local counterscale = osc_param.playresy / osc_param.unscaled_y
 
-        fontsize = fontsize * counterscale / math.max(0.65 + math.min(lines/maxlines, 1), 1)
-        outline = outline * counterscale / math.max(0.75 + math.min(lines/maxlines, 1)/2, 1)
+        if state.showingDescription then
+            fontsize = fontsize * 0.85
+            outline = outline * 0.85
+        else
+            fontsize = fontsize * counterscale / math.max(0.5 + math.min(lines/maxlines, 1), 1)
+            outline = outline * counterscale / math.max(0.5 + math.min(lines/maxlines, 1)/2, 1)    
+        end
 
         if state.showingDescription then
             ass.text = string.format('{\\pos(0,0)\\an7\\1c&H000000&\\alpha&H%X&}', user_opts.descriptionBoxAlpha)
@@ -2065,16 +2096,16 @@ layouts = function ()
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.Title,
                              geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
     lo.alpha[3] = 0
-    lo.button.maxchars = geo.w / 13
+    lo.button.maxchars = geo.w / 11
 
     -- Description
     if (state.localDescription ~= nil or state.isWebVideo) and user_opts.showdescription then
-        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w, h = 19}
+        geo = {x = 25, y = refY - 122, an = 1, w = osc_geo.w - 80, h = 19}
         lo = add_layout("description")
         lo.geometry = geo
         lo.style = osc_styles.Description
         lo.alpha[3] = 0
-        lo.button.maxchars = geo.w / 8
+        lo.button.maxchars = geo.w / 7
     end
 
     -- Volumebar
@@ -2299,7 +2330,7 @@ function osc_init()
     ne.visible = (state.localDescription ~= nil or state.isWebVideo) and user_opts.showdescription
     ne.content = function ()
         if state.isWebVideo then
-            local title = "Loading video information..."
+            local title = "Loading description..."
             if (state.descriptionLoaded) then
                 title = state.videoDescription:sub(1, 300)
             end
@@ -3745,3 +3776,4 @@ end)
 
 set_virt_mouse_area(0, 0, 0, 0, 'input')
 set_virt_mouse_area(0, 0, 0, 0, 'window-controls')
+mp.set_property("title", "mpv")
