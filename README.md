@@ -100,7 +100,7 @@ seekbarhandlesize=0
 | persistentbuffer | Whether, on web videos to show the buffer on the persistent progress line |
 | persistentprogresstoggle | Whether to enable toggling the persistentprogress bar |
 | showtitle | Whether to show the title in the OSC |
-| showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![mpv_SDXBkAeLwN](https://github.com/zydezu/ModernX/assets/50119098/cce97c08-c626-4953-bfcc-68a1d3a20ae4) |
+| showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![2024-04-28_07-34-51_077_mpv](https://github.com/zydezu/ModernX/assets/50119098/f9d2e98f-bf11-40cf-a6b7-72597402c0fd) |
 | showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
 | showfilesize | Whether to show the current file's size in the description |
 | titleBarStrip | Whether to make the title bar a singular bar, instead of a black fade at the top of the screen |
@@ -110,7 +110,7 @@ seekbarhandlesize=0
 | font | The font of the OSC, by default matches the font set in `mpv.conf` |
 | titlefontsize | The size of the title text |
 | chapterformat | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
-| dateformat | how dates should be formatted, when read from metadata (uses standard lua date formatting) <br> ![2023-11-17_00-21-51_818_mpv](https://github.com/zydezu/ModernX/assets/50119098/0c14ab2d-ce30-46a7-9a60-71bad7deb976) |
+| dateformat | how dates should be formatted, when read from metadata (uses standard lua date formatting) <br> ![2024-04-28_07-22-13_315_mpv](https://github.com/zydezu/ModernX/assets/50119098/a0602d71-a7cc-4f44-b15b-4cc061303ede) |
 | osc_color | The colour of the OSC and title bar |
 | OSCfadealpha | Alpha of the background box for the OSC |
 | boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
@@ -341,4 +341,4 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 - `Shift+Right` go to the next chapter
 - `Ctrl+Left` go to the previous file (in playlist)
 - `Ctrl+Right` go to the next file (in playlist)
-- `B` toggle the persistent progress bar if `persistentprogresstoggle ` is enabled
+- `B` toggle the persistent progress bar if `persistentprogresstoggle` is enabled
