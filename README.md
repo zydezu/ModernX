@@ -299,27 +299,27 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 
 - `Left mouse button` play previous/next file
 - `Right mouse button` show playlist
-- `Shift + left mouse button` play previous/next file and show playlist
-- `Shift + right mouse button` show playlist
+- `Shift+left mouse button` play previous/next file and show playlist
+- `Shift+right mouse button` show playlist
 
 ### Skip back/forward buttons
 
 - `Left mouse button` go to previous/next chapter
 - `Right mouse button` show chapter list
-- `Shift + left mouse button` go to previous/next chapter and show playlist
-- `Shift + right mouse button` show chapter list
+- `Shift+left mouse button` go to previous/next chapter and show playlist
+- `Shift+right mouse button` show chapter list
 
 ### Jump back/forward buttons
 
 - `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
 - `Right mouse button` jumps forwards/backwards by 1 minute
-- `Shift + left mouse button` skips to the previous/next frame
+- `Shift+left mouse button` skips to the previous/next frame
 
 ### Audio/subtitle track buttons
 
 - `Left mouse button/right mouse button` cycle to next/previous track
-- `Shift + left mouse button` cycle to next/previous track and show track list
-- `Shift + right mouse button` show track list
+- `Shift+left mouse button` cycle to next/previous track and show track list
+- `Shift+right mouse button` show track list
 
 ### Pin button
 
@@ -337,8 +337,8 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 - `c` cycle through subtitle tracks
 - `p` pin or unpin the window
 - `TAB` show chapter list
-- `Shift + left` go to the previous chapter
-- `Shift + right` go to the next chapter
-- `Ctrl + left` go to the previous file (in playlist)
-- `Ctrl + right` go to the next file (in playlist)
+- `Shift+left` go to the previous chapter
+- `Shift+right` go to the next chapter
+- `Ctrl+left` go to the previous file (in playlist)
+- `Ctrl+right` go to the next file (in playlist)
 - `b` toggle the persistent progress bar if `persistentprogresstoggle` is enabled
