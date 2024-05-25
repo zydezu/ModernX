@@ -271,7 +271,7 @@ To enable thumbnails on the seekbar, install [thumbfast](https://github.com/po5/
 Like the built-in script, some buttons may accept multiple mouse actions, here is a list:
 
 > [!NOTE]
-> Middle clicking performs the same function as `Shift+left click`, allowing for one handed use
+> Middle clicking performs the same function as `Shift+left mouse button`, allowing for one handed use
 
 ### Title
 
