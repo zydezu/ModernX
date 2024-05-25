@@ -271,7 +271,7 @@ To enable thumbnails on the seekbar, install [thumbfast](https://github.com/po5/
 Like the built-in script, some buttons may accept multiple mouse actions, here is a list:
 
 > [!NOTE]
-> Middle clicking performs the same function as Shift + Left Clicking, allowing for one handed use
+> Middle clicking performs the same function as `Shift+left click`, allowing for one handed use
 
 ### Title
 
@@ -336,7 +336,7 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 - `x` cycle through audio tracks
 - `c` cycle through subtitle tracks
 - `p` pin or unpin the window
-- `TAB` show chapter list
+- `Tab` show chapter list
 - `Shift+left` go to the previous chapter
 - `Shift+right` go to the next chapter
 - `Ctrl+left` go to the previous file (in playlist)
