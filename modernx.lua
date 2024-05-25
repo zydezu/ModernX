@@ -1130,7 +1130,6 @@ end
 -- downloading --
 
 function newfilereset()
-    mp.set_property("title", "Loading...")
     request_init()
     state.downloadedOnce = false
     state.videoDescription = "Loading description..."
@@ -1138,11 +1137,15 @@ function newfilereset()
     state.localDescription = "Loading..."
     state.localDescriptionIsClickable = false
     state.localDescriptionClick = "Loading..."
+    if is_url(mp.get_property("path")) then
+        mp.set_property("title", "Loading...")
+    end
 end
 
 function startupevents()
     state.videoDescription = "Loading description..."
     state.fileSizeNormalised = "Approximating size..."
+    state.dateexists = false
     checktitle()
     checkWebLink()
     if user_opts.automatickeyframemode then
@@ -1172,9 +1175,10 @@ function checktitle()
     local description = mp.get_property("filtered-metadata/by-key/Description")
     local date = mp.get_property("filtered-metadata/by-key/Date")
 
+    state.ytdescription = ""
     state.youtubeuploader = artist
     if mp.get_property_native('metadata') then
-        state.ytdescription = mp.get_property_native('metadata').ytdl_description or ""
+        state.ytdescription = mp.get_property_native('metadata').ytdl_description or description or ""
         -- print("Metadata: " .. utils.to_string(mp.get_property_native('metadata')))
     else
         -- print("Failed to load metadata")
@@ -1184,49 +1188,37 @@ function checktitle()
         if (title) then
             if (#state.ytdescription > 1) then
                 state.localDescriptionClick = title .. "\\N----------\\N" .. state.ytdescription .. "\\N----------\\N"
-                
-                local utf8split, lastchar = splitUTF8(state.ytdescription:gsub("\n", " "), maxdescsize)
+
+                local utf8split, lastchar = splitUTF8(state.ytdescription, maxdescsize)
+
+                print("SPLIT:"..#utf8split.."/"..#state.ytdescription)
+
                 if #utf8split ~= #state.ytdescription then
-                    utf8split = utf8split .. "..."
+                    tmp = utf8split:match("^%s*(.-)%s*$")
+                    tmp = utf8split:gsub("[,%.%s]+$", "")
+                
+                    utf8split = tmp .. "..."
                 end
-                utf8split = utf8split .. " | " .. "Uploaded by " .. artist
+                local artisttext = "By: "
+                if (is_url(mp.get_property("path"))) then
+                    artisttext = "Uploader: "
+                end
+                if (artist) then
+                    utf8split = utf8split .. " | " .. artisttext .. artist
+                    state.localDescriptionClick = state.localDescriptionClick ..  artisttext .. artist
+                end
                 state.descriptionLoaded = true
-                state.videoDescription = utf8split
+                state.videoDescription = utf8split:gsub("\r", ""):gsub("\n", " ")
+                state.localDescription = state.videoDescription
             else
                 state.localDescriptionClick = title .. "\\N----------\\N"
             end
-        end
-        if (description ~= nil) then
-            description = description:gsub('\n', '\\N'):gsub('\r', '\\N') -- old youtube videos seem to use /r
-            offlinemaxdescsize = maxdescsize * 1.0
-            local utf8split, lastchar = splitUTF8(description, offlinemaxdescsize) -- account for CJK
-            local desc
-            if utf8split then
-                if #utf8split == #description then
-                    desc = utf8split
-                else
-                    desc = utf8split .. '...'
-                end
-            else
-                if #description > offlinemaxdescsize then
-                    desc = description:sub(1, offlinemaxdescsize) .. '...'
-                else
-                    desc = description:sub(1, offlinemaxdescsize)
-                end
-            end
-            
-            state.localDescription = desc
-            state.localDescriptionClick = state.localDescriptionClick .. description .. "\\N----------"
-            state.localDescriptionIsClickable = true
         end
         if (artist ~= nil) then
             if (state.localDescription == nil) then
                 state.localDescription = artist
                 state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
                 state.localDescriptionIsClickable = true
-            else
-                state.localDescriptionClick = state.localDescriptionClick .. "\\NBy: " .. artist
-                state.localDescription = state.localDescription .. " | By: " .. artist
             end
         end
         if (album ~= nil) then
@@ -1245,6 +1237,7 @@ function checktitle()
             end
         end
         if (date ~= nil) then
+            state.dateexists = true
             local datenormal = normaliseDate(date)
             local datetext = "Year"
             if (#datenormal > 4) then datetext = "Date" end
@@ -1258,6 +1251,9 @@ function checktitle()
                 else
                     state.localDescriptionClick = datenormal
                     state.localDescriptionIsClickable = true
+                end
+                if (artist ~= nil and datetext == "Year") then
+                    state.localDescription = state.localDescription .. " (" .. datenormal .. ")"
                 end
                 -- state.localDescription = state.localDescription .. " | " ..  datetext .. ": " .. datenormal
             end
@@ -1302,6 +1298,14 @@ function normaliseDate(date)
     end
 end
 
+function is_url(s)
+    return nil ~=
+        string.match(s,
+            "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%." ..
+            "[a-zA-Z0-9()][a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?" ..
+            "[-a-zA-Z0-9()@:%_\\+.~#?&/=]*")
+end
+
 function checkWebLink()
     state.isWebVideo = false
     local path = mp.get_property("path")
@@ -1311,14 +1315,6 @@ function checkWebLink()
         path = string.gsub(path, "ytdl://", "") -- Strip possible ytdl:// prefix
     else
         path = string.gsub(path, "ytdl://", "https://") -- Strip possible ytdl:// prefix and replace with "https://" if there it isn't there already
-    end
-
-    local function is_url(s)
-        return nil ~=
-            string.match(s,
-                "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%." ..
-                "[a-zA-Z0-9()][a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?" ..
-                "[-a-zA-Z0-9()@:%_\\+.~#?&/=]*")
     end
 
     if is_url(path) and path or nil then
@@ -1363,7 +1359,7 @@ function checkWebLink()
             local command = { 
                 "yt-dlp",
                 "--no-download", 
-                "-O \\N----------\\N" .. description .. "\\N----------\\NUploaded by: " .. uploader .. "\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nViews: %(view_count)s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
+                "-O \\N----------\\N" .. description .. "\\N----------\\NUploader: " .. uploader .. "\nUploaded: %(upload_date>".. user_opts.dateformat ..")s\nViews: %(view_count)s\nComments: %(comment_count)s\nLikes: %(like_count)s", 
                 path
             }
             exec_description(command)
@@ -1499,6 +1495,12 @@ function exec_description(args, result)
         capture_stdout = true,
         capture_stderr = true,
     }, function(res, val, err)
+        if (state.dateexists) then 
+            state.descriptionLoaded = true 
+            msg.info("WEB: Loaded video description early")
+            return 
+        end
+
         state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N') .. state.dislikes, '\n', '\\N')
         if (state.dislikes == "") then
             state.localDescriptionClick = mp.get_property("media-title") .. string.gsub(string.gsub(val.stdout, '\r', '\\N'), '\n', '\\N')
@@ -1514,12 +1516,16 @@ function exec_description(args, result)
             state.localDescriptionClick = state.localDescriptionClick:gsub("(.*)\\N----------\\N", "%1")
         end
         if state.youtubeuploader then
-            state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: " .. state.youtubeuploader)
+            state.localDescriptionClick = state.localDescriptionClick:gsub("Uploader: <$\\N!uploader!\\N$>", "Uploader: " .. state.youtubeuploader)
         else
-            state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: <$\\N!uploader!\\N$>", "Uploaded by: ")
+            state.localDescriptionClick = state.localDescriptionClick:gsub("Uploader: <$\\N!uploader!\\N$>", "Uploader: ")
         end
 
-        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded by: NA\\N", "")
+        state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Views: (%d+)'), commas(state.localDescriptionClick:match('Views: (%d+)')))
+        state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Likes: (%d+)'), commas(state.localDescriptionClick:match('Likes: (%d+)')))
+        state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Comments: (%d+)'), commas(state.localDescriptionClick:match('Comments: (%d+)')))
+
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Uploader: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Views: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Comments: NA\\N", "")
@@ -1532,6 +1538,7 @@ function exec_description(args, result)
         
         -- segment localDescriptionClick parts with " | "
         local tempDesc
+
         local beforeLastPattern, afterLastPattern = state.localDescriptionClick:match("(.*)\\N----------\\N(.*)")
         if beforeLastPattern then
             local desc = string.match(beforeLastPattern, "\\N----------\\N(.*)")
@@ -1566,7 +1573,6 @@ function exec_description(args, result)
             end
         end
 
-        -- state.videoDescription = tempDesc
         state.descriptionLoaded = true
         if state.showingDescription then
             show_description(state.localDescriptionClick)
@@ -1583,7 +1589,7 @@ function exec_dislikes(args, result)
         capture_stderr = true
     }, function(res, val, err)
         local dislikes = val.stdout
-        dislikes = tonumber(dislikes:match('"dislikes":(%d+)'))
+        dislikes = commas(dislikes:match('"dislikes":(%d+)'))
         state.dislikecount = dislikes
 
         if dislikes then
@@ -1602,16 +1608,27 @@ function exec_dislikes(args, result)
     end)
 end
 
+function commas(number)
+    if number == nil then return '' end
+
+    return tostring(number) -- Make sure the "number" is a string
+       :reverse() -- Reverse the string
+       :gsub('%d%d%d', '%0,') -- insert one comma after every 3 numbers
+       :gsub(',$', '') -- Remove a trailing comma if present
+       :reverse() -- Reverse the string again
+       :sub(1) -- a little hack to get rid of the second return value 😜
+ end
+
 function addLikeCountToTitle()
     if (user_opts.updatetitleyoutubestats) then
-        state.viewcount = tonumber(state.localDescriptionClick:match('Views: (%d+)')) 
-        state.likecount = tonumber(state.localDescriptionClick:match('Likes: (%d+)'))
-        if (state.viewcount and state.likecount and state.dislikecount) then
+        state.viewcount = commas(state.localDescriptionClick:match('Views: (%d+)')) 
+        state.likecount = commas(state.localDescriptionClick:match('Likes: (%d+)'))
+        if (state.viewcount ~= '' and state.likecount ~= '' and state.dislikecount) then
             mp.set_property("title", mp.get_property("media-title") .. 
             " | " .. emoticon.view .. state.viewcount .. 
             " | " .. emoticon.like .. state.likecount .. 
             " | " .. emoticon.dislike .. state.dislikecount)
-        elseif (state.viewcount and state.likecount) then
+        elseif (state.viewcount ~= '' and state.likecount ~= '') then
             mp.set_property("title", mp.get_property("media-title") .. 
             " | " .. emoticon.view .. state.viewcount .. 
             " | " .. emoticon.like .. state.likecount)
@@ -3590,6 +3607,12 @@ mp.observe_property("chapter-list", "native", function(_, list) -- chapter list 
 end)
 mp.observe_property('seeking', nil, function()
     resetTimeout()
+end)
+mp.register_event("windowcontrols_title", function()
+    print("YEAHSDADD")
+    if mp.get_property("media-title") then
+        mp.set_property("title", mp.get_property("media-title"))
+    end
 end)
 
 if user_opts.keybindings then
