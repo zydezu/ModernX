@@ -271,7 +271,7 @@ To enable thumbnails on the seekbar, install [thumbfast](https://github.com/po5/
 Like the built-in script, some buttons may accept multiple mouse actions, here is a list:
 
 > [!NOTE]
-> Middle clicking performs the same function as Shift + Left Clicking, allowing for one handed use
+> Middle clicking performs the same function as `Shift+left mouse button`, allowing for one handed use
 
 ### Title
 
@@ -299,27 +299,27 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 
 - `Left mouse button` play previous/next file
 - `Right mouse button` show playlist
-- `Shift + Left mouse button` play previous/next file and show playlist
-- `Shift + Right mouse button` show playlist
+- `Shift+left mouse button` play previous/next file and show playlist
+- `Shift+right mouse button` show playlist
 
 ### Skip back/forward buttons
 
 - `Left mouse button` go to previous/next chapter
 - `Right mouse button` show chapter list
-- `Shift + Left mouse button` go to previous/next chapter and show playlist
-- `Shift + Right mouse button` show chapter list
+- `Shift+left mouse button` go to previous/next chapter and show playlist
+- `Shift+right mouse button` show chapter list
 
 ### Jump back/forward buttons
 
 - `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
 - `Right mouse button` jumps forwards/backwards by 1 minute
-- `Shift + Left mouse button` skips to the previous/next frame
+- `Shift+left mouse button` skips to the previous/next frame
 
 ### Audio/subtitle track buttons
 
-- `Left mouse button/Right mouse button` cycle to next/previous track
-- `Shift + Left mouse button` cycle to next/previous track and show track list
-- `Shift + Right mouse button` show track list
+- `Left mouse button/right mouse button` cycle to next/previous track
+- `Shift+left mouse button` cycle to next/previous track and show track list
+- `Shift+right mouse button` show track list
 
 ### Pin button
 
@@ -333,12 +333,12 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 
 ### Other
 
-- `X` cycle through audio tracks
-- `C` cycle through subtitle tracks
-- `P` pin or unpin the window
-- `TAB` show chapter list
-- `Shift+Left` go to the previous chapter
-- `Shift+Right` go to the next chapter
-- `Ctrl+Left` go to the previous file (in playlist)
-- `Ctrl+Right` go to the next file (in playlist)
-- `B` toggle the persistent progress bar if `persistentprogresstoggle` is enabled
+- `x` cycle through audio tracks
+- `c` cycle through subtitle tracks
+- `p` pin or unpin the window
+- `Tab` show chapter list
+- `Shift+left` go to the previous chapter
+- `Shift+right` go to the next chapter
+- `Ctrl+left` go to the previous file (in playlist)
+- `Ctrl+right` go to the next file (in playlist)
+- `b` toggle the persistent progress bar if `persistentprogresstoggle` is enabled
