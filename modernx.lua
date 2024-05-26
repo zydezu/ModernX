@@ -62,15 +62,15 @@ local user_opts = {
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
     dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
                                     -- (uses standard lua date formatting)
-    osc_color = '000000',           -- accent of the OSC and the title bar
+    osc_color = '000000',           -- accent of the OSC and the title bar, in format BBGGRR - http://www.tcax.org/docs/ass-specs.htm
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
     descriptionfontsize = 19,       -- alpha of the description background box
     descriptionBoxAlpha = 100,      -- alpha of the description background box
 
     -- seekbar settings --
-    seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
-    seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
+    seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle, in format BBGGRR - http://www.tcax.org/docs/ass-specs.htm
+    seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar, in format BBGGRR - http://www.tcax.org/docs/ass-specs.htm
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
     automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
     automatickeyframelimit = 1800,  -- videos of above this length (in seconds) will have seekbarkeyframes on
@@ -103,8 +103,10 @@ local user_opts = {
     downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
     showyoutubecomments = false,    -- EXPERIMENTAL - not ready
     commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
-    ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
+    ytdlpQuality = '' -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 }
+
+
 
 -- Icons for jump button depending on jumpamount 
 local jumpicons = { 
@@ -1190,8 +1192,7 @@ function checktitle()
                 state.localDescriptionClick = title .. "\\N----------\\N" .. state.ytdescription .. "\\N----------\\N"
 
                 local utf8split, lastchar = splitUTF8(state.ytdescription, maxdescsize)
-
-                print("SPLIT:"..#utf8split.."/"..#state.ytdescription)
+                -- print("SPLIT:"..#utf8split.."/"..#state.ytdescription)
 
                 if #utf8split ~= #state.ytdescription then
                     tmp = utf8split:match("^%s*(.-)%s*$")
@@ -1199,6 +1200,7 @@ function checktitle()
                 
                     utf8split = tmp .. "..."
                 end
+                utf8split = utf8split:match("^(.-)%s*$")
                 local artisttext = "By: "
                 if (is_url(mp.get_property("path"))) then
                     artisttext = "Uploader: "
@@ -1521,9 +1523,15 @@ function exec_description(args, result)
             state.localDescriptionClick = state.localDescriptionClick:gsub("Uploader: <$\\N!uploader!\\N$>", "Uploader: ")
         end
 
-        state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Views: (%d+)'), commas(state.localDescriptionClick:match('Views: (%d+)')))
-        state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Likes: (%d+)'), commas(state.localDescriptionClick:match('Likes: (%d+)')))
-        state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Comments: (%d+)'), commas(state.localDescriptionClick:match('Comments: (%d+)')))
+        if (state.localDescriptionClick:match('Views: (%d+)')) then
+            state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Views: (%d+)'), commas(state.localDescriptionClick:match('Views: (%d+)')))
+        end
+        if (state.localDescriptionClick:match('Likes: (%d+)')) then
+            state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Likes: (%d+)'), commas(state.localDescriptionClick:match('Likes: (%d+)')))
+        end
+        if (state.localDescriptionClick:match('Comments: (%d+)')) then
+            state.localDescriptionClick = state.localDescriptionClick:gsub(state.localDescriptionClick:match('Comments: (%d+)'), commas(state.localDescriptionClick:match('Comments: (%d+)')))
+        end
 
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploader: NA\\N", "")
         state.localDescriptionClick = state.localDescriptionClick:gsub("Uploaded: NA\\N", "")
@@ -2768,8 +2776,9 @@ function osc_init()
                     local command = { 
                         "yt-dlp",
                         user_opts.ytdlpQuality,
+                        "--remux",
+                        "mp4",
                         "--add-metadata",
-                        "--console-title",
                         "--embed-subs",
                         "-o%(title)s",
                         "-P " .. localpathnormal,
