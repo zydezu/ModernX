@@ -37,7 +37,7 @@ Then place the two fonts in the `fonts/` folder. `Material-Design-Iconic-Font.tt
 
 ### mpv.conf
 
-Add the following lines to your `mpv.conf` file.
+Add the following lines to your `mpv.conf` file (please note that mpv `.conf` use yes/no in place of true/false).
 
 ```editorconfig
 osc=no
