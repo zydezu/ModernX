@@ -40,7 +40,7 @@ Then place the two fonts in the `fonts/` folder. `Material-Design-Iconic-Font.tt
 Add the following lines to your `mpv.conf` file.
 
 > [!NOTE]
-> Please note that mpv `.conf` use yes/no in place of true/false
+> Please note that in `.conf` files, use yes/no in place of true/false
 
 ```editorconfig
 osc=no
