@@ -280,13 +280,14 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 - `Left mouse button` show the full media title
 - `Right mouse button` show the full filename
 
-### Description (only on web videos)
+### Description (only on certain videos)
 
 - `Left mouse button` show the full description, use `up arrow`, `down arrow` or `scroll wheel` to scroll through it
 
 ### Seekbar
 
-- `Left mouse button` seek to chosen position
+- `Left mouse button` seek to chosen position (using keyframes)
+- `Shift+left mouse button` seek to the exact position
 - `Right mouse button` seek to the head of chosen chapter
 
 ### Playback time
