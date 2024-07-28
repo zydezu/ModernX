@@ -228,7 +228,7 @@ local user_opts = {
     jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
                                     -- 'exact', 'relative+keyframes', etc.
     volumecontrol = true,           -- whether to show mute button and volume slider
-    volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
+    volumecontroltype = 'linear',   -- use 'linear' or 'log' (logarithmic) volume scale
     showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
     showskip = true,                -- show the skip back and forward (chapter) buttons
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
