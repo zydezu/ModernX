@@ -60,8 +60,7 @@ local user_opts = {
                                     -- to be shown as OSC title
     titlefontsize = 30,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
-    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
-                                    -- (uses standard lua date formatting)
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar, in format BBGGRR - http://www.tcax.org/docs/ass-specs.htm
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
@@ -73,7 +72,7 @@ local user_opts = {
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar, in format BBGGRR - http://www.tcax.org/docs/ass-specs.htm
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
     automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
-    automatickeyframelimit = 1800,  -- videos of above this length (in seconds) will have seekbarkeyframes on
+    automatickeyframelimit = 600,   -- videos of above this length (in seconds) will have seekbarkeyframes on
     seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,               -- show seekrange overlay
     seekrangealpha = 150,           -- transparency of seekranges
@@ -86,10 +85,9 @@ local user_opts = {
     timefontsize = 18,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
     jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
-    jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
-                                    -- 'exact', 'relative+keyframes', etc.
+    jumpmode = 'relative',          -- seek mode for jump buttons - https://mpv.io/manual/stable/#command-interface-seek-%3Ctarget%3E-[%3Cflags%3E]
     volumecontrol = true,           -- whether to show mute button and volume slider
-    volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
+    volumecontroltype = 'linear',   -- use 'linear' or 'log' (logarithmic) volume scale
     showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
     showskip = true,                -- show the skip back and forward (chapter) buttons
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
@@ -320,6 +318,11 @@ local state = {
     videoCantBeDownloaded = false,
     youtubeuploader = "",
     youtubecomments = {},
+    commentsParsed = false,
+    currentCommentIndex = 0,
+    commentsPage = 0,
+    maxCommentPages = 0,
+    commentsAdditionalText = "",
     persistentprogresstoggle = user_opts.persistentprogress,
 }
 
@@ -331,9 +334,10 @@ local thumbfast = {
 }
 
 local maxdescsize = 125
+local commentsperpage = 25
 
 local window_control_box_width = 138
-local tick_delay = 0.01
+local tick_delay = 0.01 -- 100FPS
 
 local is_december = os.date("*t").month == 12
 
@@ -967,21 +971,23 @@ function render_elements(master_ass)
                                 thumbX = math.floor(thumbX + 0.5)
                                 thumbY = math.floor(thumbY + 0.5)
 
-                                elem_ass:new_event()
-                                elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
-                                elem_ass:an(7)
-                                elem_ass:append(osc_styles.Tooltip)
-                                elem_ass:draw_start()
-                                elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
-                                elem_ass:draw_stop()
+                                if (state.anitype == nil) then
+                                    elem_ass:new_event()
+                                    elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
+                                    elem_ass:an(7)
+                                    elem_ass:append(osc_styles.Tooltip)
+                                    elem_ass:draw_start()
+                                    elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
+                                    elem_ass:draw_stop()
 
-                                -- force tooltip to be centered on the thumb, even at far left/right of screen
-                                tx = (thumbX + thumbfast.width / 2) * r_w
-                                an = 2
+                                    -- force tooltip to be centered on the thumb, even at far left/right of screen
+                                    tx = (thumbX + thumbfast.width / 2) * r_w
+                                    an = 2
 
-                                mp.commandv("script-message-to", "thumbfast", "thumb",
-                                    hover_sec, thumbX, thumbY)
+                                    mp.commandv("script-message-to", "thumbfast", "thumb", hover_sec, thumbX, thumbY)
+                                end
 
+                                
                                 -- chapter title
                                 local se, ae = state.slider_element, elements[state.active_element]
                                 if user_opts.chapterformat ~= "no" and state.touchingprogressbar then
@@ -1172,7 +1178,12 @@ function checktitle()
     state.localDescription = nil
     state.localDescriptionClick = nil
     local title = mp.get_property("media-title")
-    local artist = mp.get_property("filtered-metadata/by-key/Artist") or mp.get_property("filtered-metadata/by-key/Album_Artist") or mp.get_property("filtered-metadata/by-key/Uploader")
+    local artist = mp.get_property("filtered-metadata/by-key/Album_Artist") or mp.get_property("filtered-metadata/by-key/Artist") or mp.get_property("filtered-metadata/by-key/Uploader")
+    if (mp.get_property("filtered-metadata/by-key/Album_Artist") and mp.get_property("filtered-metadata/by-key/Artist")) then
+        if (mp.get_property("filtered-metadata/by-key/Album_Artist") ~= mp.get_property("filtered-metadata/by-key/Artist")) then
+            artist = mp.get_property("filtered-metadata/by-key/Album_Artist") .. ', ' .. mp.get_property("filtered-metadata/by-key/Artist")
+        end
+    end
     local album = mp.get_property("filtered-metadata/by-key/Album")
     local description = mp.get_property("filtered-metadata/by-key/Description")
     local date = mp.get_property("filtered-metadata/by-key/Date")
@@ -1261,7 +1272,7 @@ function checktitle()
             end
         end
 
-        local function format_file_size(file_size)
+        local function format_file_size_2dp(file_size)
             local units = {"bytes", "KB", "MB", "GB", "TB"}
             local unit_index = 1
             while file_size >= 1024 and unit_index < #units do
@@ -1274,7 +1285,7 @@ function checktitle()
         if (user_opts.showfilesize) then
             file_size = mp.get_property_native("file-size")
             if (file_size ~= nil) then
-                file_size = format_file_size(file_size)
+                file_size = format_file_size_2dp(file_size)
                 if (state.localDescription == nil) then -- only metadata
                     state.localDescription = "Size: " .. file_size
                     state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
@@ -1301,6 +1312,11 @@ function normaliseDate(date)
 end
 
 function is_url(s)
+    if (not s) then
+        user_opts.downloadbutton = false
+        return false
+    end
+
     return nil ~=
         string.match(s,
             "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%." ..
@@ -1310,6 +1326,13 @@ end
 
 function checkWebLink()
     state.isWebVideo = false
+    state.downloading = false
+    state.youtubecomments = {}
+    state.commentsParsed = false
+    state.currentCommentIndex = 0
+    state.commentsPage = 0
+    state.maxCommentPages = 0
+
     local path = mp.get_property("path")
     if not path then return nil end
 
@@ -1367,66 +1390,129 @@ function checkWebLink()
             exec_description(command)
         end
 
-        checkcomments()
+        if user_opts.showyoutubecomments then
+            msg.info("WEB: Downloading comments...")
+            checkcomments()
+        end
     end
 end
 
 function checkcomments()
-    if user_opts.showyoutubecomments then
-        function file_exists(file)
-            local f = io.open(file, "rb")
-            if f then f:close() end
-            return f ~= nil
-          end              
+    function file_exists(file)
+        local f = io.open(file, "rb")
+        if f then f:close() end
+        return f ~= nil
+    end              
 
-        function lines_from(file)
-            if not file_exists(file) then return {} end
-            local lines = {}
-            for line in io.lines(file) do 
-              lines[#lines + 1] = line
-            end
-            return lines
-          end              
+    function lines_from(file)
+        if not file_exists(file) then return {} end
+        local lines = {}
+        for line in io.lines(file) do 
+            lines[#lines + 1] = line
+        end
+        return lines
+    end         
 
-        local ret = mp.command_native_async({
-            name = "subprocess",
-            args = { 
-                "yt-dlp",
-                "--skip-download",
-                "--write-comments",
-                "-o%(title)s",
-                "-P " .. mp.command_native({"expand-path", user_opts.commentsdownloadpath}),
-                state.path 
-            },
-            capture_stdout = true,
-            capture_stderr = true
-        }, function() 
-            msg.info("WEB: Downloaded comments")
-            local filename = mp.command_native({"expand-path", user_opts.commentsdownloadpath .. '/'}) .. mp.get_property("media-title") .. ".info.json"
-            print(filename)
+    local ret = mp.command_native_async({
+        name = "subprocess",
+        args = { 
+            "yt-dlp",
+            "--skip-download",
+            "--write-comments",
+            "-o%(id)s",
+            "-P " .. mp.command_native({"expand-path", user_opts.commentsdownloadpath}),
+            state.path 
+        },
+        capture_stdout = true,
+        capture_stderr = true
+    }, function() 
+        msg.info("WEB: Downloaded comments")
+
+        local filename = mp.command_native({"expand-path", user_opts.commentsdownloadpath .. '/'}) .. mp.get_property("filename"):gsub("watch%?v=", ""):match("^[^%?&]+") .. ".info.json"
+        print(filename)
+
+        if file_exists(filename) then
+            msg.info("WEB: Reading comments file...")
             local lines = lines_from(filename)
-            local jsoncomments = utils.parse_json(lines[1]).comments
+            state.jsoncomments = utils.parse_json(lines[1]).comments
+        else
+            msg.info("WEB: Error opening comments file")
+            return
+        end
+        state.maxCommentPages = math.ceil(#state.jsoncomments / commentsperpage)
+        if (#state.jsoncomments > 0) then
+            state.commentsParsed = true
+        else
+            user_opts.showyoutubecomments = false -- prevent crash when viewing comments
+        end
+        if state.showingDescription then
+            show_description(state.localDescriptionClick)
+        end
+        msg.info("WEB: Read and parsed comments")
+    end )
+end
 
-            state.localDescriptionClick = state.localDescriptionClick .. '\\N----------\\N'
-            for i=1, #jsoncomments do
-                local comment = jsoncomments[i]
-                local commentconstruction = comment.author .. ' | '
-                if (comment.like_count) then
-                    commentconstruction = commentconstruction .. comment.like_count .. " likes"
-                else
-                    commentconstruction = commentconstruction .. "0 likes"
-                end
-                if (comment.is_favorited) then
-                    commentconstruction = commentconstruction .. (comment.is_favorited and ' | Favorited ♡\\N')
-                else
-                    commentconstruction = commentconstruction .. '\\N'
-                end
-                commentconstruction = commentconstruction .. comment.text .. '\\N-----\\N'
-                print(commentconstruction)
-                state.youtubecomments[i] = commentconstruction
-                state.localDescriptionClick = state.localDescriptionClick .. commentconstruction
+function loadSetOfComments(startIndex) 
+    if (state.jsoncomments < 1) then
+        return
+    end
+
+    state.commentDescription = ""
+    for i=startIndex, #state.jsoncomments do
+        if i > startIndex + (commentsperpage - 1) then
+            state.currentCommentIndex = i
+            break
+        end
+
+        local comment = state.jsoncomments[i]
+        local commentconstruction = comment.author
+
+        local linebreak = ''
+        if (i ~= startIndex) then
+            linebreak = '\\N'
+        end
+        if (comment.parent ~= "root") then
+            commentconstruction = linebreak .. "\\N | " .. commentconstruction  .. " (Replying) | "
+        else
+            if (linebreak == '\\N') then
+                commentconstruction = linebreak .. '-----\\N' .. commentconstruction .. ' | '
+            else
+                commentconstruction = '\\N' .. commentconstruction .. ' | '
             end
-        end )
+        end
+
+        if (comment._time_text) then
+            commentconstruction = commentconstruction .. comment._time_text
+        end
+        if (comment.is_favorited) then
+            commentconstruction = commentconstruction .. (comment.is_favorited and ' | Favorited ♡\\N')
+        end
+        if (comment.is_pinned) then
+            commentconstruction = commentconstruction .. (comment.is_pinned and ' | Pinned 📌\\N')
+        else
+            commentconstruction = commentconstruction .. '\\N'
+        end
+
+        local replyPad = ""
+        if (comment.parent ~= "root") then
+            replyPad = " | "
+            commentconstruction = commentconstruction .. replyPad .. comment.text:gsub('\n', '\\N' .. replyPad)
+        else
+            commentconstruction = commentconstruction .. comment.text
+        end
+
+        if (comment.like_count) then
+            local likeText = " likes"
+            if (comment.like_count == 1) then
+                likeText = " like"
+            end
+            commentconstruction = commentconstruction .. '\\N' .. replyPad .. comment.like_count .. likeText
+        else
+            commentconstruction = commentconstruction ..  '\\N' .. replyPad ..  "0 likes"
+        end
+        -- print(commentconstruction)
+        state.youtubecomments[i] = commentconstruction
+        state.commentDescription = state.commentDescription .. commentconstruction
     end
 end
 
@@ -1644,17 +1730,17 @@ function addLikeCountToTitle()
     end
 end
 
-function exec_filesize(args, result)
-    local function formatBytes(numberBytes)
-        local suffixes = {"B", "KB", "MB", "GB"}
-        local index = 1
-        while numberBytes >= 1024 and index < #suffixes do
-            numberBytes = numberBytes / 1024
-            index = index + 1
-        end
-        return string.format("%.2f %s", numberBytes, suffixes[index])
+function format_file_size(file_size)
+    local units = {"bytes", "KB", "MB", "GB", "TB"}
+    local unit_index = 1
+    while file_size >= 1024 and unit_index < #units do
+        file_size = file_size / 1024
+        unit_index = unit_index + 1
     end
+    return string.format("%.1f %s", math.ceil(file_size), units[unit_index])
+end
 
+function exec_filesize(args, result)
     local ret = mp.command_native_async({
         name = "subprocess",
         args = args,
@@ -1667,7 +1753,7 @@ function exec_filesize(args, result)
             state.fileSizeNormalised = "Unknown..."
             -- state.videoCantBeDownloaded = true
         else
-            state.fileSizeNormalised = "Size: ~" .. formatBytes(state.fileSizeBytes)
+            state.fileSizeNormalised = "Download size: " .. format_file_size(state.fileSizeBytes)
             msg.info("WEB: File size: " .. state.fileSizeBytes .. " B / " .. state.fileSizeNormalised)
         end
         request_tick()
@@ -1777,10 +1863,40 @@ function destroyscrollingkeys()
     unbind_keys("DOWN WHEEL_DOWN", "move_down")
     unbind_keys("ENTER MBTN_LEFT", "select")
     unbind_keys("ESC MBTN_RIGHT", "close")
+    unbind_keys("LEFT", "comments_left")
+    unbind_keys("RIGHT", "comments_right")
+end
+
+function checkDesc()
+    if state.descriptionLoaded or state.localDescriptionIsClickable then
+        if state.showingDescription then
+            state.showingDescription = false
+            destroyscrollingkeys()
+        else
+            state.showingDescription = true
+            if (state.isWebVideo) then
+                show_description(state.localDescriptionClick)
+            else
+                if (state.localDescriptionClick == nil) then
+                    show_description(state.localDescription)
+                else
+                    show_description(state.localDescriptionClick)
+                end
+            end
+        end
+    end
 end
 
 function show_description(text)
     duration = 10
+    if (state.isWebVideo and user_opts.showyoutubecomments) then
+        if (state.commentsParsed and user_opts.showyoutubecomments) then
+            state.commentsAdditionalText = '\\N----------\\NPress LEFT/RIGHT to view comments\\N' .. state.maxCommentPages .. ' pages (' .. #state.jsoncomments .. ' comments)'
+            text = text .. state.commentsAdditionalText
+        else
+            text = text .. '\\N----------\\NComments loading...'
+        end
+    end
     text = string.gsub(text, '\n', '\\N')
 
     -- enable scrolling of menu --
@@ -1789,30 +1905,76 @@ function show_description(text)
         if (state.scrolledlines > 25) then 
             state.scrolledlines = 25 
         end
-        state.message_hide_timer:kill()
-        state.message_hide_timer.timeout = duration
-        state.message_hide_timer:resume()
+        resetDescTimer()
         request_tick()
     end, { repeatable = true })
     bind_keys("DOWN WHEEL_DOWN", "move_down", function() 
         state.scrolledlines = state.scrolledlines - user_opts.scrollingSpeed 
-        state.message_hide_timer:kill()
-        state.message_hide_timer.timeout = duration
-        state.message_hide_timer:resume()
+        resetDescTimer()
         request_tick()
     end, { repeatable = true })
     bind_keys("ENTER", "select", destroyscrollingkeys)
-    bind_keys("ESC", "close", destroyscrollingkeys) --close menu using ESC
+    bind_keys("ESC", "close", function()
+        if (state.commentsPage > 0) then
+            state.commentsPage = 0
+            state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
+            resetDescTimer()
+            request_tick()
+        else
+            destroyscrollingkeys()
+        end
+    end) -- close menu using ESC
+    
+    state.commentsPage = 0
+    if (state.isWebVideo and user_opts.showyoutubecomments) then
+        bind_keys("LEFT", "comments_left", function() 
+            if (state.commentsParsed) then
+                state.commentsPage = state.commentsPage - 1
+                if (state.commentsPage == 0) then
+                    state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
+                elseif (state.commentsPage > 0) then
+                    loadSetOfComments((state.commentsPage - 1) * commentsperpage + 1)
+                    state.message_text = 'Comments | Page ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. (state.commentsPage - 1) * commentsperpage + 1 .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N')
+                else
+                    state.commentsPage = state.maxCommentPages
+                    loadSetOfComments((state.commentsPage - 1) * commentsperpage + 1)
+                    state.message_text = 'Comments | Page ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. (state.commentsPage - 1) * commentsperpage + 1 .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N')
+                end
+                state.scrolledlines = 25
+            end
+            resetDescTimer()
+            request_tick()
+        end)
+        bind_keys("RIGHT", "comments_right", function() 
+            if (state.commentsParsed) then
+                state.commentsPage = state.commentsPage + 1
+                if (state.commentsPage > state.maxCommentPages) then
+                    state.commentsPage = 0
+                    state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
+                else
+                    loadSetOfComments((state.commentsPage - 1) * commentsperpage + 1)
+                    state.message_text = 'Comments | Page ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. (state.commentsPage - 1) * commentsperpage + 1 .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N')    
+                end
+                state.scrolledlines = 25
+            end
+            resetDescTimer()
+            request_tick()
+        end)
+    end
 
     state.message_text = text
 
     if not state.message_hide_timer then
         state.message_hide_timer = mp.add_timeout(0, request_tick)
     end
+    resetDescTimer()
+    request_tick()
+end
+
+function resetDescTimer()
     state.message_hide_timer:kill()
     state.message_hide_timer.timeout = duration
     state.message_hide_timer:resume()
-    request_tick()
 end
 
 function render_message(ass)
@@ -2195,11 +2357,11 @@ layouts = function ()
 
     -- Time
     lo = add_layout('tc_left')
-    lo.geometry = {x = 25, y = refY - 84, an = 7, w = 64, h = 20}
+    lo.geometry = {x = 25, y = refY - 84, an = 7, w = 100, h = 20}
     lo.style = osc_styles.Time
         
     lo = add_layout('tc_right')
-    lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
+    lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 100, h = 20}
     lo.style = osc_styles.Time
 
     -- Audio/Subtitle
@@ -2365,23 +2527,7 @@ function osc_init()
     end
     ne.eventresponder['mbtn_left_up'] =
         function ()
-            if state.descriptionLoaded or state.localDescriptionIsClickable then
-                if state.showingDescription then
-                    state.showingDescription = false
-                    destroyscrollingkeys()
-                else
-                    state.showingDescription = true
-                    if (state.isWebVideo) then
-                        show_description(state.localDescriptionClick)
-                    else
-                        if (state.localDescriptionClick == nil) then
-                            show_description(state.localDescription)
-                        else
-                            show_description(state.localDescriptionClick)
-                        end
-                    end
-                end
-            end
+            checkDesc()
         end
 
     -- playlist buttons
@@ -2741,27 +2887,35 @@ function osc_init()
                 local localpath = localpathnormal
 
                 local function openFolder()
-                    local function is_macos()
-                        local a=os.getenv("HOME")if a~=nil and string.sub(a,1,6)=="/Users"then return true else return false end
+                    local device = "linux"
+                    if os.getenv("windir") ~= nil then
+                        device = "windows"
+                    elseif os.execute '[ -d "/Applications" ]' == 0 and os.execute '[ -d "/Library" ]' == 0 or os.execute '[ -d "/Applications" ]' == true and os.execute '[ -d "/Library" ]' == true then
+                        device = "mac"
                     end
 
-                    local function is_windows()
-                        local a=os.getenv("windir")if a~=nil then return true else return false end
-                    end
+                    -- for ubuntu
+                    local url_browser_linux_cmd = "xdg-open \"$url\""
+                    local file_browser_linux_cmd = "dbus-send --print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file:$path\" string:\"\""
+                    local url_browser_macos_cmd = "open \"$url\""
+                    local file_browser_macos_cmd = "open -a Finder -R \"$path\""
 
-                    local command = "dbus-send --print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file:$path\" string:\"\""
-                    local windowscmd = "start $path\\"
-                    local macoscmd = "open -a Finder -R \"$path\""
-
-                    if is_windows() then
+                    local cmd = ""
+                    if device == "linux" then
+                        cmd = file_browser_linux_cmd
+                    elseif device == 'windows' then
                         localpath = localpath:gsub("/", "\\")
-                        command = windowscmd
-                    elseif is_macos() then
-                        command = macoscmd
+                        local ret = mp.command_native_async({
+                            name = "subprocess",
+                            args = {"explorer", localpath}
+                        })
+                    elseif device == "mac" then
+                        cmd = file_browser_macos_cmd
+                    end 
+                    cmd = cmd:gsub("$path", localpath)
+                    if device ~= 'windows' then
+                        os.execute(cmd)
                     end
-                    command = command:gsub("$path", localpath)
-
-                    os.execute(command)
                 end
 
                 if state.downloadedOnce then
@@ -2913,7 +3067,12 @@ function osc_init()
             end
 
         end
-    ne.eventresponder['mbtn_left_down'] = --exact seeks on single clicks
+    ne.eventresponder['mbtn_left_down'] =
+        function (element)
+            element.state.mbtnleft = true
+            mp.commandv('seek', get_slider_value(element), 'absolute-percent')
+        end
+    ne.eventresponder['shift+mbtn_left_down'] = --exact seeks on shift + left click
         function (element)
             element.state.mbtnleft = true
             mp.commandv('seek', get_slider_value(element), 'absolute-percent', 'exact')
@@ -3617,12 +3776,6 @@ end)
 mp.observe_property('seeking', nil, function()
     resetTimeout()
 end)
-mp.register_event("windowcontrols_title", function()
-    print("YEAHSDADD")
-    if mp.get_property("media-title") then
-        mp.set_property("title", mp.get_property("media-title"))
-    end
-end)
 
 if user_opts.keybindings then
     -- chapter scrubbing
@@ -3662,6 +3815,10 @@ if user_opts.keybindings then
             tick()
             print("Persistent progress bar toggled")
         end);
+    end
+
+    if (user_opts.showdescription) then
+        mp.add_key_binding("d", "showdescription", checkDesc);
     end
 
     mp.add_key_binding("TAB", 'get_chapterlist', function() show_message(get_chapterlist()) end)
