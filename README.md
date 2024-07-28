@@ -33,14 +33,14 @@ Locate your MPV folder. It is typically located at `\%APPDATA%\mpv\` on Windows 
 
 Place `modernx.lua` into your mpv `scripts/` folder, remove any previous OSC scripts.
 
-Then place the two fonts in the `fonts/` folder. `Material-Design-Iconic-Font.ttf` can be downloaded [Material-Design-Iconic-Font.ttf](Material-Design-Iconic-Font.ttf) and `Material-Design-Iconic-Round.ttf` also [Material-Design-Iconic-Round.ttf](Material-Design-Iconic-Round.ttf).
+Then place the two fonts in the `fonts/` folder. [Material-Design-Iconic-Font.ttf](Material-Design-Iconic-Font.ttf) (click the link to download) and also [Material-Design-Iconic-Round.ttf](Material-Design-Iconic-Round.ttf).
 
 ### mpv.conf
 
 Add the following lines to your `mpv.conf` file.
 
 > [!NOTE]
-> Please note that in `.conf` files, use yes/no in place of true/false
+> Please note that in `.conf` files use yes/no in place of true/false
 
 ```editorconfig
 osc=no
