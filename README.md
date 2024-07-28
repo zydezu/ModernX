@@ -33,11 +33,14 @@ Locate your MPV folder. It is typically located at `\%APPDATA%\mpv\` on Windows 
 
 Place `modernx.lua` into your mpv `scripts/` folder, remove any previous OSC scripts.
 
-Then place the two fonts in the `fonts/` folder. `Material-Design-Iconic-Font.ttf` can be downloaded [Material-Design-Iconic-Font.ttf](Material-Design-Iconic-Font.ttf) and `Material-Design-Iconic-Round.ttf` also [Material-Design-Iconic-Round.ttf](Material-Design-Iconic-Round.ttf).
+Then place the two fonts in the `fonts/` folder. [Material-Design-Iconic-Font.ttf](Material-Design-Iconic-Font.ttf) (click the link to download) and also [Material-Design-Iconic-Round.ttf](Material-Design-Iconic-Round.ttf).
 
 ### mpv.conf
 
 Add the following lines to your `mpv.conf` file.
+
+> [!NOTE]
+> Please note that in `.conf` files use yes/no in place of true/false
 
 ```editorconfig
 osc=no
@@ -197,8 +200,7 @@ local user_opts = {
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
-    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
-                                    -- (uses standard lua date formatting)
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
@@ -209,7 +211,7 @@ local user_opts = {
     seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
     automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
-    automatickeyframelimit = 1800,  -- videos of above this length (in seconds) will have seekbarkeyframes on
+    automatickeyframelimit = 600,  -- videos of above this length (in seconds) will have seekbarkeyframes on
     seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
     seekrange = true,               -- show seekrange overlay
     seekrangealpha = 150,           -- transparency of seekranges
@@ -222,10 +224,9 @@ local user_opts = {
     timefontsize = 18,              -- the font size of the time
     jumpamount = 5,                 -- change the jump amount (in seconds by default)
     jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
-    jumpmode = 'exact',             -- seek mode for jump buttons. e.g.
-                                    -- 'exact', 'relative+keyframes', etc.
+    jumpmode = 'relative',          -- seek mode for jump buttons - https://mpv.io/manual/stable/#command-interface-seek-%3Ctarget%3E-[%3Cflags%3E]
     volumecontrol = true,           -- whether to show mute button and volume slider
-    volumecontroltype = 'linear',   -- use linear or logarithmic volume scale
+    volumecontroltype = 'linear',   -- use 'linear' or 'log' (logarithmic) volume scale
     showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
     showskip = true,                -- show the skip back and forward (chapter) buttons
     compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
@@ -278,13 +279,14 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 - `Left mouse button` show the full media title
 - `Right mouse button` show the full filename
 
-### Description (only on web videos)
+### Description (only on certain videos)
 
 - `Left mouse button` show the full description, use `up arrow`, `down arrow` or `scroll wheel` to scroll through it
 
 ### Seekbar
 
-- `Left mouse button` seek to chosen position
+- `Left mouse button` seek to chosen position (using keyframes)
+- `Shift+left mouse button` seek to the exact position
 - `Right mouse button` seek to the head of chosen chapter
 
 ### Playback time
