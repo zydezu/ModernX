@@ -200,8 +200,7 @@ local user_opts = {
                                     -- to be shown as OSC title
     titlefontsize = 28,             -- the font size of the title text
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
-    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata 
-                                    -- (uses standard lua date formatting)
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
     osc_color = '000000',           -- accent of the OSC and the title bar
     OSCfadealpha = 150,             -- alpha of the background box for the OSC
     boxalpha = 75,                  -- alpha of the window title bar
