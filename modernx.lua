@@ -3067,15 +3067,15 @@ function osc_init()
             end
 
         end
-    ne.eventresponder['mbtn_left_down'] =
-        function (element)
-            element.state.mbtnleft = true
-            mp.commandv('seek', get_slider_value(element), 'absolute-percent')
-        end
-    ne.eventresponder['shift+mbtn_left_down'] = --exact seeks on shift + left click
+    ne.eventresponder['mbtn_left_down'] = --exact seeks on left click
         function (element)
             element.state.mbtnleft = true
             mp.commandv('seek', get_slider_value(element), 'absolute-percent', 'exact')
+        end
+    ne.eventresponder['shift+mbtn_left_down'] = --keyframe seeks on shift+left click
+        function (element)
+            element.state.mbtnleft = true
+            mp.commandv('seek', get_slider_value(element), 'absolute-percent')
         end
     ne.eventresponder['mbtn_left_up'] =
         function (element)
