@@ -1693,7 +1693,7 @@ function exec_dislikes(args, result)
             state.dislikes = ""
         end
 
-        if (not state.descriptionLoaded) then
+        if (user_opts.showdescription and not state.descriptionLoaded) then
             state.localDescriptionClick = state.localDescriptionClick .. '\\N' .. state.dislikes
             state.videoDescription = state.localDescriptionClick
         else
@@ -1714,7 +1714,7 @@ function commas(number)
  end
 
 function addLikeCountToTitle()
-    if (user_opts.updatetitleyoutubestats) then
+    if (user_opts.showdescription and user_opts.updatetitleyoutubestats) then
         state.viewcount = commas(state.localDescriptionClick:match('Views: (%d+)')) 
         state.likecount = commas(state.localDescriptionClick:match('Likes: (%d+)'))
         if (state.viewcount ~= '' and state.likecount ~= '' and state.dislikecount) then
