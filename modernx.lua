@@ -1693,8 +1693,12 @@ function exec_dislikes(args, result)
             state.dislikes = ""
         end
 
-        if (user_opts.showdescription and not state.descriptionLoaded) then
-            state.localDescriptionClick = state.localDescriptionClick .. '\\N' .. state.dislikes
+        if (not state.descriptionLoaded) then
+            if state.localDescriptionClick then
+                state.localDescriptionClick = state.localDescriptionClick .. '\\N' .. state.dislikes
+            else
+                state.localDescriptionClick = state.dislikes
+            end
             state.videoDescription = state.localDescriptionClick
         else
             addLikeCountToTitle()
