@@ -98,6 +98,7 @@ local user_opts = {
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
+    screenshotbutton = false        -- show screenshot button
     downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
     showyoutubecomments = false,    -- EXPERIMENTAL - not ready
     commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
@@ -2269,6 +2270,7 @@ layouts = function ()
     local showloop = user_opts.showloop
     local showinfo = user_opts.showinfo
     local showontop = user_opts.showontop
+    local showscreenshot = user_opts.screenshotbutton
 
     if user_opts.compactmode then
         user_opts.showjump = false
@@ -2416,6 +2418,13 @@ layouts = function ()
         lo.geometry = {x = osc_geo.w - 217 + (showloop and 0 or 50) + (showontop and 0 or 50) + (showinfo and 0 or 50), y = refY - 40, an = 5, w = 24, h = 24}
         lo.style = osc_styles.Ctrl3
         lo.visible = (osc_param.playresx >= 400 - outeroffset)
+    end
+
+    if showscreenshot then
+        lo = add_layout('screenshot')
+        lo.geometry = {x = osc_geo.w - 262 + (showloop and 0 or 50) + (showontop and 0 or 50) + (showinfo and 0 or 50) + (user_opts.downloadbutton and 0 or 50), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.Ctrl3
+        lo.visible = (osc_param.playresx >= 300 - outeroffset)
     end
 end
 
@@ -2947,6 +2956,15 @@ function osc_init()
             else
                 show_message("\\N{\\an9}Can't be downloaded")
             end
+        end
+
+    --screenshot
+    ne = new_element('screenshot', 'button')
+    ne.content = icons.screenshot
+    ne.visible = (osc_param.playresx >= 1000)
+    ne.eventresponder['mbtn_left_up'] =
+        function ()
+            mp.command('screenshot') -- this takes screenshots with subs, remove video to take screenshots without subs
         end
 
     --tog_info
