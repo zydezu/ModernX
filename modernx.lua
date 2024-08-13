@@ -2885,7 +2885,7 @@ function osc_init()
             return (icons.download)
         end
     end
-    ne.visible = (osc_param.playresx >= 900 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100) - (user_opts.showinfo and 0 or 100)) and state.isWebVideo
+    ne.visible = (osc_param.playresx >= 1100 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100) - (user_opts.showinfo and 0 or 100) - (user_opts.showscreenshot and 0 or 100)) and state.isWebVideo
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
         local msg = state.fileSizeNormalised
@@ -2962,10 +2962,13 @@ function osc_init()
     --screenshot
     ne = new_element('screenshot', 'button')
     ne.content = icons.screenshot
-    ne.visible = (osc_param.playresx >= 900 - outeroffset)
+    ne.visible = (osc_param.playresx >= 900 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100) - (user_opts.showinfo and 0 or 100))
     ne.eventresponder['mbtn_left_up'] =
         function ()
+            local tempSubPosition = mp.get_property('sub-pos')
+            mp.commandv('set', 'sub-pos', 100)
             mp.command('screenshot') -- this takes screenshots with subs, remove video to take screenshots without subs
+            mp.commandv('set', 'sub-pos', tempSubPosition)
         end
 
     --tog_info
