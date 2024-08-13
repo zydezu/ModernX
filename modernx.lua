@@ -98,7 +98,7 @@ local user_opts = {
     showontop = true,               -- show window on top button
     showinfo = false,               -- show the info button
     downloadbutton = true,          -- show download button for web videos
-    screenshotbutton = false        -- show screenshot button
+    screenshotbutton = false,        -- show screenshot button
     downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
     showyoutubecomments = false,    -- EXPERIMENTAL - not ready
     commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
@@ -137,6 +137,7 @@ local icons = {
   downloading = '\239\134\185',
   ontopon = '\239\142\150',
   ontopoff = '\239\142\149',
+  screenshot = ''
 }
 
 local emoticon = {
@@ -2394,7 +2395,7 @@ layouts = function ()
 
     if showontop then
         lo = add_layout('tog_ontop')
-        lo.geometry = {x = osc_geo.w - 127 + (showloop and 0 or 50), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.geometry = {x = osc_geo.w - 127 + (showloop and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
         lo.style = osc_styles.Ctrl3
         lo.visible = (osc_param.playresx >= 700 - outeroffset)
     end
@@ -2408,23 +2409,23 @@ layouts = function ()
 
     if showinfo then
         lo = add_layout('tog_info')
-        lo.geometry = {x = osc_geo.w - 172 + (showloop and 0 or 50) + (showontop and 0 or 50), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.geometry = {x = osc_geo.w - 172 + (showloop and 0 or 45) + (showontop and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
         lo.style = osc_styles.Ctrl3
         lo.visible = (osc_param.playresx >= 500 - outeroffset)
     end
 
-    if user_opts.downloadbutton then
-        lo = add_layout('download')
-        lo.geometry = {x = osc_geo.w - 217 + (showloop and 0 or 50) + (showontop and 0 or 50) + (showinfo and 0 or 50), y = refY - 40, an = 5, w = 24, h = 24}
-        lo.style = osc_styles.Ctrl3
-        lo.visible = (osc_param.playresx >= 400 - outeroffset)
-    end
-
     if showscreenshot then
         lo = add_layout('screenshot')
-        lo.geometry = {x = osc_geo.w - 262 + (showloop and 0 or 50) + (showontop and 0 or 50) + (showinfo and 0 or 50) + (user_opts.downloadbutton and 0 or 50), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.geometry = {x = osc_geo.w - 217 + (showloop and 0 or 45) + (showontop and 0 or 45) + (showinfo and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
         lo.style = osc_styles.Ctrl3
         lo.visible = (osc_param.playresx >= 300 - outeroffset)
+    end
+
+    if user_opts.downloadbutton then
+        lo = add_layout('download')
+        lo.geometry = {x = osc_geo.w - 262 + (showloop and 0 or 45) + (showontop and 0 or 45) + (showinfo and 0 or 45) + (showscreenshot and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.Ctrl3
+        lo.visible = (osc_param.playresx >= 400 - outeroffset)
     end
 end
 
@@ -2961,7 +2962,7 @@ function osc_init()
     --screenshot
     ne = new_element('screenshot', 'button')
     ne.content = icons.screenshot
-    ne.visible = (osc_param.playresx >= 1000)
+    ne.visible = (osc_param.playresx >= 900 - outeroffset)
     ne.eventresponder['mbtn_left_up'] =
         function ()
             mp.command('screenshot') -- this takes screenshots with subs, remove video to take screenshots without subs
