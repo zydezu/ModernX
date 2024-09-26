@@ -1362,7 +1362,7 @@ function checkWebLink()
 
         -- Youtube Return Dislike API
         state.dislikes = ""
-        if path:find('youtu%.?be') then
+        if path:find('youtu%.?be') and (user_opts.showdescription or user_opts.updatetitleyoutubestats) then
             msg.info("WEB: Loading dislike count...")
             local filename = mp.get_property_osd("filename")
             local pattern = "v=([^&]+)"
