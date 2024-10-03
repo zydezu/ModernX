@@ -40,6 +40,7 @@ local user_opts = {
     donttimeoutonpause = false,     -- whether to disable the hide timeout on pause
     bottomhover = true,             -- if the osc should only display when hovering at the bottom
     raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
+    raisesubamount = 175,           -- how much subtitles rise when the osc is shown
     thumbnailborder = 2,            -- the width of the thumbnail border
     persistentprogress = false,     -- always show a small progress line at the bottom of the screen
     persistentprogressheight = 17,  -- the height of the persistentprogress bar
@@ -1901,7 +1902,11 @@ function show_description(text)
     duration = 10
     if (state.isWebVideo and user_opts.showyoutubecomments) then
         if (state.commentsParsed and user_opts.showyoutubecomments) then
-            state.commentsAdditionalText = '\\N----------\\NPress LEFT/RIGHT to view comments\\N' .. state.maxCommentPages .. ' pages (' .. #state.jsoncomments .. ' comments)'
+            local pageText = "pages"
+            if state.maxCommentPages == 1 then
+                pageText = "page"
+            end
+            state.commentsAdditionalText = '\\N----------\\NPress LEFT/RIGHT to view comments\\N' .. state.maxCommentPages .. ' ' .. pageText .. ' (' .. #state.jsoncomments .. ' comments)'
             text = text .. state.commentsAdditionalText
         else
             text = text .. '\\N----------\\NComments loading...'
@@ -1930,10 +1935,22 @@ function show_description(text)
             state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
             resetDescTimer()
             request_tick()
+            state.scrolledlines = 25
         else
             destroyscrollingkeys()
         end
     end) -- close menu using ESC
+
+    local function returnMessageText()
+        local totalCommentCount = #state.jsoncomments
+        local firstCommentCount = (state.commentsPage - 1) * commentsperpage + 1
+        local lastCommentCount = (state.commentsPage) * commentsperpage
+        if lastCommentCount > totalCommentCount then
+            lastCommentCount = totalCommentCount
+        end
+        loadSetOfComments(firstCommentCount)
+        return 'Comments\\NPage ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. firstCommentCount .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N') ..  '\\N----------\\NEnd of page\\NPage ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. lastCommentCount .. '/' .. totalCommentCount .. ')'
+    end
     
     state.commentsPage = 0
     if (state.isWebVideo and user_opts.showyoutubecomments) then
@@ -1943,12 +1960,10 @@ function show_description(text)
                 if (state.commentsPage == 0) then
                     state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
                 elseif (state.commentsPage > 0) then
-                    loadSetOfComments((state.commentsPage - 1) * commentsperpage + 1)
-                    state.message_text = 'Comments | Page ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. (state.commentsPage - 1) * commentsperpage + 1 .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N')
+                    state.message_text = returnMessageText()
                 else
                     state.commentsPage = state.maxCommentPages
-                    loadSetOfComments((state.commentsPage - 1) * commentsperpage + 1)
-                    state.message_text = 'Comments | Page ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. (state.commentsPage - 1) * commentsperpage + 1 .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N')
+                    state.message_text = returnMessageText()
                 end
                 state.scrolledlines = 25
             end
@@ -1962,8 +1977,7 @@ function show_description(text)
                     state.commentsPage = 0
                     state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
                 else
-                    loadSetOfComments((state.commentsPage - 1) * commentsperpage + 1)
-                    state.message_text = 'Comments | Page ' .. state.commentsPage .. '/' .. state.maxCommentPages .. ' (' .. (state.commentsPage - 1) * commentsperpage + 1 .. '/' .. #state.jsoncomments .. ')\\N----------' .. state.commentDescription:gsub('\n', '\\N')    
+                    state.message_text = returnMessageText()
                 end
                 state.scrolledlines = 25
             end
@@ -3333,7 +3347,7 @@ function adjustSubtitles(visible)
     if visible and user_opts.raisesubswithosc and state.osc_visible == true and (state.fullscreen == false or user_opts.showfullscreen) then
         local w, h = mp.get_osd_size()
         if h > 0 then
-            local subpos = math.floor((osc_param.playresy - 175)/osc_param.playresy*100)
+            local subpos = math.floor((osc_param.playresy - user_opts.raisesubamount)/osc_param.playresy*100)
             if subpos < 0 then
                 subpos = 100 -- out of screen, default to original position
             end
