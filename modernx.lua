@@ -1460,7 +1460,7 @@ function checkcomments()
 end
 
 function loadSetOfComments(startIndex) 
-    if (state.jsoncomments < 1) then
+    if (#state.jsoncomments < 1) then
         return
     end
 
