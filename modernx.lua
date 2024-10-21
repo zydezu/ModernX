@@ -54,6 +54,7 @@ local user_opts = {
     showfilesize = true,            -- show the current file's size in the description
     titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
     title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
+    windowcontrols_title = "${media-title}",    -- same as title but for windowcontrols
     dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
                                     -- differ (like with playing urls, audio or some media)
     updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
@@ -69,8 +70,8 @@ local user_opts = {
     descriptionBoxAlpha = 100,      -- alpha of the description background box
 
     -- seekbar settings --
-    seekbarfg_color = '#429CE3',     -- color of the seekbar progress and handle, in Hex color format
-    seekbarbg_color = '#FFFFFF',     -- color of the remaining seekbar, in Hex color format
+    seekbarfg_color = '#429CE3',    -- color of the seekbar progress and handle, in Hex color format
+    seekbarbg_color = '#FFFFFF',    -- color of the remaining seekbar, in Hex color format
     seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
     automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
     automatickeyframelimit = 600,   -- videos of above this length (in seconds) will have seekbarkeyframes on
@@ -2155,7 +2156,7 @@ function window_controls()
     if user_opts.showwindowtitle then
         ne = new_element("windowtitle", "button")
         ne.content = function ()
-            local title = mp.command_native({"expand-text", mp.get_property('title')})
+            local title = mp.command_native({"expand-text", user_opts.windowcontrols_title})
             -- escape ASS, and strip newlines and trailing slashes
             title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
             local titleval = not (title == "") and title or "mpv video"
