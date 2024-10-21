@@ -61,6 +61,7 @@ local user_opts = {
     font = 'mpv-osd-symbols',       -- mpv-osd-symbols = default osc font (or the one set in mpv.conf)
                                     -- to be shown as OSC title
     titlefontsize = 30,             -- the font size of the title text
+    dynamictimeformat = true,      -- don't show hh on times less than 1 hour
     chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
     dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
     osc_color = '#000000',           -- accent of the OSC and the title bar, in Hex color format
@@ -3060,7 +3061,7 @@ function osc_init()
         local duration = mp.get_property_number('duration', nil)
         if not ((duration == nil) or (pos == nil)) then
             possec = duration * (pos / 100)
-            return mp.format_time(possec)
+            return format_time(possec, true)
         else
             return ''
         end
@@ -3248,29 +3249,44 @@ function osc_init()
         function () mp.commandv("osd-auto", "add", "volume", -5) end
     
     -- Helper function to format time
-    local function format_time(seconds)
+    function format_time(seconds, dontincludems)
         if not seconds then return "--:--" end
         
         local hours = math.floor(seconds / 3600)
         local minutes = math.floor((seconds % 3600) / 60)
         local whole_seconds = math.floor(seconds % 60)
         local milliseconds = state.tc_ms and math.floor((seconds % 1) * 1000) or nil
-        
+
         -- Format string templates
         local format_with_ms = hours > 0 and "%02d:%02d:%02d.%03d" or "%02d:%02d.%03d"
         local format_without_ms = hours > 0 and "%02d:%02d:%02d" or "%02d:%02d"
-        
-        if state.tc_ms then
-            return string.format(format_with_ms, 
-                hours > 0 and hours or minutes,
-                hours > 0 and minutes or whole_seconds,
-                hours > 0 and whole_seconds or milliseconds,
-                hours > 0 and milliseconds or nil)
+
+        if state.tc_ms and not dontincludems then
+            if user_opts.dynamictimeformat then
+                return string.format(format_with_ms, 
+                    hours > 0 and hours or minutes,
+                    hours > 0 and minutes or whole_seconds,
+                    hours > 0 and whole_seconds or milliseconds,
+                    hours > 0 and milliseconds or nil)
+            else
+                return string.format(format_with_ms, 
+                    hours > 0 and hours or minutes,
+                    hours > 0 and minutes or whole_seconds,
+                    hours > 0 and whole_seconds or milliseconds,
+                    hours > 0 and milliseconds or nil)
+            end
         else
-            return string.format(format_without_ms,
-                hours > 0 and hours or minutes,
-                hours > 0 and minutes or whole_seconds,
-                hours > 0 and whole_seconds or nil)
+            if user_opts.dynamictimeformat then
+                return string.format(format_without_ms,
+                    hours > 0 and hours or minutes,
+                    hours > 0 and minutes or whole_seconds,
+                    hours > 0 and whole_seconds or nil)
+            else
+                return string.format("%02d:%02d:%02d", 
+                    hours,
+                    minutes,
+                    whole_seconds)
+            end
         end
     end
 
@@ -3278,7 +3294,7 @@ function osc_init()
     ne = new_element("tc_left", "button")
     ne.content = function()
         local playback_time = mp.get_property_number("playback-time", 0)
-        return format_time(playback_time)
+        return format_time(playback_time, false)
     end
     ne.eventresponder["mbtn_left_up"] = function()
         state.tc_ms = not state.tc_ms
@@ -3300,7 +3316,7 @@ function osc_init()
             (user_opts.unicodeminus and UNICODE_MINUS or "-") or 
             ""
             
-        return prefix .. format_time(time_to_display)
+        return prefix .. format_time(time_to_display, false)
     end
     ne.eventresponder["mbtn_left_up"] = function()
         state.rightTC_trem = not state.rightTC_trem
