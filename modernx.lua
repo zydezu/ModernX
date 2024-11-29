@@ -2556,7 +2556,11 @@ function osc_init()
             title = string.gsub(title, '\\N', ' ')
             return not (title == "") and title or "error"
         else
-            return string.gsub(state.localDescription, '\\N', ' ')
+            if(state.localDescription == nil) then
+                return ""
+            else
+                return string.gsub(state.localDescription, '\\N', ' ')
+            end
         end
     end
     ne.eventresponder['mbtn_left_up'] =
