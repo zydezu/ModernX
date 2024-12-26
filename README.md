@@ -40,7 +40,7 @@ Then place the font in the `fonts/` folder. [fluent-system-icons.ttf](fluent-sys
 Add the following lines to your `mpv.conf` file.
 
 > [!NOTE]
-> Please note that in `.conf` files use yes/no in place of true/false
+> Please note that `.conf` files use yes/no in place of true/false
 
 ```editorconfig
 osc=no
