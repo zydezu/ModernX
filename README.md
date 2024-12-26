@@ -33,7 +33,7 @@ Locate your MPV folder. It is typically located at `\%APPDATA%\mpv\` on Windows 
 
 Place `modernx.lua` into your mpv `scripts/` folder, remove any previous OSC scripts.
 
-Then place the two fonts in the `fonts/` folder. [Material-Design-Iconic-Font.ttf](Material-Design-Iconic-Font.ttf) (click the link to download) and also [Material-Design-Iconic-Round.ttf](Material-Design-Iconic-Round.ttf).
+Then place the font in the `fonts/` folder. [fluent-system-icons.ttf](fluent-system-icons.ttf) (click the link to download).
 
 ### mpv.conf
 
@@ -75,172 +75,154 @@ seekbarhandlesize=0
 
 ### Configurable Options
 
-| Option   | Description |
-| -------------- | --------------- |
-| language | The language of the osc, mostly messages that are shown in the top left of the screen <br> ![mpv_rWXEhJCgFO](https://github.com/zydezu/ModernX/assets/50119098/c09eb0c6-e67a-4b01-b48b-311d421a0490) |
-| welcomescreen  | Whether to show the mpv 'Drop files or URLs to play here.' screen <br> ![mpv_DuuCGjbj16](https://github.com/zydezu/ModernX/assets/50119098/ac70f973-023a-4f7b-afd6-66751c8e4992) |
-| windowcontrols | Whether to show OSC window controls, 'auto' will only show them in fullscreen or when borderless, 'yes' always shows them and 'no' never shows them |
-| keybindings | If to register keybindings i.e. chapter scrubbing, pinning window |
-| showwindowed | Whether to show the OSC when windowed |
-| showfullscreen | Whether to show the OSC when in fullscreen |
-| noxmas | Disable showing the santa hat in December |
-| keybindings | Whether the script should register keybindings for things like chapter scrubbing |
-| vidscale | Whether the OSC scales with the window's size |
-| scalewindowed  | The scaling of the OSC when windowed |
-| scalefullscreen | The scaling of the OSC when in fullscreen |
-| scaleforcedwindow | The scaling when rendered on a forced window (like an audio file) |
-| hidetimeout | Duration in ms until the OSC hides when there is no mouse movement |
-| fadeduration | Duration in ms of the fade effect the OSC exihibts |
-| minmousemove | The minimum amount of pixels the mouse has to move for the OSC to show |
-| scrollingSpeed | The speed of scrolling text in menus |
-| showonpause | Whether to disable the hide timeout on pause (when enabled, pausing will show the OSC instantly) |
-| donttimeoutonpause | Whether to disable the hide timeout on pause |
-| bottomhover | If the osc should only display when hovering over UI elements at the bottom of the window (includes the window control buttons at the top if visible) <br> **On:** <br> ![mpv_UuIaS6QEQG](https://github.com/zydezu/ModernX/assets/50119098/e1b81c25-7e14-42f0-9a8e-0626796e78cb) <br> **Off:** <br> ![mpv_PDZfBO3tVn](https://github.com/zydezu/ModernX/assets/50119098/2da844c8-e7d3-4ecc-9baf-dba5e421ab18) |
-| raisesubswithosc | Whether to raise any subtitles being shown, if the OSC is being shown <br> ![mpv_gpAsmbHnNs](https://github.com/zydezu/ModernX/assets/50119098/1268597a-f6e8-415e-8e58-a9f5fd55c2be) |
-| thumbnailborder | The width of outline of the [thumbnail border](thumbnails) |
-| persistentprogress | Whether to always show a small progress line at the bottom of the screen |
-| persistentprogressheight | The height of the persistentprogress bar |
-| persistentbuffer | Whether, on web videos to show the buffer on the persistent progress line |
-| persistentprogresstoggle | Whether to enable toggling the persistentprogress bar |
-| showtitle | Whether to show the title in the OSC |
-| showdescription | Whether to show video description on web videos, clicking it will show an on-screen box of the full description <br> ![2024-04-28_07-34-51_077_mpv](https://github.com/zydezu/ModernX/assets/50119098/f9d2e98f-bf11-40cf-a6b7-72597402c0fd) |
-| showwindowtitle | Whether to show to window title, when the window is borderless/fullscreened (this will match whatever is set in your `mpv.conf` file) <br> ![mpv_4hhWPnDWZS](https://github.com/zydezu/ModernX/assets/50119098/59dff364-b5d5-4adb-bb43-fd323b8f1616) |
-| showfilesize | Whether to show the current file's size in the description |
-| titleBarStrip | Whether to make the title bar a singular bar, instead of a black fade at the top of the screen |
-| title | What title is shown in the OSC, see the [mpv manual](https://mpv.io/manual/master/#command-interface-media-title) for more properties - turn off dynamictitle for this option to be respected |
-| dynamictitle | Changed what title information is shown depending on if the `filename` and `media-title` properties differ, seen most in audio files and playing urls |
-| updatetitleyoutubestats | Whether to update the window/OSC title bar with YouTube video stats (views, likes, dislikes) |
-| font | The font of the OSC, by default matches the font set in `mpv.conf` |
-| titlefontsize | The size of the title text |
-| chapterformat | The format of the chapter text when hovering over the seekbar. Use 'no' to disable |
-| dateformat | how dates should be formatted, when read from metadata (uses standard lua date formatting) <br> ![2024-04-28_07-22-13_315_mpv](https://github.com/zydezu/ModernX/assets/50119098/a0602d71-a7cc-4f44-b15b-4cc061303ede) |
-| osc_color | The colour of the OSC and title bar |
-| OSCfadealpha | Alpha of the background box for the OSC |
-| boxalpha | Alpha of the fade box effect, 0 (opaque) to 255 (fully transparent) |
-| descriptionBoxAlpha | Alpha of the description background box |
-| seekbarfg_color | Colour of current seekbar progress and the handle |
-| seekbarbg_color | Colour of the remaining seekbar |
-| seekbarkeyframes | Whether to use keyframes when dragging the seekbar |
-| automatickeyframemode | Whether to set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos |
-| automatickeyframelimit | Videos of above this length (in seconds) will have seekbarkeyframes on |
-| seekbarhandlesize | How big the seek bar handle appears, from 0 to 1 |
-| seekrange | Whether to show the buffer range on the seekbar |
-| seekrangealpha | The transparency of seekranges |
-| iconstyle | Whether the icons are normal or round varients - thanks to [https://github.com/cyl0/ModernX/pull/55](https://github.com/cyl0/ModernX/pull/55) |
-| hovereffect | Whether buttons emit a glowing effect when hovered over |
-| timetotal | Whether to display the total time instead of remaining time |
-| timems | Whether to display time in milliseconds |
-| timefontsize | The font size of the time |
-| jumpamount | How many seconds the jump buttons jump by |
-| jumpiconnumber | Whether to show 5, 10 or 30 in the jump icons if the `jumpamount` are any of those values |
-| jumpmode | What kind of seeking mode is used for the jump buttons |
-| volumecontrol | Whether to show the mute button and volume slider |
-| volumecontroltype | Whether to use linear or logarithmic volume scale |
-| showjump | Whether to show the jump forward/backward buttons |
-| showskip | Whether to show the chapter buttons |
-| compactmode | Remove the 'jump' buttons and embed that functionality in the 'chapter' buttons, see [compact mode](https://github.com/zydezu/ModernX#compact-mode) for more information |
-| showloop | Whether to show the loop button |
-| loopinpause | Whether to activate looping by right clicking pause |
-| showontop | Whether to show the pin window on top button |
-| showinfo | Whether to show the info button |
-| downloadbutton | Whether to show download button for web videos |
-| downloadpath | The download path for videos |
-| showyoutubecomments | EXPERIMENTAL - not ready, show YouTube comments below the clickable description |
-| commentsdownloadpath | The download path for the comment JSON file |
-| ytdlpQuality | What quality of video the download button uses (a max quality mp4 by is downloaded by default) |
-
 The default options are shown below:
 
 ```lua
--- Parameters
--- default user option values
--- Change them using osc.conf
 local user_opts = {
-    -- general settings --
-    language = 'en',                -- en:English, chs:Chinese, pl:Polish, jp:Japanese
-    welcomescreen = true,           -- show the mpv 'play files' screen upon open
-    windowcontrols = 'auto',        -- whether to show OSC window controls, 'auto', 'yes' or 'no'
-    showwindowed = true,            -- show OSC when windowed?
-    showfullscreen = true,          -- show OSC when fullscreen?
-    noxmas = false,                 -- disable santa hat in December
-    keybindings = true,             -- register keybindings i.e. chapter scrubbing, pinning window
+    -- Language and display --
+    language = "en",                        -- en:English - .json translations need implementing
+    font = "mpv-osd-symbols",               -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
+
+    idlescreen = true,                      -- show mpv logo when idle
+    window_top_bar = "auto",                -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
+    showwindowed = true,                    -- show OSC when windowed
+    showfullscreen = true,                  -- show OSC when fullscreen
+    showonpause = true,                     -- show OSC when paused
+    keeponpause = false,                    -- disable OSC hide timeout when paused
+    greenandgrumpy = false,                 -- disable Santa hat in December
+    visibility = "auto",                    -- only used at init to set visibility_mode(...)
+
+    -- OSC behaviour and scaling
+    hidetimeout = 1500,                     -- time (in ms) before OSC hides if no mouse movement
+    seek_resets_hidetimeout = true,         -- if seeking should reset the hidetimeout
+    fadeduration = 150,                     -- fade-out duration (in ms), set to 0 for no fade
+    minmousemove = 0,                       -- minimum mouse movement (in pixels) required to show OSC
+    bottomhover = true,                     -- show OSC only when hovering at the bottom
+    bottomhover_zone = 200,                 -- height of hover zone for bottomhover (in pixels)
+    osc_on_seek = false,                    -- show OSC when seeking
+    mouse_seek_pause = true,                -- pause video while seeking with mouse move (on button hold)
+
+    vidscale = false,                       -- scale osc with the video
+    scalewindowed = 1.0,                    -- osc scale factor when windowed
+    scalefullscreen = 1.0,                  -- osc scale factor when fullscreen
+    scaleforcedwindow = 1.0,                -- osc scale factor when forced (no video, like music files)
+
+    -- Time, title and description display
+    show_title = true,                      -- show title in the OSC (above seekbar)
+    title = "${media-title}",               -- title above seekbar format: "${media-title}" or "${filename}"
+    title_font_size = 28,                   -- font size of the title text (above seekbar)
+    dynamic_title = true,                   -- change title if {media-title} and {filename} differ (eg: when playing URLs or audio)
+
+    show_chapter_title = true,              -- show chapter title alongside timestamp (below seekbar)
+    chapter_fmt = "%s",                     -- format for chapter display on seekbar hover (set to "no" to disable)
+
+    timetotal = true,                       -- show total time instead of remaining time
+    timems = false,                         -- show timecodes with milliseconds
+    unicodeminus = false,                   -- use the Unicode minus sign in remaining time
+    time_format = "dynamic",                -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
+    time_font_size = 18,                    -- font size of the time display
+
+    show_description = true,                -- show video description on web videos
+    show_file_size = true,                  -- show the current file's size in the description
+    description_font_size = 19,             -- font size of the description text (below title)
+    description_alpha = 100,                -- alpha of the description background box
+
+    date_format = "%Y-%m-%d",               -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
+
+    -- Title bar settings
+    window_title = true,                    -- show window title in borderless/fullscreen mode
+    window_controls = true,                 -- show window controls (close, minimize, maximize) in borderless/fullscreen
+    title_bar_box = false,                  -- show title bar as a box instead of a black fade
+    windowcontrols_title = "${media-title}",-- same as title but for window_controls
+
+    -- Subtitle display settings
+    raise_subtitles = true,                 -- whether to raise subtitles above the osc when it's shown
+    raise_subtitle_amount = 175,            -- how much subtitles rise when the osc is shown
+
+    -- Buttons display and functionality
+    compactmode = true,                     -- replace the jump buttons with the seek/chapter buttons
     
-    -- scaling settings --
-    vidscale = false,               -- whether to scale the controller with the video
-    scalewindowed = 1.0,            -- scaling of the controller when windowed
-    scalefullscreen = 1.0,          -- scaling of the controller when fullscreen
-    scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
+    jump_buttons = true,                    -- show the jump backward and forward buttons
+    jump_amount = 10,                       -- change the jump amount in seconds
+    jump_more_amount = 60,                  -- change the jump amount in seconds when right-clicking jump buttons and shift-clicking chapter skip buttons
+    jump_icon_number = true,                -- show different icon when jump_amount is set to 5, 10, or 30
+    jump_mode = "relative",                 -- seek mode for jump buttons
+    jump_softrepeat = true,                 -- enable continuous jumping when holding down seek buttons
+    chapter_skip_buttons = true,            -- show the chapter skip backward and forward buttons
+    chapter_softrepeat = false,             -- enable continuous skipping when holding down chapter skip buttons
+    track_nextprev_buttons = true,          -- show next/previous playlist track buttons
 
-    -- interface settings --
-    hidetimeout = 2000,             -- duration in ms until OSC hides if no mouse movement
-    fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
-    minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
-    scrollingSpeed = 40,            -- the speed of scrolling text in menus
-    showonpause = true,             -- whether to show to osc when paused
-    donttimeoutonpause = false,     -- whether to disable the hide timeout on pause
-    bottomhover = true,             -- if the osc should only display when hovering at the bottom
-    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
-    thumbnailborder = 2,            -- the width of the thumbnail border
-    persistentprogress = false,     -- always show a small progress line at the bottom of the screen
-    persistentprogressheight = 17,  -- the height of the persistentprogress bar
-    persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
-    persistentprogresstoggle = true,-- enable toggling the persistentprogress bar
+    volume_control = true,                  -- show mute button and volume slider
+    volume_control_type = "linear",         -- volume scale type: "linear" or "logarithmic"
+    
+    info_button = false,                    -- show info button
+    ontop_button = true,                    -- show window on top button
+    screenshot_button = false,              -- show screenshot button
+    screenshot_flag = "subtitles",          -- flag for screenshot button: "subtitles", "video", "window", "each-frame" 
+                                            -- https://mpv.io/manual/master/#command-interface-screenshot-%3Cflags%3E
 
-    -- title and chapter settings --
-    showtitle = true,               -- show title in OSC
-    showdescription = true,         -- show video description on web videos
-    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
-    showfilesize = true,            -- show the current file's size in the description
-    titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
-    title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
-    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
-                                    -- differ (like with playing urls, audio or some media)
-    updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
-    font = 'mpv-osd-symbols',       -- mpv-osd-symbols = default osc font (or the one set in mpv.conf)
-                                    -- to be shown as OSC title
-    titlefontsize = 28,             -- the font size of the title text
-    chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
-    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
-    osc_color = '000000',           -- accent of the OSC and the title bar
-    OSCfadealpha = 150,             -- alpha of the background box for the OSC
-    boxalpha = 75,                  -- alpha of the window title bar
-    descriptionBoxAlpha = 100,      -- alpha of the description background box
+    download_button = true,                 -- show download button on web videos (requires yt-dlp and ffmpeg)
+    download_path = "~~desktop/mpv/downloads", -- default download directory for videos (https://mpv.io/manual/master/#paths)
 
-    -- seekbar settings --
-    seekbarfg_color = 'E39C42',     -- color of the seekbar progress and handle
-    seekbarbg_color = 'FFFFFF',     -- color of the remaining seekbar
-    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
-    automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
-    automatickeyframelimit = 600,  -- videos of above this length (in seconds) will have seekbarkeyframes on
-    seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
-    seekrange = true,               -- show seekrange overlay
-    seekrangealpha = 150,           -- transparency of seekranges
-    iconstyle = 'round',            -- icon style, 'solid' or 'round'
-    hovereffect = true,             -- whether buttons have a glowing effect when hovered over
+    loop_button = false,                     -- show loop button
 
-    -- button settings --
-    timetotal = true,               -- display total time instead of remaining time by default
-    timems = false,                 -- show time as milliseconds by default
-    timefontsize = 18,              -- the font size of the time
-    jumpamount = 5,                 -- change the jump amount (in seconds by default)
-    jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
-    jumpmode = 'relative',          -- seek mode for jump buttons - https://mpv.io/manual/stable/#command-interface-seek-%3Ctarget%3E-[%3Cflags%3E]
-    volumecontrol = true,           -- whether to show mute button and volume slider
-    volumecontroltype = 'linear',   -- use 'linear' or 'log' (logarithmic) volume scale
-    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
-    showskip = true,                -- show the skip back and forward (chapter) buttons
-    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
-                                    -- buttons will act as jumping, and shift clicking will act as
-                                    -- skipping a chapter
-    showloop = true,                -- show the loop button
-    loopinpause = true,             -- activate looping by right clicking pause
-    showontop = true,               -- show window on top button
-    showinfo = false,               -- show the info button
-    downloadbutton = true,          -- show download button for web videos
-    downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
-    showyoutubecomments = false,    -- EXPERIMENTAL - not ready
-    commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
-    ytdlpQuality = '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' -- what quality of video the download button uses (max quality mp4 by default)
+    loop_in_pause = true,                   -- enable looping by right-clicking pause
+
+    playpause_size = 30,                    -- icon size for the play/pause button
+    midbuttons_size = 24,                   -- icon size for the middle buttons
+    sidebuttons_size = 24,                  -- icon size for the side buttons
+
+    -- Colors and style
+    osc_color = "#000000",                  -- accent color of the OSC and title bar
+    window_title_color = "#FFFFFF",         -- color of the title in borderless/fullscreen mode
+    window_controls_color = "#FFFFFF",      -- color of the window controls (close, minimize, maximize) in borderless/fullscreen mode
+    windowcontrols_close_hover = "#E81123", -- color of close window control on hover
+    windowcontrols_minmax_hover = "#53A4FC",-- color of min/max window controls on hover
+    title_color = "#FFFFFF",                -- color of the title (above seekbar)
+    seekbarfg_color = "#1D96F5",            -- color of the seekbar progress and handle, in Hex color format
+    seekbarbg_color = "#FFFFFF",            -- color of the remaining seekbar, in Hex color format
+    seekbar_cache_color = "#1D96F5",        -- color of the cache ranges on the seekbar
+    volumebar_match_seek_color = false,     -- match volume bar color with seekbar color (ignores side_buttons_color)
+    time_color = "#FFFFFF",                 -- color of the timestamps (below seekbar)
+    chapter_title_color = "#FFFFFF",        -- color of the chapter title next to timestamp (below seekbar)
+    side_buttons_color = "#FFFFFF",         -- color of the side buttons (audio, subtitles, playlist, etc.)
+    middle_buttons_color = "#FFFFFF",       -- color of the middle buttons (skip, jump, chapter, etc.)
+    playpause_color = "#FFFFFF",            -- color of the play/pause button
+    held_element_color = "#999999",         -- color of the element when held down (pressed)
+    hover_effect_color = "#FFFFFF",         -- color of a hovered button when hover_effect includes "color"
+    thumbnail_border_color = "#FFFFFF",     -- color of the border for thumbnails (with thumbfast)
+
+    fade_alpha = 150,                       -- alpha of the OSC background box
+    fade_blur_strength = 100,               -- blur strength for the OSC alpha fade. caution: high values can take a lot of CPU time to render
+    window_fade_alpha = 75,                 -- alpha of the window title bar
+    thumbnail_border = 1,                   -- the width of the thumbnail border
+
+    -- Button hover effects
+    hover_effect = "size,glow,color",       -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
+    hover_button_size = 115,                -- relative size of a hovered button if "size" effect is active
+    button_glow_amount = 5,                 -- glow intensity when "glow" hover effect is active
+    hover_effect_for_sliders = false,       -- apply hover effects to slider handles
+
+    -- Progress bar settings
+    seekbarhandlesize = 0.8,                -- size ratio of the seekbar handle (range: 0 ~ 1)
+    seekrange = true,                       -- show seek range overlay
+    seekrangealpha = 175,                   -- transparency of the seek range
+    seekbarkeyframes = false,               -- use keyframes when dragging the seekbar
+    
+    automatickeyframemode = true,           -- automatically set keyframes for the seekbar based on video length
+    automatickeyframelimit = 600,           -- videos longer than this (in seconds) will have keyframes on the seekbar
+
+    persistentprogress = false,             -- always show a small progress line at the bottom of the screen
+    persistentprogressheight = 17,          -- the height of the persistentprogress bar
+    persistentbuffer = false,               -- on web videos, show the buffer on the persistent progress line
+    persistentprogresstoggle = true,        -- enable toggling the persistentprogress bar
+
+    -- Experimental
+    title_youtube_stats = true,             -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
+    show_youtube_comments = false,          -- EXPERIMENTAL - not ready
+    comments_download_path = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
+    scrolling_speed = 40,                   -- the speed of scrolling text in menus
+    ytdl_format = "",                       -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
 }
 ```
 
