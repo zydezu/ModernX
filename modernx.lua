@@ -20,151 +20,96 @@ local utils = require "mp.utils"
 -- default user option values
 -- change them using modernx.conf
 local user_opts = {
-    -- Language and display --
-    language = "en",                        -- en:English - .json translations need implementing
-    font = "mpv-osd-symbols",               -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
-
-    idle_screen = true,                     -- show mpv logo when idle
-    key_bindings = true,                   -- register additional key bindings, such as chapter scrubbing, pinning the window
-    window_top_bar = "auto",                -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
-    show_windowed = true,                   -- show OSC when windowed
-    show_fullscreen = true,                 -- show OSC when fullscreen
-    show_on_pause = true,                   -- show OSC when paused
-    keep_on_pause = false,                  -- disable OSC hide timeout when paused
-    green_and_grumpy = false,               -- disable Santa hat in December
-    visibility = "auto",                    -- only used at init to set visibility_mode(...)
-
-    -- OSC behaviour and scaling
-    hide_timeout = 1500,                    -- time (in ms) before OSC hides if no mouse movement
-    seek_resets_hide_timeout = true,        -- if seeking should reset the hide_timeout
-    fade_duration = 150,                    -- fade-out duration (in ms), set to 0 for no fade
-    min_mouse_move = 0,                     -- minimum mouse movement (in pixels) required to show OSC
-    bottom_hover = true,                    -- show OSC only when hovering at the bottom
-    bottom_hover_zone = 200,                -- height of hover zone for bottom_hover (in pixels)
-    osc_on_seek = false,                    -- show OSC when seeking
-    mouse_seek_pause = true,                -- pause video while seeking with mouse move (on button hold)
-
-    vid_scale = false,                      -- scale osc with the video
-    scale_windowed = 1.0,                   -- osc scale factor when windowed
-    scale_fullscreen = 1.0,                 -- osc scale factor when fullscreen
-    scale_forced_window = 1.0,              -- osc scale factor when forced (no video, like music files)
-
-    -- Time, title and description display
-    show_title = true,                      -- show title in the OSC (above seekbar)
-    title = "${media-title}",               -- title above seekbar format: "${media-title}" or "${filename}"
-    title_font_size = 28,                   -- font size of the title text (above seekbar)
-    dynamic_title = true,                   -- change title if {media-title} and {filename} differ (eg: when playing URLs or audio)
-
-    show_chapter_title = true,              -- show chapter title alongside timestamp (below seekbar)
-    chapter_fmt = "%s",                     -- format for chapter display on seekbar hover (set to "no" to disable)
-
-    time_total = true,                      -- show total time instead of remaining time
-    time_ms = false,                        -- show timecodes with milliseconds
-    unicode_minus = false,                  -- use the Unicode minus sign in remaining time
-    time_format = "dynamic",                -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
-    time_font_size = 18,                    -- font size of the time display
-
-    show_description = true,                -- show video description on web videos
-    show_file_size = true,                  -- show the current file's size in the description
-    description_font_size = 19,             -- font size of the description text (below title)
-    description_alpha = 100,                -- alpha of the description background box
-
-    date_format = "%Y-%m-%d",               -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
-
-    -- Title bar settings
-    window_title = true,                    -- show window title in borderless/fullscreen mode
-    window_controls = true,                 -- show window controls (close, minimize, maximize) in borderless/fullscreen
-    title_bar_box = false,                  -- show title bar as a box instead of a black fade
-    window_controls_title = "${media-title}",-- same as title but for window_controls
-
-    -- Subtitle display settings
-    raise_subtitles = true,                 -- whether to raise subtitles above the osc when it's shown
-    raise_subtitle_amount = 175,            -- how much subtitles rise when the osc is shown
-
-    -- Buttons display and functionality
-    compact_mode = true,                    -- replace the jump buttons with the seek/chapter buttons
+    -- general settings --
+    language = 'en',                -- en:English, chs:Chinese, pl:Polish, jp:Japanese
+    welcomescreen = true,           -- show the mpv 'play files' screen upon open
+    windowcontrols = 'auto',        -- whether to show OSC window controls, 'auto', 'yes' or 'no'
+    showwindowed = true,            -- show OSC when windowed?
+    showfullscreen = true,          -- show OSC when fullscreen?
+    noxmas = false,                 -- disable santa hat in December
+    keybindings = true,             -- register keybindings i.e. chapter scrubbing, pinning window
     
-    jump_buttons = true,                    -- show the jump backward and forward buttons
-    jump_amount = 10,                       -- change the jump amount in seconds
-    jump_more_amount = 60,                  -- change the jump amount in seconds when right-clicking jump buttons and shift-clicking chapter skip buttons
-    jump_icon_number = true,                -- show different icon when jump_amount is set to 5, 10, or 30
-    jump_mode = "relative",                 -- seek mode for jump buttons
-    jump_softrepeat = true,                 -- enable continuous jumping when holding down seek buttons
-    chapter_skip_buttons = true,            -- show the chapter skip backward and forward buttons
-    chapter_softrepeat = false,             -- enable continuous skipping when holding down chapter skip buttons
-    track_nextprev_buttons = true,          -- show next/previous playlist track buttons
+    -- scaling settings --
+    vidscale = false,               -- whether to scale the controller with the video
+    scalewindowed = 1.0,            -- scaling of the controller when windowed
+    scalefullscreen = 1.0,          -- scaling of the controller when fullscreen
+    scaleforcedwindow = 1.0,        -- scaling when rendered on a forced window
 
-    volume_control = true,                  -- show mute button and volume slider
-    volume_control_type = "linear",         -- volume scale type: "linear" or "logarithmic"
-    
-    info_button = false,                    -- show info button
-    ontop_button = true,                    -- show window on top button
-    screenshot_button = false,              -- show screenshot button
-    screenshot_flag = "subtitles",          -- flag for screenshot button: "subtitles", "video", "window", "each-frame" 
-                                            -- https://mpv.io/manual/master/#command-interface-screenshot-%3Cflags%3E
+    -- interface settings --
+    hidetimeout = 2000,             -- duration in ms until OSC hides if no mouse movement
+    fadeduration = 150,             -- duration of fade out in ms, 0 = no fade
+    minmousemove = 0,               -- amount of pixels the mouse has to move for OSC to show
+    scrollingSpeed = 40,            -- the speed of scrolling text in menus
+    showonpause = true,             -- whether to show to osc when paused
+    donttimeoutonpause = false,     -- whether to disable the hide timeout on pause
+    bottomhover = true,             -- if the osc should only display when hovering at the bottom
+    raisesubswithosc = true,        -- whether to raise subtitles above the osc when it's shown
+    raisesubamount = 175,           -- how much subtitles rise when the osc is shown
+    thumbnailborder = 2,            -- the width of the thumbnail border
+    persistentprogress = false,     -- always show a small progress line at the bottom of the screen
+    persistentprogressheight = 17,  -- the height of the persistentprogress bar
+    persistentbuffer = false,       -- on web videos, show the buffer on the persistent progress line
+    persistentprogresstoggle = true,-- enable toggling the persistentprogress bar
 
-    download_button = true,                 -- show download button on web videos (requires yt-dlp and ffmpeg)
-    download_path = "~~desktop/mpv/downloads", -- default download directory for videos (https://mpv.io/manual/master/#paths)
+    -- title and chapter settings --
+    showtitle = true,               -- show title in OSC
+    showdescription = true,         -- show video description on web videos
+    showwindowtitle = true,         -- show window title in borderless/fullscreen mode
+    showfilesize = true,            -- show the current file's size in the description
+    titleBarStrip = true,           -- whether to make the title bar a singular bar instead of a black fade
+    title = '${media-title}',       -- title shown on OSC - turn off dynamictitle for this option to apply
+    windowcontrols_title = "${media-title}",    -- same as title but for windowcontrols
+    dynamictitle = true,            -- change the title depending on if {media-title} and {filename} 
+                                    -- differ (like with playing urls, audio or some media)
+    updatetitleyoutubestats = true, -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
+    font = 'mpv-osd-symbols',       -- mpv-osd-symbols = default osc font (or the one set in mpv.conf)
+                                    -- to be shown as OSC title
+    titlefontsize = 30,             -- the font size of the title text
+    dynamictimeformat = true,      -- don't show hh on times less than 1 hour
+    chapterformat = 'Chapter: %s',  -- chapter print format for seekbar-hover. "no" to disable
+    dateformat = "%Y-%m-%d",        -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
+    osc_color = '#000000',           -- accent of the OSC and the title bar, in Hex color format
+    OSCfadealpha = 150,             -- alpha of the background box for the OSC
+    boxalpha = 75,                  -- alpha of the window title bar
+    descriptionfontsize = 19,       -- alpha of the description background box
+    descriptionBoxAlpha = 100,      -- alpha of the description background box
 
-    loop_button = false,                    -- show loop button
+    -- seekbar settings --
+    seekbarfg_color = '#429CE3',    -- color of the seekbar progress and handle, in Hex color format
+    seekbarbg_color = '#FFFFFF',    -- color of the remaining seekbar, in Hex color format
+    seekbarkeyframes = false,       -- use keyframes when dragging the seekbar
+    automatickeyframemode = true,   -- set seekbarkeyframes based on video length to prevent laggy scrubbing on long videos 
+    automatickeyframelimit = 600,   -- videos of above this length (in seconds) will have seekbarkeyframes on
+    seekbarhandlesize = 0.8,        -- size ratio of the slider handle, range 0 ~ 1
+    seekrange = true,               -- show seekrange overlay
+    seekrangealpha = 150,           -- transparency of seekranges
+    iconstyle = 'round',            -- icon style, 'solid' or 'round'
+    hovereffect = true,             -- whether buttons have a glowing effect when hovered over
 
-    loop_in_pause = true,                   -- enable looping by right-clicking pause
-
-    playpause_size = 30,                    -- icon size for the play/pause button
-    midbuttons_size = 24,                   -- icon size for the middle buttons
-    sidebuttons_size = 24,                  -- icon size for the side buttons
-
-    -- Colors and style
-    osc_color = "#000000",                  -- accent color of the OSC and title bar
-    window_title_color = "#FFFFFF",         -- color of the title in borderless/fullscreen mode
-    window_controls_color = "#FFFFFF",      -- color of the window controls (close, minimize, maximize) in borderless/fullscreen mode
-    window_controls_close_hover = "#E81123", -- color of close window control on hover
-    window_controls_minmax_hover = "#53A4FC",-- color of min/max window controls on hover
-    title_color = "#FFFFFF",                -- color of the title (above seekbar)
-    seekbarfg_color = "#1D96F5",            -- color of the seekbar progress and handle, in Hex color format
-    seekbarbg_color = "#FFFFFF",            -- color of the remaining seekbar, in Hex color format
-    seekbar_cache_color = "#1D96F5",        -- color of the cache ranges on the seekbar
-    volumebar_match_seek_color = false,     -- match volume bar color with seekbar color (ignores side_buttons_color)
-    time_color = "#FFFFFF",                 -- color of the timestamps (below seekbar)
-    chapter_title_color = "#FFFFFF",        -- color of the chapter title next to timestamp (below seekbar)
-    side_buttons_color = "#FFFFFF",         -- color of the side buttons (audio, subtitles, playlist, etc.)
-    middle_buttons_color = "#FFFFFF",       -- color of the middle buttons (skip, jump, chapter, etc.)
-    playpause_color = "#FFFFFF",            -- color of the play/pause button
-    held_element_color = "#999999",         -- color of the element when held down (pressed)
-    hover_effect_color = "#FFFFFF",         -- color of a hovered button when hover_effect includes "color"
-    thumbnail_border_color = "#FFFFFF",     -- color of the border for thumbnails (with thumbfast)
-
-    fade_alpha = 150,                       -- alpha of the OSC background box
-    fade_blur_strength = 100,               -- blur strength for the OSC alpha fade. caution: high values can take a lot of CPU time to render
-    window_fade_alpha = 75,                 -- alpha of the window title bar
-    thumbnail_border = 1,                   -- the width of the thumbnail border
-
-    -- Button hover effects
-    hover_effect = "size,glow,color",       -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
-    hover_button_size = 115,                -- relative size of a hovered button if "size" effect is active
-    button_glow_amount = 5,                 -- glow intensity when "glow" hover effect is active
-    hover_effect_for_sliders = false,       -- apply hover effects to slider handles
-
-    -- Progress bar settings
-    seekbar_handle_size = 0.8,              -- size ratio of the seekbar handle (range: 0 ~ 1)
-    seek_range = true,                      -- show seek range overlay
-    seek_rangealpha = 175,                  -- transparency of the seek range
-    seekbar_keyframes = false,              -- use keyframes when dragging the seekbar
-    
-    automatic_keyframe_mode = true,         -- automatically set keyframes for the seekbar based on video length
-    automatic_keyframe_limit = 600,         -- videos longer than this (in seconds) will have keyframes on the seekbar
-
-    persistent_progress = false,            -- always show a small progress line at the bottom of the screen
-    persistent_progressheight = 17,         -- the height of the persistent_progress bar
-    persistent_buffer = false,              -- on web videos, show the buffer on the persistent progress line
-    persistent_progresstoggle = true,       -- enable toggling the persistent_progress bar
-
-    -- Experimental
-    title_youtube_stats = true,             -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
-    show_youtube_comments = false,          -- EXPERIMENTAL - not ready
-    comments_download_path = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
-    scrolling_speed = 40,                   -- the speed of scrolling text in menus
-    ytdl_format = "",                       -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
+    -- button settings --
+    timetotal = true,               -- display total time instead of remaining time by default
+    timems = false,                 -- show time as milliseconds by default
+    timefontsize = 18,              -- the font size of the time
+    jumpamount = 5,                 -- change the jump amount (in seconds by default)
+    jumpiconnumber = true,          -- show different icon when jumpamount is 5, 10, or 30
+    jumpmode = 'relative',          -- seek mode for jump buttons - https://mpv.io/manual/stable/#command-interface-seek-%3Ctarget%3E-[%3Cflags%3E]
+    volumecontrol = true,           -- whether to show mute button and volume slider
+    volumecontroltype = 'linear',   -- use 'linear' or 'log' (logarithmic) volume scale
+    showjump = true,                -- show "jump forward/backward 5 seconds" buttons 
+    showskip = true,                -- show the skip back and forward (chapter) buttons
+    compactmode = true,             -- replace the jump buttons with the chapter buttons, clicking the
+                                    -- buttons will act as jumping, and shift clicking will act as
+                                    -- skipping a chapter
+    showloop = true,                -- show the loop button
+    loopinpause = true,             -- activate looping by right clicking pause
+    showontop = true,               -- show window on top button
+    showinfo = false,               -- show the info button
+    downloadbutton = true,          -- show download button for web videos
+    screenshotbutton = false,        -- show screenshot button
+    downloadpath = "~~desktop/mpv/downloads", -- the download path for videos
+    showyoutubecomments = false,    -- EXPERIMENTAL - not ready
+    commentsdownloadpath = "~~desktop/mpv/downloads/comments", -- the download path for the comment JSON file
+    ytdlpQuality = '' -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo[vcodec^=avc][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 }
 
 mp.observe_property("osc", "bool", function(name, value) if value == true then mp.set_property("osc", "no") end end)
@@ -240,57 +185,79 @@ local language = {
         nochapter = 'No chapters available',
         ontop = 'Pin window',
         ontopdisable = 'Unpin window',
-        loopenable = 'Enable loop',
-        loopdisable = 'Disable loop',
-        screenshot = "Screenshot",
-        statsinfo = "Information",
-        download = "Download",
-        download_in_progress = "Download in progress",
-        downloading = "Downloading",
-        downloaded = "Already downloaded",
+        loopenable = 'Enable looping',
+        loopdisable = 'Disable looping',
+    },
+    ['chs'] = {
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}将文件或URL放在这里播放',  -- this text appears when mpv starts
+        off = '关闭',
+        na = 'n/a',
+        none = '无数据',
+        video = '视频',
+        audio = '音频',
+        subtitle = '字幕',
+        nosub = "没有字幕", -- please check these translations
+        noaudio = "不提供音轨", -- please check these translations
+        track = '：',
+        playlist = '播放列表',
+        nolist = '无列表信息',
+        chapter = '章节',
+        nochapter = '无章节信息',
+        ontop = '启用窗口停留在顶层',  -- please check these translations
+        ontopdisable = '禁用停留在顶层的窗口',  -- please check these translations
+        loopenable = '启用循环功能',
+        loopdisable = '禁用循环功能',
+    },
+    ['pl'] = {
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}Upuść plik lub łącze URL do odtworzenia.',  -- this text appears when mpv starts
+        off = 'WYŁ.',
+        na = 'n/a',
+        none = 'nic',
+        video = 'Wideo',
+        audio = 'Audio',
+        subtitle = 'Napisy',
+        nosub = 'Brak dostępnych napisów', -- please check these translations
+        noaudio = 'Brak dostępnych ścieżek dźwiękowych', -- please check these translations
+        track = ' ścieżki:',
+        playlist = 'Lista odtwarzania',
+        nolist = 'Lista odtwarzania pusta.',
+        chapter = 'Rozdział',
+        nochapter = 'Brak rozdziałów.',
+        ontop = 'Przypnij okno do góry',
+        ontopdisable = 'Odepnij okno od góry',
+        loopenable = 'Włączenie zapętlenia',
+        loopdisable = 'Wyłączenie zapętlenia',
+    },
+    ['jp'] = {
+        welcome = '{\\fs24\\1c&H0&\\1c&HFFFFFF&}ファイルやURLのリンクをここにドロップすると再生されます。',  -- this text appears when mpv starts
+        off = 'OFF',
+        na = 'n/a',
+        none = 'なし',
+        video = 'ビデオ',
+        audio = 'オーディオ',
+        subtitle = 'サブタイトル',
+        nosub = '字幕はありません',
+        noaudio = 'オーディオトラックはありません',
+        track = 'トラック:',
+        playlist = 'プレイリスト',
+        nolist = '空のプレイリスト.',
+        chapter = 'チャプター',
+        nochapter = '利用可能なチャプターはありません.',
+        ontop = 'ピンウィンドウをトップに表示',
+        ontopdisable = 'ウィンドウを上からアンピンする',
+        loopenable = 'ループON',
+        loopdisable = 'ループOFF',
     }
 }
 
 -- apply lang opts
-local texts = language[user_opts.language] or language["en"]
-
-local function contains(list, item)
-    local t = {}
-    if type(list) ~= "table" then
-        for str in string.gmatch(list, '([^,]+)') do
-            str = str:gsub("%s+", "")
-            table.insert(t, str)
-        end
-    else
-        t = list
-    end
-    for _, v in ipairs(t) do
-        if v == item then
-            return true
-        end
-    end
-    return false
-end
-
-function dumptable(o)
-    if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dumptable(v) .. ','
-       end
-       return s .. '} '
-    else
-       return tostring(o)
-    end
-end
- 
-
-local thumbfast = {
-    width = 0,
-    height = 0,
-    disabled = true,
-    available = false
+local texts = language[user_opts.language]
+local osc_param = {                         -- calculated by osc_init()
+    playresy = 0,                           -- canvas size Y
+    playresx = 0,                           -- canvas size X
+    display_aspect = 1,
+    unscaled_y = 0,
+    areas = {},
 }
 
 local tick_delay = 1 / 100 -- 100FPS
@@ -342,10 +309,10 @@ local state = {
     animation = nil,                        -- current animation alpha
     mouse_down_counter = 0,                 -- used for softrepeat
     active_element = nil,                   -- nil = none, 0 = background, 1+ = see elements[]
-    active_event_source = nil,              -- the "button" that issued the current event
-    tc_right_rem = not user_opts.time_total, -- if the right timecode should display total or remaining time
-    fulltime = user_opts.time_ms,
-    mp_screen_sizeX = nil, mp_screen_sizeY = nil, -- last screen-resolution, to detect resolution changes to issue reINITs
+    active_event_source = nil,              -- the 'button' that issued the current event
+    touchingprogressbar = false,                 -- if the mouse is touching the progress bar
+    rightTC_trem = not user_opts.timetotal, -- if the right timecode should display total or remaining time
+    mp_screen_sizeX, mp_screen_sizeY,       -- last screen-resolution, to detect resolution changes to issue reINITs
     initREQ = false,                        -- is a re-init request pending?
     last_mouseX = nil, last_mouseY = nil,   -- last mouse position, to detect significant mouse movement
     mouse_in_window = false,
@@ -365,23 +332,18 @@ local state = {
     osd = mp.create_osd_overlay('ass-events'),
     new_file_flag = false,                  -- flag to detect new file starts
     chapter_list = {},                      -- sorted by time
-    mute = false,
-    looping = false,    
-    sliderpos = 0,
-    touchingprogressbar = false,            -- if the mouse is touching the progress bar
-    initialborder = mp.get_property('border'),
-    playingWhilstSeeking = false,
-    playingWhilstSeekingWaitingForEnd = false,
-    persistent_progresstoggle = user_opts.persistent_progress,
-
-    downloaded_once = false,
+    looping = false,
+    videoDescription = "",                  -- fill if it is a YouTube
+    descriptionLoaded = false,
+    showingDescription = false,
+    downloadedOnce = false,
+    downloadFileName = "",
+    scrolledlines = 25,
+    isWebVideo = false,
+    path = "",                               -- used for yt-dlp downloading
     downloading = false,
-    file_size_bytes = 0,
-    file_size_normalized = "Approximating size...",
-    is_URL = false,
-    URL_path = "",                          -- used for yt-dlp downloading
-    videoCantBeDownloaded = false, -- TODO: needs to be removed
-
+    fileSizeBytes = 0,
+    fileSizeNormalised = "Approximating size...",
     localDescription = nil,
     localDescriptionClick = nil,
     localDescriptionIsClickable = false,
@@ -605,52 +567,14 @@ local function ass_draw_rr_h_cw(ass, x0, y0, x1, y1, r1, hexagon, r2)
     end
 end
 
-local function get_hide_timeout()
-    if user_opts.visibility == "always" then
-        return -1 -- disable autohide
-    end
-    return user_opts.hide_timeout
-end
-
-local tick
--- Request that tick() is called (which typically re-renders the OSC).
--- The tick is then either executed immediately, or rate-limited if it was
--- called a small time ago.
-local function request_tick()
-    if state.tick_timer == nil then
-        state.tick_timer = mp.add_timeout(0, tick)
-    end
-
-    if not state.tick_timer:is_enabled() then
-        local now = mp.get_time()
-        local timeout = tick_delay - (now - state.tick_last_time)
-        if timeout < 0 then
-            timeout = 0
-        end
-        state.tick_timer.timeout = timeout
-        state.tick_timer:resume()
+function ass_draw_rr_h_ccw(ass, x0, y0, x1, y1, r1, hexagon, r2)
+    if hexagon then
+        ass:hexagon_ccw(x0, y0, x1, y1, r1, r2)
+    else
+        ass:round_rect_ccw(x0, y0, x1, y1, r1, r2)
     end
 end
 
-local function request_init()
-    state.initREQ = true
-    request_tick()
-end
-
--- Like request_init(), but also request an immediate update
-local function request_init_resize()
-    request_init()
-    -- ensure immediate update
-    state.tick_timer:kill()
-    state.tick_timer.timeout = 0
-    state.tick_timer:resume()
-end
-
-local function render_wipe()
-    msg.trace('render_wipe()')
-    state.osd.data = "" -- allows set_osd to immediately update on enable
-    state.osd:remove()
-end
 
 --
 -- Tracklist Management
@@ -1168,60 +1092,24 @@ function render_elements(master_ass)
             end
         end
 
-        master_ass:merge(elem_ass)
-    end
-end
-
-function render_persistent_progressbar(master_ass)
-    for n=1, #elements do
-        local element = elements[n]
-        if (element.name == "persistentseekbar") then
-            local style_ass = assdraw.ass_new()
-            style_ass:merge(element.style_ass)
-            ass_append_alpha(style_ass, element.layout.alpha, 0, true)
-            
-            if not state.animation and state.osc_visible then
-                ass_append_alpha(style_ass, element.layout.alpha, 255)
-            end
-            
-            local elem_ass = assdraw.ass_new()
-            elem_ass:merge(style_ass)
-            if not (element.type == "button") then
-                elem_ass:merge(element.static_ass)
-            end
-
-            local slider_lo = element.layout.slider
-            local elem_geo = element.layout.geometry
-            local s_min = element.slider.min.value
-            local s_max = element.slider.max.value
-
-            -- draw pos marker
-            local pos = element.slider.posF()
-            local seek_ranges = element.slider.seek_rangesF()
-            local rh = 0 -- Handle radius
-            local xp
-                
-            if pos then
-                xp = get_slider_ele_pos_for(element, pos)
-                ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
-                elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
-            end
-
-            if user_opts.persistent_buffer and seek_ranges then
-                elem_ass:draw_stop()
-                elem_ass:merge(element.style_ass)
-                ass_append_alpha(elem_ass, element.layout.alpha, user_opts.seek_rangealpha, true)
-                elem_ass:merge(element.static_ass)
-                for _,range in pairs(seek_ranges) do
-                    local pstart = get_slider_ele_pos_for(element, range["start"])
-                    local pend = get_slider_ele_pos_for(element, range["end"])
-                    elem_ass:rect_cw(pstart - rh, slider_lo.gap, pend + rh, elem_geo.h - slider_lo.gap)
+            if user_opts.hovereffect == true then
+                -- add hover effect
+                -- source: https://github.com/Zren/mpvz/issues/13
+                local button_lo = element.layout.button
+                local is_clickable = element.eventresponder and (
+                    element.eventresponder["mbtn_left_down"] ~= nil or
+                    element.eventresponder["mbtn_left_up"] ~= nil
+                )
+                if mouse_hit(element) and is_clickable and element.enabled then
+                    local shadow_ass = assdraw.ass_new()
+                    shadow_ass:merge(style_ass)
+                    shadow_ass:append(button_lo.hoverstyle .. buttontext)
+                    elem_ass:merge(shadow_ass)
                 end
             end
-
-            elem_ass:draw_stop()
-            master_ass:merge(elem_ass)
         end
+
+        master_ass:merge(elem_ass)
     end
 end
 
@@ -1275,12 +1163,12 @@ function startupevents()
     state.videoDescription = "Loading description..."
     state.file_size_normalized = "Approximating size..."
     checktitle()
-    check_path_url()
-    if user_opts.automatic_keyframe_mode then
-        if mp.get_property_number("duration", 0) > user_opts.automatic_keyframe_limit then
-             user_opts.seekbar_keyframes = true
+    checkWebLink()
+    if user_opts.automatickeyframemode then
+        if mp.get_property_number("duration", 0) > user_opts.automatickeyframelimit then
+            user_opts.seekbarkeyframes = true
         else
-             user_opts.seekbar_keyframes = false
+            user_opts.seekbarkeyframes = false
         end
      end
     destroyscrollingkeys() -- close description
@@ -1658,34 +1546,15 @@ function exec_filesize(args)
         args = args,
         capture_stdout = true,
         capture_stderr = true
-    }, function(res, val)
-        local fileSizeString = val.stdout
-        state.file_size_bytes = tonumber(fileSizeString)
-
-        if state.file_size_bytes then
-            state.file_size_normalized = format_file_size(state.file_size_bytes)
-            msg.info("File size: " .. state.file_size_bytes .. " B (" .. state.file_size_normalized .. ")")
-        else
-            local fs_prop = mp.get_property_osd("file-size")
-            if fs_prop and fs_prop ~= "" then
-                state.file_size_normalized = fs_prop
-                msg.info(fs_prop)
-            else
-                state.file_size_normalized = "Unknown"
-                msg.info("Unable to retrieve file size.")
-            end        
-        end
-
-        request_tick()
-    end)
+    }, callback)
+    return ret.status
 end
 
-local function download_done(success, result, error)
+function downloadDone(success, result, error)
     if success then
-        local download_path = mp.command_native({"expand-path", user_opts.download_path})
-        show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", user_opts.download_path}))
-        state.downloaded_once = true
-        msg.info("Download completed")
+        show_message("\\N{\\an9}Download saved to " .. mp.command_native({"expand-path", user_opts.downloadpath}))
+        state.downloadedOnce = true
+        msg.info("WEB: Download complete")
     else
         show_message("\\N{\\an9}WEB: Download failed - " .. (error or "Unknown error"))
         msg.info("Download failed")
@@ -2296,65 +2165,61 @@ function window_controls()
     -- and libass will complain that they are not present in the
     -- default font, even if another font with them is available.
 
-    if user_opts.window_controls then 
-        -- Close: 🗙
-        ne = new_element('close', 'button')
-        ne.content = '\238\132\149'
-        ne.eventresponder['mbtn_left_up'] =
-            function () mp.commandv('quit') end
-        lo = add_layout('close')
-        lo.geometry = third_geo
-        lo.style = osc_styles.window_control
-        lo.button.hoverstyle = "{\\c&H" .. osc_color_convert(user_opts.window_controls_close_hover) .. "&}"
-
-        -- Minimize: 🗕
-        ne = new_element('minimize', 'button')
-        ne.content = '\238\132\146'
-        ne.eventresponder['mbtn_left_up'] =
-            function () mp.commandv('cycle', 'window-minimized') end
-        lo = add_layout('minimize')
-        lo.geometry = first_geo
-        lo.style = osc_styles.window_control
-        lo.button.hoverstyle = "{\\c&H" .. osc_color_convert(user_opts.window_controls_minmax_hover) .. "&}"
-        
-        -- Maximize: 🗖/🗗
-        ne = new_element('maximize', 'button')
-        if state.maximized or state.fullscreen then
-            ne.content = '\238\132\148'
-        else
-            ne.content = '\238\132\147'
-        end
-        ne.eventresponder['mbtn_left_up'] =
-            function ()
-                if state.fullscreen then
-                    mp.commandv('cycle', 'fullscreen')
-                else
-                    mp.commandv('cycle', 'window-maximized')
-                end
-            end
-        lo = add_layout('maximize')
-        lo.geometry = second_geo
-        lo.style = osc_styles.window_control
-        lo.button.hoverstyle = "{\\c&H" .. osc_color_convert(user_opts.window_controls_minmax_hover) .. "&}"
-    end
-
     -- Window Title
-    if user_opts.window_title then
-        ne = new_element("window_title", "button")
+    if user_opts.showwindowtitle then
+        ne = new_element("windowtitle", "button")
         ne.content = function ()
-            local title = mp.command_native({"expand-text", user_opts.window_controls_title})
+            local title = mp.command_native({"expand-text", user_opts.windowcontrols_title})
             -- escape ASS, and strip newlines and trailing slashes
             title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
             local titleval = not (title == "") and title or "mpv video"
             if (mp.get_property('ontop') == 'yes') then return "📌 " .. titleval end
             return titleval
         end
-        lo = add_layout('window_title')
-        local geo = {x = 20, y = button_y + 14, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
+        lo = add_layout('windowtitle')
+        geo = {x = 10, y = button_y + 10, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
         lo.geometry = geo
-        lo.style = osc_styles.window_title
+        lo.style = osc_styles.WindowTitle
         lo.button.maxchars = geo.w / 10
     end
+
+    -- Close: 🗙
+    ne = new_element('close', 'button')
+    ne.content = '\238\132\149'
+    ne.eventresponder['mbtn_left_up'] =
+        function () mp.commandv('quit') end
+    lo = add_layout('close')
+    lo.geometry = third_geo
+    lo.style = osc_styles.WinCtrl
+    lo.button.hoverstyle = "{\\c&H2311E8&}"
+
+    -- Minimize: 🗕
+    ne = new_element('minimize', 'button')
+    ne.content = '\238\132\146'
+    ne.eventresponder['mbtn_left_up'] =
+        function () mp.commandv('cycle', 'window-minimized') end
+    lo = add_layout('minimize')
+    lo.geometry = first_geo
+    lo.style = osc_styles.WinCtrl
+    
+    -- Maximize: 🗖/🗗
+    ne = new_element('maximize', 'button')
+    if state.maximized or state.fullscreen then
+        ne.content = '\238\132\148'
+    else
+        ne.content = '\238\132\147'
+    end
+    ne.eventresponder['mbtn_left_up'] =
+        function ()
+            if state.fullscreen then
+                mp.commandv('cycle', 'fullscreen')
+            else
+                mp.commandv('cycle', 'window-maximized')
+            end
+        end
+    lo = add_layout('maximize')
+    lo.geometry = second_geo
+    lo.style = osc_styles.WinCtrl
 end
 
 --
@@ -2428,8 +2293,8 @@ layouts = function ()
     
     if (user_opts.persistent_progress or user_opts.persistent_progresstoggle) then
         lo = add_layout('persistentseekbar')
-        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistent_progressheight}
-        lo.style = osc_styles.seekbar_fg
+        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistentprogressheight}
+        lo.style = osc_styles.SeekbarFg
         lo.slider.gap = 7
         lo.slider.tooltip_an = 0   
     end
@@ -2443,9 +2308,9 @@ layouts = function ()
     local ontop_button = user_opts.ontop_button
     local screenshot_button = user_opts.screenshot_button
 
-    if user_opts.compact_mode then
-        user_opts.jump_buttons = false
-        jump_buttons = false
+    if user_opts.compactmode then
+        user_opts.showjump = false
+        showjump = false
     end
     local offset = jump_buttons and 60 or 0
     local outeroffset = (chapter_skip_buttons and 0 or 100) + (jump_buttons and 0 or 100)
@@ -2646,8 +2511,8 @@ local function osc_init()
     local _, display_h, display_aspect = mp.get_osd_size()
     local scale
 
-    if (mp.get_property("video") == "no") then -- dummy/forced window
-        scale = user_opts.scale_forced_window
+    if (mp.get_property('video') == 'no') then -- dummy/forced window
+        scale = user_opts.scaleforcedwindow
     elseif state.fullscreen then
         scale = user_opts.scale_fullscreen
     else
@@ -2680,10 +2545,12 @@ local function osc_init()
     local nojumpoffset = user_opts.jump_buttons and 0 or 100
     local noskipoffset = user_opts.chapter_skip_buttons and 0 or 100
 
-    local compact_mode = user_opts.compact_mode
-    if compact_mode then nojumpoffset = 100 end
-    local outeroffset = (user_opts.chapter_skip_buttons and 0 or 140) + (user_opts.jump_buttons and 0 or 140)
-    if compact_mode then outeroffset = 140 end
+    local compactmode = user_opts.compactmode
+
+    if compactmode then nojumpoffset = 100 end
+
+    local outeroffset = (user_opts.showskip and 0 or 140) + (user_opts.showjump and 0 or 140)
+    if compactmode then outeroffset = 140 end
 
     local ne
 
@@ -2808,13 +2675,13 @@ local function osc_init()
 
     ne = new_element('skipback', 'button')
     ne.visible = (osc_param.playresx >= 400 - nojumpoffset*10)
-    ne.softrepeat = user_opts.chapter_softrepeat == true
-    ne.content = icons.rewind
-    ne.enabled = (have_ch) or compact_mode -- disables button when no chapters available.
+    ne.softrepeat = true
+    ne.content = icons.backward
+    ne.enabled = (have_ch) or compactmode -- disables button when no chapters available.
     ne.eventresponder['mbtn_left_down'] =
         function () 
-            if compact_mode then
-                mp.commandv('seek', -jump_amount, jump_mode)
+            if compactmode then
+                mp.commandv('seek', -jumpamount, jumpmode)
             else
                 mp.commandv("add", "chapter", -1)
             end
@@ -2845,8 +2712,8 @@ local function osc_init()
     ne.enabled = (have_ch) or compact_mode -- disables button when no chapters available.
     ne.eventresponder['mbtn_left_down'] =
         function ()
-            if compact_mode then
-                mp.commandv('seek', jump_amount, jump_mode)
+            if compactmode then
+                mp.commandv('seek', jumpamount, jumpmode)
             else
                 mp.commandv("add", "chapter", 1)
             end
@@ -3052,44 +2919,87 @@ local function osc_init()
         end    
 
     --download
-    ne = new_element("download", "button")
-    ne.content = function () return state.downloading and icons.downloading or icons.download end
-    ne.visible = (osc_param.playresx >= 1100 - outeroffset - (user_opts.loop_button and 0 or 100) - (user_opts.ontop_button and 0 or 100) - (user_opts.info_button and 0 or 100) - (user_opts.screenshot_button and 0 or 100)) and state.is_URL
-    ne.tooltip_style = osc_styles.tooltip
-    ne.tooltipF = function () return state.downloading and (texts.downloading .. "...") or (texts.download .. " (" .. state.file_size_normalized .. ")") end
-    ne.eventresponder["mbtn_left_up"] = function ()
-        if not state.videoCantBeDownloaded then
-            local localpath = mp.command_native({"expand-path", user_opts.download_path})
-
-            if state.downloaded_once then
-                show_message("\\N{\\an9}" .. texts.downloaded .. "...")
-            elseif state.downloading then
-                show_message("\\N{\\an9}" .. texts.download_in_progress .. "...")
-            else
-                show_message("\\N{\\an9}" .. texts.downloading .. "...")
-                state.downloading = true
-
-                -- use current or default ytdl-format
-                local mpv_ytdl = (user_opts.ytdl_format and user_opts.ytdl_format ~= "") and user_opts.ytdl_format or  mp.get_property("file-local-options/ytdl-format") or mp.get_property("ytdl-format") or ""
-                local ytdl_format = (mpv_ytdl and mpv_ytdl ~= "") and mpv_ytdl or "-f bestvideo+bestaudio/best"
-            
-                local command = {
-                    "yt-dlp",
-                    user_opts.ytdl_format,
-                    "--remux", "mp4",
-                    "--add-metadata",
-                    "--embed-subs",
-                    "-o", "%(title)s.%(ext)s",
-                    "-P", localpath,
-                    state.url_path
-                }
-
-                local status = exec(command, download_done)
-            end
+    ne = new_element('download', 'button')
+    ne.content = function ()
+        if (state.downloading) then
+            return (icons.downloading)
         else
-            show_message("\\N{\\an9}Can't be downloaded")
+            return (icons.download)
         end
     end
+    ne.visible = (osc_param.playresx >= 1100 - outeroffset - (user_opts.showloop and 0 or 100) - (user_opts.showontop and 0 or 100) - (user_opts.showinfo and 0 or 100) - (user_opts.showscreenshot and 0 or 100)) and state.isWebVideo
+    ne.tooltip_style = osc_styles.Tooltip
+    ne.tooltipF = function ()
+        local msg = state.fileSizeNormalised
+        if (state.downloading)then
+            msg = "Downloading..."
+        end
+        return msg
+    end
+    ne.eventresponder['mbtn_left_up'] =
+        function ()
+            if (not state.videoCantBeDownloaded) then
+                local localpathnormal = mp.command_native({"expand-path", user_opts.downloadpath})
+                local localpath = localpathnormal
+
+                local function openFolder()
+                    local device = "linux"
+                    if os.getenv("windir") ~= nil then
+                        device = "windows"
+                    elseif os.execute '[ -d "/Applications" ]' == 0 and os.execute '[ -d "/Library" ]' == 0 or os.execute '[ -d "/Applications" ]' == true and os.execute '[ -d "/Library" ]' == true then
+                        device = "mac"
+                    end
+
+                    -- for ubuntu
+                    local url_browser_linux_cmd = "xdg-open \"$url\""
+                    local file_browser_linux_cmd = "dbus-send --print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file:$path\" string:\"\""
+                    local url_browser_macos_cmd = "open \"$url\""
+                    local file_browser_macos_cmd = "open -a Finder -R \"$path\""
+
+                    local cmd = ""
+                    if device == "linux" then
+                        cmd = file_browser_linux_cmd
+                    elseif device == 'windows' then
+                        localpath = localpath:gsub("/", "\\")
+                        local ret = mp.command_native_async({
+                            name = "subprocess",
+                            args = {"explorer", localpath}
+                        })
+                    elseif device == "mac" then
+                        cmd = file_browser_macos_cmd
+                    end 
+                    cmd = cmd:gsub("$path", localpath)
+                    if device ~= 'windows' then
+                        os.execute(cmd)
+                    end
+                end
+
+                if state.downloadedOnce then
+                    show_message("\\N{\\an9}Already downloaded")
+                    openFolder()
+                elseif state.downloading then
+                    show_message("\\N{\\an9}Already downloading...")
+                    openFolder()
+                else
+                    show_message("\\N{\\an9}Downloading...")
+                    state.downloading = true
+                    local command = { 
+                        "yt-dlp",
+                        user_opts.ytdlpQuality,
+                        "--remux",
+                        "mp4",
+                        "--add-metadata",
+                        "--embed-subs",
+                        "-o%(title)s",
+                        "-P " .. localpathnormal,
+                        state.path 
+                    }
+                    local status = exec(command, downloadDone)                
+                end
+            else
+                show_message("\\N{\\an9}Can't be downloaded")
+            end
+        end
 
     --screenshot
     ne = new_element("screenshot", "button")
@@ -3225,13 +3135,14 @@ local function osc_init()
                 mp.commandv("cycle", "pause")
             end
             local seekto = get_slider_value(element)
-            if element.state.lastseek == nil or element.state.lastseek ~= seekto then
-                local flags = "absolute-percent"
-                if not user_opts.seekbar_keyframes then
-                    flags = flags .. "+exact"
-                end
-                mp.commandv("seek", seekto, flags)
-                element.state.lastseek = seekto
+            if (element.state.lastseek == nil) or
+                (not (element.state.lastseek == seekto)) then
+                    local flags = 'absolute-percent'
+                    if not user_opts.seekbarkeyframes then
+                        flags = flags .. '+exact'
+                    end
+                    mp.commandv('seek', seekto, flags)
+                    element.state.lastseek = seekto
             end
 
         end
@@ -3277,41 +3188,6 @@ local function osc_init()
                 state.playingWhilstSeeking = false
             end
         end
-
-    --volumebar
-    if user_opts.volume_control then
-        local volume_max = mp.get_property_number("volume-max") > 0 and mp.get_property_number("volume-max") or 100
-        ne = new_element("volumebar", "slider")
-        ne.visible = (osc_param.playresx >= 900 - outeroffset) and user_opts.volume_control
-        ne.enabled = get_track('audio') > 0
-        ne.slider = {min = {value = 0}, max = {value = volume_max}}
-        ne.slider.markerF = function () return {} end
-        ne.slider.seek_rangesF = function() return nil end
-        ne.slider.posF = function ()
-            local volume = mp.get_property_number("volume")
-            if user_opts.volume_control_type == "logarithmic" then
-                return math.sqrt(volume * 100)
-            else
-                return volume
-            end
-        end
-        ne.slider.tooltipF = function (pos) return (get_track('audio') > 0) and set_volume(pos) or "" end
-        ne.eventresponder["mouse_move"] = function (element)
-            local pos = get_slider_value(element)
-            local setvol = set_volume(pos)
-            if element.state.lastseek == nil or element.state.lastseek ~= setvol then
-                mp.commandv("osd-msg", "set", "volume", setvol)
-                element.state.lastseek = setvol
-            end
-        end
-        ne.eventresponder["mbtn_left_down"] = function (element)
-            local pos = get_slider_value(element)
-            mp.commandv("osd-msg", "set", "volume", set_volume(pos))
-        end
-        ne.eventresponder["reset"] = function (element) element.state.lastseek = nil end
-        ne.eventresponder["wheel_up_press"] = function () mp.commandv("osd-msg", "add", "volume", 5) end
-        ne.eventresponder["wheel_down_press"] = function () mp.commandv("osd-msg", "add", "volume", -5) end    
-    end
 
     --persistent seekbar
     if (user_opts.persistent_progress or user_opts.persistent_progresstoggle) then
@@ -3399,38 +3275,6 @@ local function osc_init()
         request_init()
     end
 
-    -- Chapter title (below seekbar)
-    local chapter_index = mp.get_property_number("chapter", -1)
-    ne = new_element("separator", "button")
-    ne.visible = true
-    ne.content = function()
-        if chapter_index >= 0 or state.buffering then
-            return " • "
-        else
-            return ""
-        end
-    end
-
-    ne = new_element("chapter_title", "button")
-    ne.visible = true
-    ne.content = function()
-        if state.buffering then
-            return "Buffereing..." .. " " .. mp.get_property("cache-buffering-state") .. "%"
-        else
-            if user_opts.chapter_fmt ~= "no" and chapter_index >= 0 then
-                request_init()
-                local chapters = mp.get_property_native("chapter-list", {})
-                local chapter_title = (chapters[chapter_index + 1] and chapters[chapter_index + 1].title ~= "") and chapters[chapter_index + 1].title 
-                    or chapter_index + 1 .. "/" .. #chapters
-                chapter_title = mp.command_native({"escape-ass", chapter_title})
-                return string.format(user_opts.chapter_fmt, chapter_title)
-            end    
-        end
-        return "" -- fallback
-    end
-    ne.eventresponder["mbtn_left_up"] = function() show_message(get_chapterlist()) end
-    ne.eventresponder["mbtn_right_up"] = nil
-
     -- Total/remaining time display
     ne = new_element("tc_right", "button")
     ne.visible = (mp.get_property_number("duration", 0) > 0)
@@ -3441,8 +3285,9 @@ local function osc_init()
         local time_to_display = state.tc_right_rem and 
             mp.get_property_number("playtime-remaining", 0) or duration
             
-        local prefix = state.tc_right_rem and 
-            (user_opts.unicode_minus and UNICODE_MINUS or "-") or ""
+        local prefix = state.rightTC_trem and 
+            (user_opts.unicodeminus and UNICODE_MINUS or "-") or 
+            ""
             
         return prefix .. format_time(time_to_display, false)
     end
@@ -3510,7 +3355,7 @@ function osc_visible(visible)
 end
 
 function adjustSubtitles(visible)
-    if visible and user_opts.raise_subtitles and state.osc_visible == true and (state.fullscreen == false or user_opts.show_fullscreen) then
+    if visible and user_opts.raisesubswithosc and state.osc_visible == true and (state.fullscreen == false or user_opts.showfullscreen) then
         local w, h = mp.get_osd_size()
         if h > 0 then
             local subpos = math.floor((osc_param.playresy - user_opts.raise_subtitle_amount)/osc_param.playresy*100)
@@ -3545,9 +3390,27 @@ function cache_state(name, st)
     request_tick()
 end
 
+-- Request that tick() is called (which typically re-renders the OSC).
+-- The tick is then either executed immediately, or rate-limited if it was
+-- called a small time ago.
+function request_tick()
+    if state.tick_timer == nil then
+        state.tick_timer = mp.add_timeout(0, tick)
+    end
 
-local function mouse_leave()
-    if get_hide_timeout() >= 0 then
+    if not state.tick_timer:is_enabled() then
+        local now = mp.get_time()
+        local timeout = tick_delay - (now - state.tick_last_time)
+        if timeout < 0 then
+            timeout = 0
+        end
+        state.tick_timer.timeout = timeout
+        state.tick_timer:resume()
+    end
+end
+
+function mouse_leave()
+    if get_hidetimeout() >= 0 then
         hide_osc()
     end
     -- reset mouse position
@@ -3555,31 +3418,27 @@ local function mouse_leave()
     state.mouse_in_window = false
 end
 
-local function do_enable_key_bindings()
-    if state.enabled then
-        if not state.showhide_enabled then
-            mp.enable_key_bindings('showhide', 'allow-vo-dragging+allow-hide-cursor')
-            mp.enable_key_bindings('showhide_wc', 'allow-vo-dragging+allow-hide-cursor')
-        end
-        state.showhide_enabled = true
-    end
+function request_init()
+    state.initREQ = true
+    request_tick()
 end
 
-local function enable_osc(enable)
-    state.enabled = enable
-    if enable then
-        do_enable_key_bindings()
-    else
-        hide_osc() -- acts immediately when state.enabled == false
-        if state.showhide_enabled then
-            mp.disable_key_bindings('showhide')
-            mp.disable_key_bindings('showhide_wc')
-        end
-        state.showhide_enabled = false
-    end
+-- Like request_init(), but also request an immediate update
+function request_init_resize()
+    request_init()
+    -- ensure immediate update
+    state.tick_timer:kill()
+    state.tick_timer.timeout = 0
+    state.tick_timer:resume()
 end
 
-local function render()
+function render_wipe()
+    msg.trace('render_wipe()')
+    state.osd.data = "" -- allows set_osd to immediately update on enable
+    state.osd:remove()
+end
+
+function render()
     msg.trace('rendering')
     local current_screen_sizeX, current_screen_sizeY, aspect = mp.get_osd_size()
     local mouseX, mouseY = get_virt_mouse_pos()
@@ -3707,8 +3566,8 @@ local function render()
     if not (state.showtime == nil) and (get_hide_timeout() >= 0) then
         local timeout = state.showtime + (get_hide_timeout()/1000) - now
         if timeout <= 0 then
-            if (state.active_element == nil) and (user_opts.bottom_hover or not (mouse_over_osc)) then
-                if (not (state.paused and user_opts.keep_on_pause)) then
+            if (state.active_element == nil) and (user_opts.bottomhover or not (mouse_over_osc)) then
+                if (not (state.paused and user_opts.donttimeoutonpause)) then
                     hide_osc()
                 end
             end
@@ -3807,16 +3666,9 @@ function process_event(source, what)
         state.mouse_in_window = true
 
         local mouseX, mouseY = get_virt_mouse_pos()
-        if (user_opts.min_mouse_move == 0) or 
-            (not ((state.last_mouseX == nil) or (state.last_mouseY == nil)) and 
-                ((math.abs(mouseX - state.last_mouseX) >= user_opts.min_mouse_move) 
-                    or (math.abs(mouseY - state.last_mouseY) >= user_opts.min_mouse_move)
-                )
-            ) then
-                if user_opts.bottom_hover then -- if enabled, only show osc if mouse is hovering at the bottom of the screen (where the UI elements are)
-                    local top_hover = window_controls_enabled() and (user_opts.window_title or user_opts.window_top_bar)
-                    if mouseY > osc_param.playresy - (user_opts.bottom_hover_zone or 200) or 
-                        ((user_opts.window_top_bar == "yes" or not (state.border and state.title_bar)) or state.fullscreen) and (mouseY < 40 and top_hover) then
+        if (user_opts.minmousemove == 0) or (not ((state.last_mouseX == nil) or (state.last_mouseY == nil)) and ((math.abs(mouseX - state.last_mouseX) >= user_opts.minmousemove) or (math.abs(mouseY - state.last_mouseY) >= user_opts.minmousemove))) then
+                if user_opts.bottomhover then -- if enabled, only show osc if mouse is hovering at the bottom of the screen (where the UI elements are)
+                    if (mouseY > osc_param.playresy - 200) or ((not state.border or state.fullscreen) and mouseY < 40) then -- account for scaling options
                         show_osc()
                     else
                         hide_osc()
@@ -3858,7 +3710,7 @@ function tick()
         local ass = assdraw.ass_new()
 
         -- mpv logo
-        if user_opts.idle_screen then
+        if user_opts.welcomescreen then
             for i, line in ipairs(logo_lines) do
                 ass:new_event()
                 ass:append(line_prefix .. line)
@@ -3866,14 +3718,14 @@ function tick()
         end
 
         -- Santa hat
-        if is_december and user_opts.idle_screen and not user_opts.green_and_grumpy then
+        if is_december and user_opts.welcomescreen and not user_opts.noxmas then
             for i, line in ipairs(santa_hat_lines) do
                 ass:new_event()
                 ass:append(line_prefix .. line)
             end
         end
    
-        if user_opts.idle_screen then
+        if user_opts.welcomescreen then
             ass:new_event()
             ass:pos(display_w / 2, icon_y + 65)
             ass:an(8)
@@ -3926,17 +3778,10 @@ mp.observe_property("chapter-list", "native", function(_, list) -- chapter list 
     request_init()
 end)
 mp.observe_property('seeking', nil, function()
-    if user_opts.seek_resets_hide_timeout then
-        reset_timeout()
-    end
-    if seeking and user_opts.osc_on_seek and not state.new_file_flag then
-        show_osc()
-    elseif state.new_file_flag then
-        state.new_file_flag = false
-    end
+    resetTimeout()
 end)
 
-if user_opts.key_bindings then
+if user_opts.keybindings then
     -- chapter scrubbing
     mp.add_key_binding("CTRL+LEFT", "prevfile", function()
         mp.commandv('playlist-prev', 'weak')
