@@ -67,10 +67,10 @@ Create an `modernx.conf` file and place it in the `script-opts/` folder (create 
 Here is an example of a configuration file, which would be placed in `script-opts/modernx.conf`:
 
 ```editorconfig
-compactmode=no
-showinfo=yes
-titlefontsize=20
-seekbarhandlesize=0
+compact_mode=no
+info_button=yes
+title_font_size=20
+seekbar_handle_size=0
 ```
 
 ### Configurable Options
@@ -78,34 +78,38 @@ seekbarhandlesize=0
 The default options are shown below:
 
 ```lua
+-- Parameters
+-- default user option values
+-- change them using modernx.conf
 local user_opts = {
     -- Language and display --
     language = "en",                        -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",               -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
 
-    idlescreen = true,                      -- show mpv logo when idle
+    idle_screen = true,                     -- show mpv logo when idle
+    key_bindings = true,                   -- register additional key bindings, such as chapter scrubbing, pinning the window
     window_top_bar = "auto",                -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
-    showwindowed = true,                    -- show OSC when windowed
-    showfullscreen = true,                  -- show OSC when fullscreen
-    showonpause = true,                     -- show OSC when paused
-    keeponpause = false,                    -- disable OSC hide timeout when paused
-    greenandgrumpy = false,                 -- disable Santa hat in December
+    show_windowed = true,                   -- show OSC when windowed
+    show_fullscreen = true,                 -- show OSC when fullscreen
+    show_on_pause = true,                   -- show OSC when paused
+    keep_on_pause = false,                  -- disable OSC hide timeout when paused
+    green_and_grumpy = false,               -- disable Santa hat in December
     visibility = "auto",                    -- only used at init to set visibility_mode(...)
 
     -- OSC behaviour and scaling
-    hidetimeout = 1500,                     -- time (in ms) before OSC hides if no mouse movement
-    seek_resets_hidetimeout = true,         -- if seeking should reset the hidetimeout
-    fadeduration = 150,                     -- fade-out duration (in ms), set to 0 for no fade
-    minmousemove = 0,                       -- minimum mouse movement (in pixels) required to show OSC
-    bottomhover = true,                     -- show OSC only when hovering at the bottom
-    bottomhover_zone = 200,                 -- height of hover zone for bottomhover (in pixels)
+    hide_timeout = 1500,                    -- time (in ms) before OSC hides if no mouse movement
+    seek_resets_hide_timeout = true,        -- if seeking should reset the hide_timeout
+    fade_duration = 150,                    -- fade-out duration (in ms), set to 0 for no fade
+    min_mouse_move = 0,                     -- minimum mouse movement (in pixels) required to show OSC
+    bottom_hover = true,                    -- show OSC only when hovering at the bottom
+    bottom_hover_zone = 200,                -- height of hover zone for bottom_hover (in pixels)
     osc_on_seek = false,                    -- show OSC when seeking
     mouse_seek_pause = true,                -- pause video while seeking with mouse move (on button hold)
 
-    vidscale = false,                       -- scale osc with the video
-    scalewindowed = 1.0,                    -- osc scale factor when windowed
-    scalefullscreen = 1.0,                  -- osc scale factor when fullscreen
-    scaleforcedwindow = 1.0,                -- osc scale factor when forced (no video, like music files)
+    vid_scale = false,                      -- scale osc with the video
+    scale_windowed = 1.0,                   -- osc scale factor when windowed
+    scale_fullscreen = 1.0,                 -- osc scale factor when fullscreen
+    scale_forced_window = 1.0,              -- osc scale factor when forced (no video, like music files)
 
     -- Time, title and description display
     show_title = true,                      -- show title in the OSC (above seekbar)
@@ -116,9 +120,9 @@ local user_opts = {
     show_chapter_title = true,              -- show chapter title alongside timestamp (below seekbar)
     chapter_fmt = "%s",                     -- format for chapter display on seekbar hover (set to "no" to disable)
 
-    timetotal = true,                       -- show total time instead of remaining time
-    timems = false,                         -- show timecodes with milliseconds
-    unicodeminus = false,                   -- use the Unicode minus sign in remaining time
+    time_total = true,                      -- show total time instead of remaining time
+    time_ms = false,                        -- show timecodes with milliseconds
+    unicode_minus = false,                  -- use the Unicode minus sign in remaining time
     time_format = "dynamic",                -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
     time_font_size = 18,                    -- font size of the time display
 
@@ -133,14 +137,14 @@ local user_opts = {
     window_title = true,                    -- show window title in borderless/fullscreen mode
     window_controls = true,                 -- show window controls (close, minimize, maximize) in borderless/fullscreen
     title_bar_box = false,                  -- show title bar as a box instead of a black fade
-    windowcontrols_title = "${media-title}",-- same as title but for window_controls
+    window_controls_title = "${media-title}",-- same as title but for window_controls
 
     -- Subtitle display settings
     raise_subtitles = true,                 -- whether to raise subtitles above the osc when it's shown
     raise_subtitle_amount = 175,            -- how much subtitles rise when the osc is shown
 
     -- Buttons display and functionality
-    compactmode = true,                     -- replace the jump buttons with the seek/chapter buttons
+    compact_mode = true,                    -- replace the jump buttons with the seek/chapter buttons
     
     jump_buttons = true,                    -- show the jump backward and forward buttons
     jump_amount = 10,                       -- change the jump amount in seconds
@@ -164,7 +168,7 @@ local user_opts = {
     download_button = true,                 -- show download button on web videos (requires yt-dlp and ffmpeg)
     download_path = "~~desktop/mpv/downloads", -- default download directory for videos (https://mpv.io/manual/master/#paths)
 
-    loop_button = false,                     -- show loop button
+    loop_button = false,                    -- show loop button
 
     loop_in_pause = true,                   -- enable looping by right-clicking pause
 
@@ -176,8 +180,8 @@ local user_opts = {
     osc_color = "#000000",                  -- accent color of the OSC and title bar
     window_title_color = "#FFFFFF",         -- color of the title in borderless/fullscreen mode
     window_controls_color = "#FFFFFF",      -- color of the window controls (close, minimize, maximize) in borderless/fullscreen mode
-    windowcontrols_close_hover = "#E81123", -- color of close window control on hover
-    windowcontrols_minmax_hover = "#53A4FC",-- color of min/max window controls on hover
+    window_controls_close_hover = "#E81123", -- color of close window control on hover
+    window_controls_minmax_hover = "#53A4FC",-- color of min/max window controls on hover
     title_color = "#FFFFFF",                -- color of the title (above seekbar)
     seekbarfg_color = "#1D96F5",            -- color of the seekbar progress and handle, in Hex color format
     seekbarbg_color = "#FFFFFF",            -- color of the remaining seekbar, in Hex color format
@@ -204,18 +208,18 @@ local user_opts = {
     hover_effect_for_sliders = false,       -- apply hover effects to slider handles
 
     -- Progress bar settings
-    seekbarhandlesize = 0.8,                -- size ratio of the seekbar handle (range: 0 ~ 1)
-    seekrange = true,                       -- show seek range overlay
-    seekrangealpha = 175,                   -- transparency of the seek range
-    seekbarkeyframes = false,               -- use keyframes when dragging the seekbar
+    seekbar_handle_size = 0.8,              -- size ratio of the seekbar handle (range: 0 ~ 1)
+    seek_range = true,                      -- show seek range overlay
+    seek_rangealpha = 175,                  -- transparency of the seek range
+    seekbar_keyframes = false,              -- use keyframes when dragging the seekbar
     
-    automatickeyframemode = true,           -- automatically set keyframes for the seekbar based on video length
-    automatickeyframelimit = 600,           -- videos longer than this (in seconds) will have keyframes on the seekbar
+    automatic_keyframe_mode = true,         -- automatically set keyframes for the seekbar based on video length
+    automatic_keyframe_limit = 600,         -- videos longer than this (in seconds) will have keyframes on the seekbar
 
-    persistentprogress = false,             -- always show a small progress line at the bottom of the screen
-    persistentprogressheight = 17,          -- the height of the persistentprogress bar
-    persistentbuffer = false,               -- on web videos, show the buffer on the persistent progress line
-    persistentprogresstoggle = true,        -- enable toggling the persistentprogress bar
+    persistent_progress = false,            -- always show a small progress line at the bottom of the screen
+    persistent_progressheight = 17,         -- the height of the persistent_progress bar
+    persistent_buffer = false,              -- on web videos, show the buffer on the persistent progress line
+    persistent_progresstoggle = true,       -- enable toggling the persistent_progress bar
 
     -- Experimental
     title_youtube_stats = true,             -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
