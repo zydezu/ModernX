@@ -76,7 +76,7 @@ local user_opts = {
     -- Language and display --
     language = "en",                        -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",               -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
-    layout_option = "original",             -- switching the original/reduced layouts
+    layout_option = "original",             -- use the original/reduced layout
     idle_screen = true,                     -- show mpv logo when idle
     key_bindings = true,                    -- register additional key bindings, such as chapter scrubbing, pinning the window
     window_top_bar = "auto",                -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
@@ -221,7 +221,7 @@ local user_opts = {
     -- Web videos
     title_youtube_stats = true,             -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
     ytdl_format = "",                       -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
-    
+
     -- sponsorblock features need https://github.com/zydezu/mpvconfig/blob/main/scripts/sponsorblock.lua to work!
     show_sponsorblock_segments = true,      -- show sponsorblock segments on the progress bar
     add_sponsorblock_chapters = false,      -- add sponsorblock chapters to the chapter list
@@ -2524,6 +2524,8 @@ end
 --
 -- ModernX Layout
 --
+
+local layouts = {}
 
 -- Default layout
 layouts["original"] = function ()
