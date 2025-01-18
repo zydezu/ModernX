@@ -76,9 +76,9 @@ local user_opts = {
     -- Language and display --
     language = "en",                        -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",               -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
-
+    layout_option = "original",             -- switching the original/reduced layouts
     idle_screen = true,                     -- show mpv logo when idle
-    key_bindings = true,                   -- register additional key bindings, such as chapter scrubbing, pinning the window
+    key_bindings = true,                    -- register additional key bindings, such as chapter scrubbing, pinning the window
     window_top_bar = "auto",                -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
     show_windowed = true,                   -- show OSC when windowed
     show_fullscreen = true,                 -- show OSC when fullscreen
@@ -2526,7 +2526,7 @@ end
 --
 
 -- Default layout
-local function layouts()
+layouts["original"] = function ()
     local osc_geo = {
         w = osc_param.playresx,
         h = 180
@@ -2756,6 +2756,257 @@ local function layouts()
         lo.geometry = {x = osc_geo.w - 82, y = refY - 40, an = 5, w = 24, h = 24}
         lo.style = osc_styles.control_3
         lo.visible = (osc_param.playresx >= 600 - outeroffset)
+    end
+
+    if info_button then
+        lo = add_layout('tog_info')
+        lo.geometry = {x = osc_geo.w - 172 + (loop_button and 0 or 45) + (ontop_button and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        lo.visible = (osc_param.playresx >= 500 - outeroffset)
+    end
+
+    if screenshot_button then
+        lo = add_layout('screenshot')
+        lo.geometry = {x = osc_geo.w - 217 + (loop_button and 0 or 45) + (ontop_button and 0 or 45) + (info_button and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        lo.visible = (osc_param.playresx >= 300 - outeroffset)
+    end
+
+    if user_opts.download_button then
+        lo = add_layout('download')
+        lo.geometry = {x = osc_geo.w - 262 + (loop_button and 0 or 45) + (ontop_button and 0 or 45) + (info_button and 0 or 45) + (screenshot_button and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        lo.visible = (osc_param.playresx >= 400 - outeroffset)
+    end
+end
+
+-- Reduced occupation layout
+layouts["reduced"] = function ()
+    local osc_geo = {
+        w = osc_param.playresx,
+        h = 180
+    }
+
+    -- origin of the controllers, left/bottom corner
+    local posX = 0
+    local posY = osc_param.playresy
+
+    osc_param.areas = {} -- delete areas
+
+    -- area for active mouse input
+    add_area('input', get_hitbox_coords(posX, posY, 1, osc_geo.w, osc_geo.h))
+
+    -- area for show/hide
+    add_area('showhide', 0, 0, osc_param.playresx, osc_param.playresy)
+
+    -- fetch values
+    local osc_w, osc_h = osc_geo.w, osc_geo.h
+
+    -- Controller Background
+    local lo, geo
+    
+    new_element('box_bg', 'box')
+    lo = add_layout('box_bg')
+    lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
+    lo.style = osc_styles.box_bg
+    lo.layer = 10
+    lo.alpha[3] = 0
+
+    local top_titlebar = window_controls_enabled() and (user_opts.window_title or user_opts.window_controls)
+
+    if not user_opts.title_bar_box and ((user_opts.window_top_bar == "yes" or not (state.border and state.title_bar)) or state.fullscreen) and top_titlebar then
+        new_element("title_alpha_bg", "box")
+        lo = add_layout("title_alpha_bg")
+        lo.geometry = {x = posX, y = -100, an = 7, w = osc_w, h = -1}
+        lo.style = osc_styles.box_bg
+        lo.layer = 10
+        lo.alpha[3] = 0
+    end
+        
+    -- Alignment
+    local refX = osc_w / 2
+    local refY = posY
+        
+    -- Seekbar
+    new_element('seekbarbg', 'box')
+    lo = add_layout('seekbarbg')
+    lo.geometry = {x = refX , y = refY - 75, an = 5, w = osc_geo.w - 200, h = 2}
+    lo.layer = 13
+    lo.style = osc_styles.seekbar_bg
+    lo.alpha[1] = 128
+    lo.alpha[3] = 128
+
+    lo = add_layout('seekbar')
+    lo.geometry = {x = refX, y = refY - 75, an = 5, w = osc_geo.w - 200, h = 16}
+    lo.style = osc_styles.seekbar_fg
+    lo.slider.gap = 7
+    lo.slider.tooltip_style = osc_styles.tooltip
+    lo.slider.tooltip_an = 2
+    
+    if (user_opts.persistent_progress or user_opts.persistent_progresstoggle) then
+        lo = add_layout('persistentseekbar')
+        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistent_progressheight}
+        lo.style = osc_styles.seekbar_fg
+        lo.slider.gap = 7
+        lo.slider.tooltip_an = 0   
+    end
+
+    local jump_buttons = user_opts.jump_buttons
+    local chapter_skip_buttons = user_opts.chapter_skip_buttons
+    local track_nextprev_buttons = user_opts.track_nextprev_buttons
+
+    local loop_button = user_opts.loop_button
+    local info_button = user_opts.info_button
+    local ontop_button = user_opts.ontop_button
+    local screenshot_button = user_opts.screenshot_button
+
+    if user_opts.compact_mode then
+        user_opts.jump_buttons = false
+        jump_buttons = false
+    end
+    local offset = jump_buttons and 60 or 0
+    local outeroffset = (chapter_skip_buttons and 0 or 100) + (jump_buttons and 0 or 100)
+
+    -- Title
+    geo = {x = 25, y = refY - 97, an = 1, w = osc_geo.w - 50, h = 35}
+    lo = add_layout("title")
+    lo.geometry = geo
+    lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.title,
+                             geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
+    lo.alpha[3] = 0
+    lo.button.maxchars = geo.w / 11
+
+    -- Description
+    if (state.localDescription ~= nil or state.is_URL) and user_opts.show_description then
+        geo = {x = osc_geo.w - 25, y = refY - 115, an = 9, w = osc_geo.w - 80, h = 19}
+        lo = add_layout("description")
+        lo.geometry = geo
+        lo.style = osc_styles.description
+        lo.alpha[3] = 0
+        lo.button.maxchars = geo.w / 7
+    end
+
+    -- Volumebar
+    if user_opts.volume_control then
+        lo = new_element("volumebarbg", "box")
+        lo.visible = (osc_param.playresx >= 900 - outeroffset) and user_opts.volume_control
+        lo = add_layout("volumebarbg")
+        lo.geometry = {x = 155, y = refY - 40, an = 4, w = 80, h = 2}
+        lo.layer = 13
+        lo.alpha[1] = 128
+        lo.style = user_opts.volumebar_match_seek_color and osc_styles.seekbar_bg or osc_styles.volumebar_bg
+        
+        lo = add_layout("volumebar")
+        lo.geometry = {x = 155, y = refY - 40, an = 4, w = 80, h = 8}
+        lo.style = user_opts.volumebar_match_seek_color and osc_styles.seekbar_fg or osc_styles.volumebar_fg
+        lo.slider.gap = 3
+        lo.slider.tooltip_style = osc_styles.tooltip
+        lo.slider.tooltip_an = 2    
+    end
+
+    -- buttons
+    if track_nextprev_buttons then
+        lo = add_layout('pl_prev')
+        lo.geometry = {x = refX - (60 + (chapter_skip_buttons and 60 or 0)) - offset, y = refY - 40 , an = 5, w = 30, h = 24}
+        lo.style = osc_styles.control_2    
+    end
+
+    if chapter_skip_buttons then 
+        lo = add_layout('skipback')
+        lo.geometry = {x = refX - 60 - offset, y = refY - 40 , an = 5, w = 30, h = 24}
+        lo.style = osc_styles.control_2
+    end
+
+    if jump_buttons then
+        lo = add_layout('jumpback')
+        lo.geometry = {x = refX - 60, y = refY - 40 , an = 5, w = 30, h = 24}
+        lo.style = osc_styles.control_2
+    end
+
+    lo = add_layout("play_pause")
+    lo.geometry = {x = refX, y = refY - 40 , an = 5, w = 45, h = 45}
+    lo.style = osc_styles.control_1
+
+    if jump_buttons then
+        lo = add_layout('jumpfrwd')
+        lo.geometry = {x = refX + 60, y = refY - 40 , an = 5, w = 30, h = 24}
+        -- HACK: jumpfrwd's icon must be mirrored for nonstandard # of seconds
+        -- as the font only has an icon without a number for rewinding
+        lo.style = (user_opts.jump_icon_number and icons.jumpicons[user_opts.jump_amount] ~= nil) and osc_styles.control_2 or osc_styles.control_2_flip
+    end
+
+    if chapter_skip_buttons then
+        lo = add_layout('skipfrwd')
+        lo.geometry = {x = refX + 60 + offset, y = refY - 40 , an = 5, w = 30, h = 24}
+        lo.style = osc_styles.control_2
+    end
+
+    if track_nextprev_buttons then
+        lo = add_layout('pl_next')
+        lo.geometry = {x = refX + (60 + (chapter_skip_buttons and 60 or 0)) + offset, y = refY - 40 , an = 5, w = 30, h = 24}
+        lo.style = osc_styles.control_2
+    end
+
+    -- Time
+    local remsec = mp.get_property_number("playtime-remaining", 0)
+    local possec = mp.get_property_number("playback-time", 0)
+    local dur = mp.get_property_number("duration", 0)
+
+    local show_hours = possec >= 3600 or user_opts.time_format ~= "dynamic"
+    lo = add_layout("tc_left")
+    lo.geometry = {x = 25, y = refY - 84, an = 7, w = 35 + (state.tc_ms and 30 or 0) + (show_hours and 20 or 0), h = 20}
+    lo.style = osc_styles.time
+
+    local show_remhours = (state.tc_right_rem and remsec >= 3600) or (not state.tc_right_rem and dur >= 3600) or user_opts.time_format ~= "dynamic"
+    lo = add_layout("tc_right")
+    lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 35 + (state.tc_ms and 30 or 0) + (show_remhours and 25 or 0), h = 20}
+    lo.style = osc_styles.time
+
+    -- Chapter Title (next to timestamp)
+    if user_opts.show_chapter_title then
+        lo = add_layout("separator")
+        lo.geometry = {x = 65 + (state.tc_ms and 25 or 0) + (show_hours and 16 or 0), y = refY - 84, an = 7, w = 30, h = 20}
+        lo.style = osc_styles.time
+
+        lo = add_layout("chapter_title")
+        lo.geometry = {x = 77 + (state.tc_ms and 25 or 0) + (show_hours and 16 or 0), y = refY - 84, an = 7, w = osc_geo.w - 200 - ((show_hours or state.tc_ms) and 60 or 0), h = 20}
+        lo.style = osc_styles.chapter_title
+    end
+
+    -- Audio/Subtitle
+    lo = add_layout('cy_audio')
+    lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.style = osc_styles.control_3
+    lo.visible = (osc_param.playresx >= 500 - outeroffset)
+
+    lo = add_layout('cy_sub')
+    lo.geometry = {x = 82, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.style = osc_styles.control_3
+    lo.visible = (osc_param.playresx >= 600 - outeroffset)
+
+    lo = add_layout('vol_ctrl')
+    lo.geometry = {x = 127, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.style = osc_styles.control_3
+    lo.visible = (osc_param.playresx >= 700 - outeroffset)
+
+    -- Fullscreen/Loop/Info
+    lo = add_layout('tog_fs')
+    lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.style = osc_styles.control_3
+    lo.visible = (osc_param.playresx >= 250 - outeroffset)    
+
+    if ontop_button then
+        lo = add_layout('tog_ontop')
+        lo.geometry = {x = osc_geo.w - 127 + (loop_button and 0 or 45), y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        lo.visible = (osc_param.playresx >= 700 - outeroffset)
+    end
+
+    if loop_button then
+        lo = add_layout('tog_loop')
+        lo.geometry = {x = osc_geo.w - 82, y = refY - 40, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        lo.visible = (osc_param.playresx >= 600 - outeroffset)    
     end
 
     if info_button then
@@ -3630,7 +3881,7 @@ local function osc_init()
     end
 
     -- load layout
-    layouts()
+    layouts[user_opts.layout_option]()
 
     -- load window controls
     if window_controls_enabled() then
