@@ -248,7 +248,7 @@ local user_opts = {
     -- Experimental
     show_youtube_comments = false,          -- EXPERIMENTAL - show youtube comments
     comments_download_path = "~~desktop/mpv/downloads/comments", -- EXPERIMENTAL - the download path for the comment JSON file
-    FORCE_fix_not_ontop = true,            -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
+    FORCE_fix_not_ontop = false,            -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
 }
 -- read options from config and command-line
 require("mp.options").read_options(user_opts, 'modernx', function(list) update_options(list) end)
