@@ -41,7 +41,6 @@ local function process_vid_stats() end
 local function process_dislikes() end
 local function add_commas_to_number() end
 local function addLikeCountToTitle() end
-local function format_file_size(file_size) end
 local function get_playlist() end
 local function get_chapterlist() end
 local function show_message(text, duration) end
@@ -129,7 +128,6 @@ local user_opts = {
     -- Title bar settings
     window_title = true,                    -- show window title in borderless/fullscreen mode
     window_controls = true,                 -- show window controls (close, minimize, maximize) in borderless/fullscreen
-    title_bar_box = false,                  -- show title bar as a box instead of a black fade
     window_controls_title = "${media-title}", -- same as title but for window_controls
 
     -- Subtitle display settings
@@ -191,9 +189,10 @@ local user_opts = {
 
     fade_alpha = 100,                       -- alpha of the title bar background box
     fade_blur_strength = 75,                -- blur strength for the OSC alpha fade - caution: high values can take a lot of CPU time to render
-    title_bar_fade_alpha = 150,             -- alpha of the OSC background box
-    title_bar_fade_blur_strength = 100,     -- blur strength for the title bar alpha fade
-    window_fade_alpha = 75,                 -- alpha of the window title bar
+    fade_transparency_strength = 0,         -- use with "fade_blur_strength = 0" to create a transparency box
+    window_fade_alpha = 100,                -- alpha of the window title bar
+    window_fade_blur_strength = 75,          -- blur strength for the window title bar. caution: high values can take a lot of CPU time to render
+    window_fade_transparency_strength = 0,  -- use with "window_fade_blur_strength = 0" to create a transparency box
     thumbnail_border = 3,                   -- width of the thumbnail border (for thumbfast)
     thumbnail_border_radius = 3,            -- rounded corner radius for thumbnail border (0 to disable)
 
@@ -358,6 +357,7 @@ local function contains(list, item)
     return false
 end
 
+-- debug function
 local function dumptable(o)
     if type(o) == 'table' then
        local s = '{ '
@@ -407,9 +407,8 @@ local playpause_size = user_opts.playpause_size or 30
 local midbuttons_size = user_opts.midbuttons_size or 24
 local sidebuttons_size = user_opts.sidebuttons_size or 24
 local osc_styles = {
-    background_bar = "{\\1c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",
-    box_bg = "{\\blur" .. user_opts.fade_blur_strength .. "\\bord" .. user_opts.fade_alpha .. "\\1c&H000000&\\3c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",
-    title_bar_box_bg = "{\\blur" .. user_opts.title_bar_fade_blur_strength .. "\\bord" .. user_opts.title_bar_fade_alpha .. "\\1c&H000000&\\3c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",
+    osc_fade_bg = "{\\blur" .. user_opts.fade_blur_strength .. "\\bord" .. user_opts.fade_alpha .. "\\1c&H0&\\3c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",    
+    window_fade_bg = "{\\blur" .. user_opts.window_fade_blur_strength .. "\\bord" .. user_opts.window_fade_alpha .. "\\1c&H0&\\3c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",
     chapter_title = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.chapter_title_color) .. "&\\3c&H000000&\\fs" .. user_opts.time_font_size .. "\\fn" .. user_opts.font .. "}",
     control_1 = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.playpause_color) .. "&\\3c&HFFFFFF&\\fs" .. playpause_size .. "\\fn" .. iconfont .. "}",
     control_2 = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.middle_buttons_color) .. "&\\3c&HFFFFFF&\\fs" .. midbuttons_size .. "\\fn" .. iconfont .. "}",
@@ -425,8 +424,8 @@ local osc_styles = {
     tooltip = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs" .. user_opts.time_font_size .. "\\fn" .. user_opts.font .. "}",
     volumebar_bg = "{\\blur0\\bord0\\1c&H999999&}",
     volumebar_fg = "{\\blur1\\bord1\\1c&H" .. osc_color_convert(user_opts.side_buttons_color) .. "&}",
-    window_control = "{\\blur1\\bord0.5\\1c&H" .. osc_color_convert(user_opts.window_controls_color) .. "&\\3c&H0&\\fs20\\fnmpv-osd-symbols}",
-    window_title = "{\\blur1\\bord0.5\\1c&H" .. osc_color_convert(user_opts.window_title_color) .. "&\\3c&H0&\\fs20\\q2\\fn" .. user_opts.font .. "}",
+    window_control = "{\\blur1\\bord0.5\\1c&H" .. osc_color_convert(user_opts.window_controls_color) .. "&\\3c&H0&\\fs18\\fnmpv-osd-symbols}",
+    window_title = "{\\blur1\\bord0.5\\1c&H" .. osc_color_convert(user_opts.window_title_color) .. "&\\3c&H0&\\fs19\\q2\\fn" .. user_opts.font .. "}",
     description = '{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H000000&\\fs'.. user_opts.description_font_size ..'\\q2\\fn' .. user_opts.font .. '}',
 }
 
@@ -463,7 +462,6 @@ local state = {
     osd = mp.create_osd_overlay('ass-events'),
     new_file_flag = false,                  -- flag to detect new file starts
     chapter_list = {},                      -- sorted by time
-    chapter_list_pre_sponsorblock = {},
     mute = false,
     looping = false,
     sliderpos = 0,
@@ -496,6 +494,7 @@ local state = {
     commentsPage = 0,
     maxCommentPages = 0,
     commentsAdditionalText = "",
+    is_live = false,
 
     sponsor_segments = {},
 
@@ -757,7 +756,7 @@ end
 -- Tracklist Management
 --
 
-local nicetypes = {video = texts.video, audio = texts.audio, sub = texts.subtitle}
+local valid_types = {video = texts.video, audio = texts.audio, sub = texts.subtitle}
 local tracks_osc, tracks_mpv
 
 -- updates the OSC internal playlists, should be run each time the track-layout changes
@@ -787,7 +786,9 @@ end
 
 -- return a nice list of tracks of the given type (video, audio, sub)
 function get_tracklist(type)
-    local message = nicetypes[type] .. texts.track
+    update_tracklist()
+
+    local message = valid_types[type] .. texts.track
     if not tracks_osc or #tracks_osc[type] == 0 then
         message = texts.none
     else
@@ -1485,11 +1486,15 @@ function checktitle()
     -- fake description using metadata
     state.localDescription = nil
     state.localDescriptionClick = nil
+
     local title = mp.get_property("media-title")
     local artist = mp.get_property("filtered-metadata/by-key/Album_Artist") or mp.get_property("filtered-metadata/by-key/Artist") or mp.get_property("filtered-metadata/by-key/Uploader")
+    local tempartistclicktext = "Contributing artists: " .. (artist or "")
+
     if (mp.get_property("filtered-metadata/by-key/Album_Artist") and mp.get_property("filtered-metadata/by-key/Artist")) then
         if (mp.get_property("filtered-metadata/by-key/Album_Artist") ~= mp.get_property("filtered-metadata/by-key/Artist")) then
-            artist = mp.get_property("filtered-metadata/by-key/Album_Artist") .. ', ' .. mp.get_property("filtered-metadata/by-key/Artist")
+            artist = mp.get_property("filtered-metadata/by-key/Artist") .. ", " .. mp.get_property("filtered-metadata/by-key/Album_Artist")
+            tempartistclicktext = "Contributing artists: " .. mp.get_property("filtered-metadata/by-key/Artist") .. "\\NAlbum arist: " .. mp.get_property("filtered-metadata/by-key/Album_Artist")
         end
     end
     local album = mp.get_property("filtered-metadata/by-key/Album")
@@ -1499,10 +1504,14 @@ function checktitle()
     state.ytdescription = ""
     state.youtubeuploader = artist
 
-    print(dumptable(mp.get_property_native("metadata")))
-    if mp.get_property_native('metadata') then
-        state.ytdescription = mp.get_property_native('metadata').ytdl_description or description or ""
-        state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N'):gsub("%%", "%%%%")
+    local metadata = mp.get_property_native('metadata')
+    print(dumptable(metadata))
+    
+    if metadata then
+        state.ytdescription = metadata.ytdl_description or description or ""
+        state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N'):gsub("%%", "%%")
+
+        state.is_live = metadata.ytdl_is_live
     else
         print("Failed to load metadata")
     end
@@ -1516,7 +1525,6 @@ function checktitle()
 
                 if #utf8split ~= #state.ytdescription then
                     local tmp = utf8split:gsub("[,%.%s]+$", "")
-
                     utf8split = tmp .. "..."
                 end
                 utf8split = utf8split:match("^(.-)%s*$")
@@ -1535,7 +1543,7 @@ function checktitle()
         if (artist ~= nil) then
             if (state.localDescription == nil) then
                 state.localDescription = artist
-                state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
+                state.localDescriptionClick = state.localDescriptionClick .. tempartistclicktext
                 state.localDescriptionIsClickable = true
             end
         end
@@ -1546,12 +1554,12 @@ function checktitle()
                 state.localDescriptionIsClickable = true
             else -- append to other metadata
                 if (state.localDescriptionClick ~= nil) then
-                    state.localDescriptionClick = state.localDescriptionClick .. " | " .. album
+                    state.localDescriptionClick = state.localDescriptionClick .. "\\NAlbum: " .. album .. "\\N"
                 else
                     state.localDescriptionClick = album
                     state.localDescriptionIsClickable = true
                 end
-                state.localDescription = state.localDescription .. " | " .. album
+                state.localDescription = state.localDescription .. " (" .. album .. ")"
             end
         end
         if (date ~= nil) then
@@ -1594,12 +1602,16 @@ end
 
 function normaliseDate(date)
     date = string.gsub(date:gsub("/", ""), "-", "")
+    local date_table
+    if string.find(date:sub(1,8), ":") then
+        return date
+    end
     if (#date > 8) then -- YYYYMMDD HHMMSS (plus a time)
-        local dateTable = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
-        return os.date(user_opts.date_format, os.time(dateTable)) .. date:sub(9)
+        date_table = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
+        return os.date(user_opts.date_format, os.time(date_table)) .. date:sub(9)
     elseif (#date > 4) then -- YYYYMMDD
-        local dateTable = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
-        return os.date(user_opts.date_format, os.time(dateTable))
+        date_table = {year = date:sub(1,4), month = date:sub(5,6), day = date:sub(7,8)}
+        return os.date(user_opts.date_format, os.time(date_table))
     else -- YYYY
         return date
     end
@@ -1919,7 +1931,7 @@ function process_vid_stats(success, result, error)
         state.ytdescription
 
     if (state.dislikes == "") then
-        state.localDescriptionClick = state.localDescriptionClick .. string.gsub(string.gsub(result.stdout, '\r', '\\N'), '\n', '\\N')
+        state.localDescriptionClick = state.localDescriptionClick .. string.gsub(result.stdout, '\r', '\\N'):gsub("\n", "\\N")
         state.localDescriptionClick = state.localDescriptionClick:sub(1, #state.localDescriptionClick - 2)
     end
     addLikeCountToTitle()
@@ -2059,6 +2071,7 @@ end
 
 local function make_sponsorblock_segments()
     if not user_opts.show_sponsorblock_segments then return end
+    if not state.is_URL then return end
 
     local sponsor_types = user_opts.sponsor_types
 
@@ -2067,14 +2080,21 @@ local function make_sponsorblock_segments()
     local is_start_added = false
     local current_category = ""
 
+    local temp_chapters = mp.get_property_native("chapter-list")
     local duration = mp.get_property_number('duration', nil)
 
     if duration then
-        for _, chapter in ipairs(state.chapter_list_pre_sponsorblock) do
+        for _, chapter in ipairs(temp_chapters) do
+            
+            print(chapter.title)
+            
             if chapter.title then
+
+
                 for _, value in ipairs(sponsor_types) do
                     if string.find(string.lower(chapter.title), value) then
                         current_category = value
+
                         if not temp_segment[current_category] then
                             temp_segment[current_category] = {}
                         end
@@ -2109,14 +2129,17 @@ local function make_sponsorblock_segments()
     if not user_opts.add_sponsorblock_chapters then
         -- remove [SponsorBlock] chapters
         local updated_chapters = {}
-        for _, chapter in ipairs(state.chapter_list_pre_sponsorblock) do
+        for _, chapter in ipairs(temp_chapters) do
             if not string.find(chapter.title, "%[SponsorBlock%]") then
                 table.insert(updated_chapters, chapter)
             end
         end
         -- updated chapter list
         state.chapter_list = updated_chapters
-        mp.set_property_native("chapter-list", updated_chapters)
+
+        if #updated_chapters > 0 then
+            mp.set_property_native("chapter-list", updated_chapters)
+        end
     end
 
     print("Added SponsorBlock segments")
@@ -2434,16 +2457,6 @@ function window_controls()
 
     local lo, ne
 
-    -- Background Bar
-    if user_opts.title_bar_box then
-        new_element("wcbar", "box")
-        lo = add_layout("wcbar")
-        lo.geometry = wc_geo
-        lo.layer = 10
-        lo.style = osc_styles.background_bar
-        lo.alpha[1] = user_opts.window_fade_alpha
-    end
-
     local button_y = wc_geo.y - (wc_geo.h / 2)
     local first_geo =
         {x = controlbox_left + 30, y = button_y, an = 5, w = 40, h = wc_geo.h}
@@ -2513,14 +2526,13 @@ function window_controls()
         end
         lo = add_layout('window_title')
 
-        local geo = {x = 20, y = button_y + 14, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
-        if user_opts.title_bar_box then
-            geo = {x = 10, y = button_y + 10, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
-        end
+        local geo = {x = 12, y = button_y + 9, an = 1, w = osc_param.playresx - 150, h = wc_geo.h}
 
         lo.geometry = geo
-        lo.style = osc_styles.window_title
-        lo.button.maxchars = geo.w / 10
+        lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.window_title,
+                    geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
+
+        -- lo.button.maxchars = geo.w / 10
     end
 end
 
@@ -2555,22 +2567,22 @@ layouts["original"] = function ()
     -- Controller Background
     local lo, geo
 
-    new_element('box_bg', 'box')
-    lo = add_layout('box_bg')
+    new_element('osc_fade_bg', 'box')
+    lo = add_layout('osc_fade_bg')
     lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
-    lo.style = osc_styles.box_bg
+    lo.style = osc_styles.osc_fade_bg
     lo.layer = 10
-    lo.alpha[3] = 0
+    lo.alpha[3] = user_opts.fade_transparency_strength
 
     local top_titlebar = window_controls_enabled() and (user_opts.window_title or user_opts.window_controls)
 
-    if not user_opts.title_bar_box and (user_opts.window_top_bar == "yes" or (not state.border) or (not state.title_bar) or state.fullscreen) and top_titlebar then
-        new_element("title_alpha_bg", "box")
-        lo = add_layout("title_alpha_bg")
-        lo.geometry = {x = posX, y = -100, an = 7, w = osc_w, h = -1}
-        lo.style = osc_styles.title_bar_box_bg
+    if (user_opts.window_top_bar == "yes" or (not state.border) or (not state.title_bar) or state.fullscreen) and top_titlebar then
+        new_element("window_bar_alpha_bg", "box")
+        lo = add_layout("window_bar_alpha_bg")
+        lo.geometry = {x = posX, y = -70, an = 7, w = osc_w, h = -1}
+        lo.style = osc_styles.window_fade_bg
         lo.layer = 10
-        lo.alpha[3] = 0
+        lo.alpha[3] = user_opts.window_fade_transparency_strength
     end
 
     -- Alignment
@@ -2810,22 +2822,22 @@ layouts["reduced"] = function ()
     -- Controller Background
     local lo, geo
 
-    new_element('box_bg', 'box')
-    lo = add_layout('box_bg')
+    new_element('osc_fade_bg', 'box')
+    lo = add_layout('osc_fade_bg')
     lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
-    lo.style = osc_styles.box_bg
+    lo.style = osc_styles.osc_fade_bg
     lo.layer = 10
-    lo.alpha[3] = 0
+    lo.alpha[3] = user_opts.fade_transparency_strength
 
     local top_titlebar = window_controls_enabled() and (user_opts.window_title or user_opts.window_controls)
 
-    if not user_opts.title_bar_box and (user_opts.window_top_bar == "yes" or (not state.border) or (not state.title_bar) or state.fullscreen) and top_titlebar then
-        new_element("title_alpha_bg", "box")
-        lo = add_layout("title_alpha_bg")
-        lo.geometry = {x = posX, y = -100, an = 7, w = osc_w, h = -1}
-        lo.style = osc_styles.box_bg
+    if (user_opts.window_top_bar == "yes" or (not state.border) or (not state.title_bar) or state.fullscreen) and top_titlebar then
+        new_element("window_bar_alpha_bg", "box")
+        lo = add_layout("window_bar_alpha_bg")
+        lo.geometry = {x = posX, y = -70, an = 7, w = osc_w, h = -1}
+        lo.style = osc_styles.window_fade_bg
         lo.layer = 10
-        lo.alpha[3] = 0
+        lo.alpha[3] = user_opts.window_fade_transparency_strength
     end
 
     -- Alignment
@@ -3398,7 +3410,7 @@ local function osc_init()
         function ()
             mp.set_property_number("secondary-sid", 0)
             set_track('sub', 1)
-            show_message(get_tracklist('sub'))
+            show_message(get_tracklist("sub"))
         end
     ne.eventresponder['enter'] =
         function ()
@@ -3420,8 +3432,6 @@ local function osc_init()
     end
     ne.eventresponder['shift+mbtn_right_down'] =
         function () show_message(get_tracklist('sub')) end
-
-
 
     -- vol_ctrl
     ne = new_element("vol_ctrl", "button")
@@ -3575,7 +3585,6 @@ local function osc_init()
             if (state.initialborder == 'yes') then
                 if (mp.get_property('ontop') == 'yes') then
                     mp.commandv('set', 'border', "no")
-
                 else
                     mp.commandv('set', 'border', "yes")
                 end
@@ -3850,8 +3859,8 @@ local function osc_init()
     ne = new_element("chapter_title", "button")
     ne.visible = true
     ne.content = function()
-        if state.buffering then
-            return "Buffering..." .. " " .. mp.get_property("cache-buffering-state") .. "%"
+        if state.buffering ~= nil and state.buffering then
+            return "Buffering..." .. " " .. (mp.get_property("cache-buffering-state") or "0") .. "%"
         else
             if user_opts.chapter_fmt ~= "no" and chapter_index >= 0 then
                 request_init()
@@ -3880,7 +3889,7 @@ local function osc_init()
         local prefix = state.tc_right_rem and
             (user_opts.unicode_minus and UNICODE_MINUS or "-") or ""
 
-        return prefix .. format_time(time_to_display)
+        return prefix .. format_time(time_to_display) .. (state.is_live and " • LIVE" or "")
     end
     ne.eventresponder["mbtn_left_up"] = function()
         state.tc_right_rem = not state.tc_right_rem
@@ -4172,7 +4181,8 @@ local function render()
     if state.osc_visible then
         render_elements(ass)
     end
-    if user_opts.persistent_progress_default or state.persistent_progresstoggle then
+
+    if state.persistent_progresstoggle then
         render_persistent_progressbar(ass)
     end
 
@@ -4322,7 +4332,6 @@ function tick()
             state.showhide_enabled = false
         end
 
-
     elseif (state.fullscreen and user_opts.show_fullscreen)
         or (not state.fullscreen and user_opts.show_windowed) then
 
@@ -4357,7 +4366,6 @@ mp.observe_property('playlist', nil, request_init)
 mp.observe_property("chapter-list", "native", function(_, list) -- chapter list changes
     list = list or {}  -- safety, shouldn't return nil
     table.sort(list, function(a, b) return a.time < b.time end)
-    state.chapter_list_pre_sponsorblock = list
     state.chapter_list = list
     -- make_sponsorblock_segments()
     request_init()
@@ -4374,7 +4382,7 @@ mp.observe_property('seeking', nil, function()
 end)
 
 if user_opts.key_bindings then
-    local function changeChapter(number)
+    local function change_chapter(number)
         mp.commandv("add", "chapter", number)
         reset_timeout()
         show_message(get_chapterlist())
@@ -4390,10 +4398,10 @@ if user_opts.key_bindings then
         destroyscrollingkeys()
     end);
     mp.add_key_binding("shift+left", "prevchapter", function()
-        changeChapter(-1)
+        change_chapter(-1)
     end);
     mp.add_key_binding("shift+right", "nextchapter", function()
-        changeChapter(1)
+        change_chapter(1)
     end);
 
     -- extra key bindings
