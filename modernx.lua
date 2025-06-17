@@ -94,6 +94,7 @@ local user_opts = {
     bottom_hover = true,                    -- show OSC only when hovering at the bottom
     bottom_hover_zone = 200,                -- height of hover zone for bottom_hover (in pixels)
     osc_on_seek = false,                    -- show OSC when seeking
+    osc_keep_with_cursor = true,            -- keep OSC visible if mouse cursor is within OSC boundaries
     mouse_seek_pause = true,                -- pause video while seeking with mouse move (on button hold)
 
     vid_scale = false,                      -- scale osc with the video
@@ -191,7 +192,7 @@ local user_opts = {
     fade_blur_strength = 75,                -- blur strength for the OSC alpha fade - caution: high values can take a lot of CPU time to render
     fade_transparency_strength = 0,         -- use with "fade_blur_strength = 0" to create a transparency box
     window_fade_alpha = 100,                -- alpha of the window title bar
-    window_fade_blur_strength = 75,          -- blur strength for the window title bar. caution: high values can take a lot of CPU time to render
+    window_fade_blur_strength = 75,         -- blur strength for the window title bar. caution: high values can take a lot of CPU time to render
     window_fade_transparency_strength = 0,  -- use with "window_fade_blur_strength = 0" to create a transparency box
     thumbnail_border = 3,                   -- width of the thumbnail border (for thumbfast)
     thumbnail_border_radius = 3,            -- rounded corner radius for thumbnail border (0 to disable)
@@ -204,6 +205,8 @@ local user_opts = {
 
     -- Progress bar settings
     seek_handle_size = 0.8,                 -- size ratio of the seekbar handle (range: 0 ~ 1)
+    seekbar_between_timers = false,         -- moves the seekbar and progress bar between the timers
+    seekbar_height = 2,                     -- height of the seekbar
     progress_bar_height = 16,               -- height of the progress bar
     seek_range = true,                      -- show seek range overlay
     seek_range_alpha = 175,                 -- transparency of the seek range
@@ -2592,14 +2595,22 @@ layouts["original"] = function ()
     -- Seekbar
     new_element('seekbarbg', 'box')
     lo = add_layout('seekbarbg')
-    lo.geometry = {x = refX , y = refY - 100, an = 5, w = osc_geo.w - 50, h = 2}
+    if user_opts.seekbar_between_timers then
+        lo.geometry = {x = refX , y = refY - 75, an = 5, w = osc_geo.w - 200, h = user_opts.seekbar_height}
+    else
+        lo.geometry = {x = refX , y = refY - 100, an = 5, w = osc_geo.w - 50, h = user_opts.seekbar_height}
+    end
     lo.layer = 13
     lo.style = osc_styles.seekbar_bg
     lo.alpha[1] = 128
     lo.alpha[3] = 128
 
     lo = add_layout('seekbar')
-    lo.geometry = {x = refX, y = refY - 100, an = 5, w = osc_geo.w - 50, h = user_opts.progress_bar_height}
+    if user_opts.seekbar_between_timers then
+        lo.geometry = {x = refX, y = refY - 75, an = 5, w = osc_geo.w - 200, h = user_opts.progress_bar_height}
+    else
+        lo.geometry = {x = refX, y = refY - 100, an = 5, w = osc_geo.w - 50, h = user_opts.progress_bar_height}
+    end
     lo.style = osc_styles.seekbar_fg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.tooltip
@@ -2862,7 +2873,7 @@ layouts["reduced"] = function ()
 
     if (user_opts.persistent_progress or user_opts.persistent_progresstoggle) then
         lo = add_layout('persistentseekbar')
-        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistent_progressheight}
+        lo.geometry = {x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistent_progress_height}
         lo.style = osc_styles.seekbar_fg
         lo.slider.gap = 7
         lo.slider.tooltip_an = 0
@@ -4120,7 +4131,7 @@ local function render()
             state.input_enabled = state.osc_visible
         end
 
-        if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2)) then
+        if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) and user_opts.osc_keep_with_cursor) then
             mouse_over_osc = true
         end
     end
@@ -4134,7 +4145,7 @@ local function render()
                 mp.disable_key_bindings('window-controls')
             end
 
-            if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2)) then
+            if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) and user_opts.osc_keep_with_cursor) then
                 mouse_over_osc = true
             end
         end
@@ -4142,7 +4153,7 @@ local function render()
 
     if osc_param.areas['window-controls-title'] then
         for _,cords in ipairs(osc_param.areas['window-controls-title']) do
-            if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2)) then
+            if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) and user_opts.osc_keep_with_cursor) then
                 mouse_over_osc = true
             end
         end
