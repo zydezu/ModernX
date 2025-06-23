@@ -57,7 +57,7 @@ local function update_options(list) end
 local function show_osc() end
 local function hide_osc() end
 local function osc_visible(visible) end
-local function adjustSubtitles(visible) end
+local function adjust_subtitles(visible) end
 local function pause_state() end
 local function cache_state() end
 local function process_event() end
@@ -83,7 +83,7 @@ local user_opts = {
     show_fullscreen = true,                 -- show OSC when fullscreen
     show_on_pause = true,                   -- show OSC when paused
     keep_on_pause = false,                  -- disable OSC hide timeout when paused
-    green_and_grumpy = false,               -- disable Santa hat in December
+    green_and_grumpy = false,               -- disable the Santa hat in December
     visibility = "auto",                    -- only used at init to set visibility_mode(...)
 
     -- OSC behaviour and scaling
@@ -94,7 +94,7 @@ local user_opts = {
     bottom_hover = true,                    -- show OSC only when hovering at the bottom
     bottom_hover_zone = 200,                -- height of hover zone for bottom_hover (in pixels)
     osc_on_seek = false,                    -- show OSC when seeking
-    osc_keep_with_cursor = true,            -- keep OSC visible if mouse cursor is within OSC boundaries
+    osc_keep_with_cursor = false,           -- keep OSC visible if mouse cursor is within OSC boundaries
     mouse_seek_pause = true,                -- pause video while seeking with mouse move (on button hold)
 
     vid_scale = false,                      -- scale osc with the video
@@ -133,7 +133,7 @@ local user_opts = {
 
     -- Subtitle display settings
     raise_subtitles = true,                 -- whether to raise subtitles above the osc when it's shown
-    raise_subtitle_amount = 175,            -- how much subtitles rise when the osc is shown
+    raise_subtitle_amount = 160,            -- how much subtitles rise when the osc is shown
 
     -- Buttons display and functionality
     compact_mode = true,                    -- replace the jump buttons with the seek/chapter buttons
@@ -229,10 +229,10 @@ local user_opts = {
     add_sponsorblock_chapters = false,      -- add sponsorblock chapters to the chapter list
     sponsorblock_seek_range_alpha = 75,     -- transparency of sponsorblock segments
     sponsor_types = {                       -- what categories to show in the progress bar
-        "sponsor",                          -- all categories:
-        "intro",                            --      sponsor, intro, outro,
-        "outro",                            --      interaction, selfpromo, preview,
-        "interaction",                      --      music_offtopic, filler
+        "sponsor",                          -- all categories: sponsor, intro, outro,
+        "intro",                            -- interaction, selfpromo, preview, music_offtopic, filler
+        "outro",
+        "interaction",
         "selfpromo",
         "preview",
         "music_offtopic",
@@ -1752,17 +1752,16 @@ function check_comments()
         local file_prop = mp.get_property("filename")
         local comments_path = user_opts.comments_download_path or ""
 
-        if file_prop then
+        if file_prop then            
             mp.msg.info("[WEB] Downloaded comments")
 
-            -- 清洗文件名
+            -- clean file name
             local clean_name = file_prop:gsub("watch%?v=", "")
-            clean_name = clean_name:match("^[^%?&]+") or clean_name  -- 避免 match 返回 nil
+            clean_name = clean_name:match("^[^%?&]+") or clean_name
 
-            -- 构建完整路径
+            -- create the file path
             local base_path = mp.command_native({"expand-path", comments_path .. '/'}) or ""
-            filename = base_path .. clean_name .. ".info.json"
-        else
+            filename = base_path .. clean_name .. ".info.json"        else
             mp.msg.info("[WEB] Comments failed to download...")
             return
         end
@@ -2098,12 +2097,8 @@ local function make_sponsorblock_segments()
 
     if duration then
         for _, chapter in ipairs(temp_chapters) do
-
             print(chapter.title)
-
             if chapter.title then
-
-
                 for _, value in ipairs(sponsor_types) do
                     if string.find(string.lower(chapter.title), value) then
                         current_category = value
@@ -2116,7 +2111,6 @@ local function make_sponsorblock_segments()
                         end
                     end
                 end
-
                 if string.find(chapter.title, ("start"):gsub("[%[%]]", "%%%1")) then
                     if not is_start_added then
                         temp_segment[current_category]["start"] = chapter.time / duration * 100
@@ -2147,9 +2141,9 @@ local function make_sponsorblock_segments()
                 table.insert(updated_chapters, chapter)
             end
         end
+
         -- updated chapter list
         state.chapter_list = updated_chapters
-
         if #updated_chapters > 0 then
             mp.set_property_native("chapter-list", updated_chapters)
         end
@@ -2652,7 +2646,7 @@ layouts["original"] = function ()
     local outeroffset = (chapter_skip_buttons and 0 or 100) + (jump_buttons and 0 or 100)
 
     -- Title
-    geo = {x = 25, y = refY - 117 + (((state.localDescription ~= nil or state.is_URL) and user_opts.show_description) and -20 or 0), an = 1, w = osc_geo.w - 50, h = 35}
+    geo = {x = 25, y = refY - 117 + (((state.localDescription ~= nil or state.is_URL) and user_opts.show_description) and -20 or 0) + (user_opts.seekbar_between_timers and 25 or 0), an = 1, w = osc_geo.w - 50, h = 35}
     lo = add_layout("title")
     lo.geometry = geo
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.title,
@@ -2662,7 +2656,7 @@ layouts["original"] = function ()
 
     -- Description
     if (state.localDescription ~= nil or state.is_URL) and user_opts.show_description then
-        geo = {x = 25, y = refY - 117, an = 1, w = osc_geo.w - 50, h = 19}
+        geo = {x = 25, y = refY - 117 + (user_opts.seekbar_between_timers and 25 or 0), an = 1, w = osc_geo.w - 50, h = 19}
         lo = add_layout("description")
         lo.geometry = geo
 
@@ -3122,7 +3116,6 @@ local function osc_init()
 
     elements = {}
 
-    -- some often needed stuff
     local pl_count = mp.get_property_number("playlist-count", 0)
     local have_pl = pl_count > 1
     local pl_pos = mp.get_property_number("playlist-pos", 0) + 1
@@ -3338,7 +3331,7 @@ local function osc_init()
         ne.eventresponder['mbtn_left_down'] =
             function () mp.commandv('seek', -jump_amount, jump_mode) end
         ne.eventresponder['mbtn_right_down'] =
-            function () mp.commandv('seek', -60, jump_mode) end
+            function () mp.commandv('seek', -jump_more_amount, jump_mode) end
         ne.eventresponder['shift+mbtn_left_down'] =
             function () mp.commandv('frame-back-step') end
 
@@ -3351,7 +3344,7 @@ local function osc_init()
         ne.eventresponder['mbtn_left_down'] =
             function () mp.commandv('seek', jump_amount, jump_mode) end
         ne.eventresponder['mbtn_right_down'] =
-            function () mp.commandv('seek', 60, jump_mode) end
+            function () mp.commandv('seek', jump_more_amount, jump_mode) end
         ne.eventresponder['shift+mbtn_left_down'] =
             function () mp.commandv('frame-step') end
     end
@@ -3895,7 +3888,6 @@ local function osc_init()
         return "" -- fallback
     end
     ne.eventresponder["mbtn_left_up"] = function() show_message(get_chapterlist()) end
-    ne.eventresponder["mbtn_right_up"] = nil
 
     -- Total/remaining time display
     ne = new_element("tc_right", "button")
@@ -3952,7 +3944,7 @@ function hide_osc()
         -- typically hide happens at render() from tick(), but now tick() is
         -- no-op and won't render again to remove the osc, so do that manually.
         state.osc_visible = false
-        adjustSubtitles(false)
+        adjust_subtitles(false)
         render_wipe()
     elseif (user_opts.fade_duration > 0) then
         if not(state.osc_visible == false) then
@@ -3970,16 +3962,16 @@ end
 function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
-        adjustSubtitles(true)    -- raise subtitles
+        adjust_subtitles(true)  -- raise subtitles
     end
     request_tick()
 end
 
-function adjustSubtitles(visible)
+function adjust_subtitles(visible)
     if visible and user_opts.raise_subtitles and state.osc_visible == true and (state.fullscreen == false or user_opts.show_fullscreen) then
         local _, h = mp.get_osd_size()
         if h > 0 then
-            local subpos = math.floor((osc_param.playresy - user_opts.raise_subtitle_amount)/osc_param.playresy*100)
+            local subpos = math.floor((osc_param.playresy - (user_opts.raise_subtitle_amount - (user_opts.seekbar_between_timers and 25 or 0)))/osc_param.playresy*100)
             if subpos < 0 then
                 subpos = 100 -- out of screen, default to original position
             end
@@ -4113,11 +4105,11 @@ local function render()
     end
 
     -- mouse show/hide area
-    for k,cords in pairs(osc_param.areas['showhide']) do
+    for _,cords in pairs(osc_param.areas['showhide']) do
         set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, 'showhide')
     end
     if osc_param.areas['showhide_wc'] then
-        for k,cords in pairs(osc_param.areas['showhide_wc']) do
+        for _,cords in pairs(osc_param.areas['showhide_wc']) do
             set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, 'showhide_wc')
         end
     else
@@ -4155,14 +4147,6 @@ local function render()
                 mp.disable_key_bindings('window-controls')
             end
 
-            if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) and user_opts.osc_keep_with_cursor) then
-                mouse_over_osc = true
-            end
-        end
-    end
-
-    if osc_param.areas['window-controls-title'] then
-        for _,cords in ipairs(osc_param.areas['window-controls-title']) do
             if (mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) and user_opts.osc_keep_with_cursor) then
                 mouse_over_osc = true
             end
@@ -4553,7 +4537,6 @@ mp.set_key_bindings({
                             function(e) process_event("shift+mbtn_right", "down")  end},
     {"mbtn_right",          function(e) process_event("mbtn_right", "up") end,
                             function(e) process_event("mbtn_right", "down")  end},
-    -- alias to shift_mbtn_left for single-handed mouse use
     {"mbtn_mid",            function(e) process_event("shift+mbtn_left", "up") end,
                             function(e) process_event("shift+mbtn_left", "down")  end},
     {"wheel_up",            function(e) process_event("wheel_up", "press") end},
