@@ -1,5 +1,5 @@
 --[[
-    modernx.lua by zydezu
+    modernx.lua v0.4.4 by zydezu
     (https://github.com/zydezu/ModernX)
 
     This script is a result of the original mpv-osc-modern by maoiscat
@@ -39,7 +39,6 @@ local function load_set_of_comments() end
 local function process_filesize() end
 local function split_utf8_strings(str, maxLength) end
 local function process_vid_stats() end
-local function process_dislikes() end
 local function add_commas_to_number() end
 local function add_like_count_to_title() end
 local function get_playlist(shuffled) end
@@ -161,7 +160,7 @@ local user_opts = {
                                             -- https://mpv.io/manual/master/#command-interface-screenshot-%3Cflags%3E
 
     download_button = true,                 -- show download button on web videos (requires yt-dlp and ffmpeg)
-    download_path = "~~desktop/mpv/downloads", -- default download directory for videos (https://mpv.io/manual/master/#paths)
+    download_path = "~/Pictures/mpv/downloads", -- default download directory for videos (https://mpv.io/manual/master/#paths)
 
     loop_button = false,                    -- show loop button
     loop_in_pause = true,                   -- enable looping by right-clicking pause
@@ -224,7 +223,7 @@ local user_opts = {
     persistent_progress_toggle = true,      -- enable toggling the persistent_progress bar
 
     -- Web videos
-    title_youtube_stats = true,             -- update the window/OSC title bar with YouTube video stats (views, likes, dislikes)
+    title_youtube_stats = true,             -- update the window/OSC title bar with YouTube video stats (views, comments, likes)
     ytdl_format = "",                       -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
 
     -- sponsorblock features need https://github.com/zydezu/mpvconfig/blob/main/scripts/sponsorblock.lua to work!
@@ -252,7 +251,7 @@ local user_opts = {
 
     -- Experimental
     show_youtube_comments = false,          -- EXPERIMENTAL - show youtube comments
-    comments_download_path = "~~desktop/mpv/downloads/comments", -- EXPERIMENTAL - the download path for the comment JSON file
+    comments_download_path = "~~Pictures/mpv/downloads/comments", -- EXPERIMENTAL - the download path for the comment JSON file
     FORCE_fix_not_ontop = true,             -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
 }
 -- read options from config and command-line
@@ -305,8 +304,7 @@ local icons = {
     emoticon = {
         view = "👁️",
         comment = "💬",
-        like = "👍",
-        dislike = "👎"
+        like = "👍"
     },
 
     playlist = "\238\161\159", -- unused rn
@@ -1593,14 +1591,15 @@ function check_title()
 
         if (user_opts.show_file_size) then
             local file_size = mp.get_property_native("file-size")
+            local resinfo = ""
             if (file_size ~= nil) then
                 file_size = mp.utils.format_bytes_humanized(file_size)
                 if (state.localDescription == nil) then -- only metadata
-                    state.localDescription = "Size: " .. file_size
+                    state.localDescription = "Size: " .. file_size .. " " .. resinfo
                     state.localDescriptionClick = state.localDescriptionClick .. state.localDescription
                     state.localDescriptionIsClickable = true
                 else
-                    state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size
+                    state.localDescriptionClick = state.localDescriptionClick .. "\\NSize: " .. file_size .. " " .. resinfo
                 end
             end
         end
@@ -1674,6 +1673,14 @@ function check_path_url()
         state.url_path = path
         mp.msg.info("URL detected.")
 
+        if not (path:match("https?://(www%.youtube%.com/watch%?v=.+)") or path:match("https?://youtu%.be/.+")) then
+            user_opts.download_button = false
+            user_opts.show_youtube_comments = false
+            user_opts.is_youtube = false
+        else
+            user_opts.is_youtube = true
+        end
+
         if user_opts.download_button then
             mp.msg.info("Fetching file size...")
             local command = {
@@ -1686,26 +1693,15 @@ function check_path_url()
             exec_async(command, process_filesize)
         end
 
-        -- Youtube Return Dislike API
-        state.dislikes = ""
-        if path:find('youtu%.?be') and (user_opts.show_description or user_opts.title_youtube_stats) then
-            mp.msg.info("[WEB] Loading dislike count...")
-            local filename = mp.get_property_osd("filename")
-            local pattern = "v=([^&]+)"
-            local match = string.match(filename, pattern)
-            if match then
-                exec_async({"curl","https://returnyoutubedislikeapi.com/votes?videoId=" .. match}, process_dislikes)
-            else
-                local _, _, videoID = string.find(filename, "([%w_-]+)%?si=")
-                if videoID then
-                    exec_async({"curl","https://returnyoutubedislikeapi.com/votes?videoId=" .. videoID}, process_dislikes)
-                else
-                    mp.msg.info("[WEB] Failed to fetch dislikes")
-                end
-            end
-        end
-
         if user_opts.show_description then
+            if not user_opts.is_youtube then
+                local file_size = mp.get_property_native("file-size")
+                file_size = mp.utils.format_bytes_humanized(file_size)
+                state.videoDescription = "Size: " .. file_size
+                state.descriptionLoaded = true
+                return
+            end
+
             mp.msg.info("[WEB] Loading video description...")
             local command = {
                 "yt-dlp",
@@ -1952,20 +1948,6 @@ function process_vid_stats(success, result, error)
         return
     end
 
-    state.localDescriptionClick =
-        mp.get_property("media-title", "") ..
-        "\\N────────────────────\\N" ..
-        string.gsub(
-            string.gsub(result.stdout, '\r', '\\N') ..
-            state.dislikes, '\n', '\\N'
-        ) ..
-        "\\N────────────────────\\N" ..
-        state.ytdescription
-
-    if (state.dislikes == "") then
-        state.localDescriptionClick = state.localDescriptionClick .. string.gsub(result.stdout, '\r', '\\N'):gsub("\n", "\\N")
-        state.localDescriptionClick = state.localDescriptionClick:sub(1, #state.localDescriptionClick - 2)
-    end
     add_like_count_to_title()
 
     if (state.localDescriptionClick:match('Views: (%d+)')) then
@@ -1984,13 +1966,12 @@ function process_vid_stats(success, result, error)
     state.localDescriptionClick = state.localDescriptionClick:gsub("Comments: NA\\N", "")
     state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA\\N", "")
     state.localDescriptionClick = state.localDescriptionClick:gsub("Likes: NA", "")
-    state.localDescriptionClick = state.localDescriptionClick:gsub("Dislikes: NA\\N", "")
 
     if false then
-        state.localDescriptionClick = state.localDescriptionClick:gsub("Views:", icons.emoticon.view):gsub("Comments:", icons.emoticon.comment):gsub("Likes:", icons.emoticon.like):gsub("Dislikes:", icons.emoticon.dislike)  -- replace with icons
+        state.localDescriptionClick = state.localDescriptionClick:gsub("Views:", icons.emoticon.view):gsub("Comments:", icons.emoticon.comment):gsub("Likes:", icons.emoticon.like)  -- replace with icons
     end
 
-    if not state.ytdescription then
+    if not state.ytdescription or #state.ytdescription < 5 then
         if mp.get_property_number("estimated-vf-fps") then
             state.videoDescription = mp.get_property("width") .. "x" .. mp.get_property("height") .. " | FPS: " ..
             (math.floor(mp.get_property_number("estimated-vf-fps") + 0.5) or "") -- can't get a normal description, display something else
@@ -2002,34 +1983,6 @@ function process_vid_stats(success, result, error)
         show_description(state.localDescriptionClick)
     end
     mp.msg.info("[WEB] Loaded video description")
-end
-
-function process_dislikes(success, result, error)
-    if not success then
-        print("[WEB] Couldn't fetch video dislikes: " .. error)
-        return
-    end
-
-    local dislikes = result.stdout
-    dislikes = add_commas_to_number(dislikes:match('"dislikes":(%d+)'))
-    state.dislikecount = dislikes
-
-    if dislikes then
-        state.dislikes = "Dislikes: " .. dislikes
-        mp.msg.info("[WEB] Fetched dislike count")
-    else
-        state.dislikes = ""
-    end
-
-    if (not state.descriptionLoaded) then
-        if state.localDescriptionClick then
-            state.localDescriptionClick = state.localDescriptionClick .. '\\N' .. state.dislikes
-        else
-            state.localDescriptionClick = state.dislikes
-        end
-    else
-        add_like_count_to_title()
-    end
 end
 
 function add_commas_to_number(number)
@@ -2047,12 +2000,7 @@ function add_like_count_to_title()
     if (user_opts.show_description and user_opts.title_youtube_stats) then
         state.viewcount = add_commas_to_number(state.localDescriptionClick:match('Views: (%d+)'))
         state.likecount = add_commas_to_number(state.localDescriptionClick:match('Likes: (%d+)'))
-        if (state.viewcount ~= '' and state.likecount ~= '' and state.dislikecount) then
-            mp.set_property("title", mp.get_property("media-title") ..
-            " | " .. icons.emoticon.view .. state.viewcount ..
-            " | " .. icons.emoticon.like .. state.likecount ..
-            " | " .. icons.emoticon.dislike .. state.dislikecount)
-        elseif (state.viewcount ~= '' and state.likecount ~= '') then
+        if (state.viewcount ~= '' and state.likecount ~= '') then
             mp.set_property("title", mp.get_property("media-title") ..
             " | " .. icons.emoticon.view .. state.viewcount ..
             " | " .. icons.emoticon.like .. state.likecount)
@@ -2118,7 +2066,6 @@ local function make_sponsorblock_segments()
 
     if duration then
         for _, chapter in ipairs(temp_chapters) do
-            print(chapter.title)
             if chapter.title then
                 for _, value in ipairs(sponsor_types) do
                     if string.find(string.lower(chapter.title), value) then
