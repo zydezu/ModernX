@@ -1,5 +1,5 @@
 --[[
-    modernx.lua v0.4.3.1 by zydezu
+    modernx.lua v0.4.5 by zydezu
     (https://github.com/zydezu/ModernX)
 
     This script is a result of the original mpv-osc-modern by maoiscat
