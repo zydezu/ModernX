@@ -47,16 +47,11 @@ osc=no
 border=no #optional - if you don't want to see the OS border
 ```
 
-### Border differences
+## SponsorBlock
 
-This is what disabling and enabling the border looks like:
+To allow SponsorBlock segments to show up on the timeline, please add this script to your mpv scripts directory. https://github.com/zydezu/mpvconfig/blob/main/scripts/sponsorblock.lua
 
-| Border Enabled | Border Disabled |
-| -------------- | --------------- |
-| ![mpv_tkhXHUKNNt](https://github.com/zydezu/ModernX/assets/50119098/d2c3eb4e-5c7d-45df-ab35-6a0903c9c075) | ![mpv_rrIXTdX0Sx](https://github.com/zydezu/ModernX/assets/50119098/5573c30b-d57e-434a-b189-71dfb94b70bb) |
-
-> [!NOTE]
-> This option may vary depending on your system.
+![image](https://github.com/user-attachments/assets/a7dd23bb-f59e-4f0a-bbcb-b9c5c759e802)
 
 ## Configuration
 
@@ -265,6 +260,17 @@ local user_opts = {
     FORCE_fix_not_ontop = true,             -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
 }
 ```
+
+### Border differences
+
+This is what disabling and enabling the border looks like:
+
+| Border Enabled | Border Disabled |
+| -------------- | --------------- |
+| ![mpv_tkhXHUKNNt](https://github.com/zydezu/ModernX/assets/50119098/d2c3eb4e-5c7d-45df-ab35-6a0903c9c075) | ![mpv_rrIXTdX0Sx](https://github.com/zydezu/ModernX/assets/50119098/5573c30b-d57e-434a-b189-71dfb94b70bb) |
+
+> [!NOTE]
+> This option may vary depending on your system.
 
 ### Compact Mode
 
