@@ -5,7 +5,7 @@
 
 A fork of modernX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-modern/)), that aims to mirror the functionality of MPV's stock OSC while with a more modern-looking interface.
 
-<img src="https://github.com/zydezu/ModernX/blob/main/img/preview.png?raw=true">
+<img src="https://raw.githubusercontent.com/zydezu/ModernX/refs/heads/main/preview.png">
 
 > [!NOTE]
 > This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig), check that repository for a full mpv configuration
