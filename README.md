@@ -1,11 +1,11 @@
 # ModernX
 >
 > [!IMPORTANT]
-> This script is updated more frequently at [mpvconfig](https://github.com/zydezu/mpvconfig), stable builds are released here in the [releases](https://github.com/zydezu/ModernX/releases) tab.
+> This script is updated frequently at [mpvconfig](https://github.com/zydezu/mpvconfig), stable builds are released here in the [releases](https://github.com/zydezu/ModernX/releases) tab.
 
 A fork of modernX (based on [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-modern/)), that aims to mirror the functionality of MPV's stock OSC while with a more modern-looking interface.
 
-![image](preview.jpg)
+<img src="https://github.com/zydezu/ModernX/blob/main/img/preview.png?raw=true">
 
 > [!NOTE]
 > This script is included in my [mpvconfig](https://github.com/zydezu/mpvconfig), check that repository for a full mpv configuration
@@ -18,9 +18,11 @@ This fork changes the following:
 - Added loop and pin window buttons
 - Adds a download button for web videos
 - Displays descriptions, likes and dislike counts from web videos
+- Links found in video descriptions can be selected (`Tab`/`Shift+Tab`) and opened (`Enter`)
 - Added shift+left clicking and shift+right clicking the audio/subtitles button for a list of tracks are shown and traversed through
 - Pressing TAB shows a list of chapters
 - Added dynamic title changing depending on the file/source being played
+- Automatically resumes playback when navigating to a different playlist item while paused
 - Many more configurable options
 - Various bug fixes
 
@@ -77,7 +79,7 @@ The default options are shown below:
 -- default user option values
 -- change them using modernx.conf
 local user_opts = {
-    -- Language and display --
+    -- Language and display
     language = "en",            -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",   -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
     layout_option = "original", -- use the original/reduced layout
@@ -97,7 +99,7 @@ local user_opts = {
     fade_duration = 150,             -- fade-out duration (in ms), set to 0 for no fade
     min_mouse_move = 0,              -- minimum mouse movement (in pixels) required to show OSC
     bottom_hover = true,             -- show OSC only when hovering at the bottom
-    bottom_hover_zone = 200,         -- height of hover zone for bottom_hover (in pixels)
+    bottom_hover_zone = 175,         -- height of hover zone for bottom_hover (in pixels)
     osc_on_seek = false,             -- show OSC when seeking
     osc_keep_with_cursor = false,    -- keep OSC visible if mouse cursor is within OSC boundaries
     mouse_seek_pause = true,         -- pause video while seeking with mouse move (on button hold)
@@ -108,30 +110,33 @@ local user_opts = {
     scale_forced_window = 1.0,       -- osc scale factor when forced (no video, for example music files)
 
     -- Time, title and description display
-    show_title = true,           -- show title in the OSC (above seekbar)
-    title = "${media-title}",    -- title above seekbar format: "${media-title}" or "${filename}"
-    title_font_size = 28,        -- font size of the title text (above seekbar)
-    dynamic_title = true,        -- change title if {media-title} and {filename} differ (eg: when playing URLs or audio)
+    show_title = true,             -- show title in the OSC (above seekbar)
+    title = "${media-title}",      -- title above seekbar format: "${media-title}" or "${filename}"
+    title_font_size = 28,          -- font size of the title text (above seekbar)
+    dynamic_title = true,          -- change title if {media-title} and {filename} differ (eg: when playing URLs or audio)
 
-    show_chapter_title = true,   -- show chapter title alongside timestamp (below seekbar)
-    chapter_fmt = "%s",          -- format for chapter display on seekbar hover (set to "no" to disable)
-    show_chapter_markers = true, -- show chapter markers on the seekbar
-    show_top_mark = true,        -- show the top part of the chapter marker
-    show_bottom_mark = false,    -- show the bottom part of the chapter marker
+    show_chapter_title = true,     -- show chapter title alongside timestamp (below seekbar)
+    chapter_fmt = "%s",            -- format for chapter display on seekbar hover (set to "no" to disable)
+    chapter_hover_title = false,   -- show the hovered chapter's name in place of the main title while scrubbing (only applies when thumbfast isn't available)
+    chapter_hover_subtitle = true, -- show the hovered chapter's name in the chapter title text below the seekbar instead of the main title (only applies when thumbfast isn't available)
+    show_chapter_markers = true,   -- show chapter markers on the seekbar
+    chapter_marker_style = "gap",  -- shape of chapter markers: "triangle", "bar", "single-bar", or "gap"
+    show_top_mark = true,          -- show the top part of the chapter marker (only for the "triangle" chapter_marker_style)
+    show_bottom_mark = false,      -- show the bottom part of the chapter marker (only for the "triangle" chapter_marker_style)
 
-    time_total = true,           -- show total time instead of remaining time
-    time_ms = false,             -- show timecodes with milliseconds
-    unicode_minus = false,       -- use the Unicode minus sign in remaining time
-    time_format = "dynamic",     -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
-    time_font_size = 18,         -- font size of the time display
+    time_total = true,             -- show total time instead of remaining time
+    time_ms = false,               -- show timecodes with milliseconds
+    unicode_minus = false,         -- use the Unicode minus sign in remaining time
+    time_format = "dynamic",       -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
+    time_font_size = 18,           -- font size of the time display
 
-    show_description = true,     -- show video description - description on web videos or metadata/stats on local video
-    show_file_size = true,       -- show the current file's size in the description
-    description_font_size = 19,  -- font size of the description text (below title)
-    description_alpha = 100,     -- alpha of the description background box
-    scrolling_speed = 40,        -- the speed of scrolling text in description/comment menus
+    show_description = true,       -- show video description - description on web videos or metadata/stats on local video
+    show_file_size = true,         -- show the current file's size in the description
+    description_font_size = 19,    -- font size of the description text (below title)
+    description_alpha = 100,       -- alpha of the description background box
+    scrolling_speed = 40,          -- the speed of scrolling text in description/comment menus
 
-    date_format = "%Y-%m-%d",    -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
+    date_format = "%Y-%m-%d",      -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
 
     -- Title bar settings
     window_title = true,                      -- show window title in borderless/fullscreen mode
@@ -187,6 +192,8 @@ local user_opts = {
     volumebar_match_seek_color = false,       -- match volume bar color with seekbar color (ignores side_buttons_color)
     time_color = "#FFFFFF",                   -- color of the timestamps (below seekbar)
     chapter_title_color = "#FFFFFF",          -- color of the chapter title next to timestamp (below seekbar)
+    chapter_marker_color = "#1D96F5",         -- color of chapter markers on the seekbar
+    chapter_marker_current_color = "#9D96f5", -- color of the marker for the current chapter
     side_buttons_color = "#FFFFFF",           -- color of the side buttons (audio, subtitles, playlist, etc.)
     middle_buttons_color = "#FFFFFF",         -- color of the middle buttons (skip, jump, chapter, etc.)
     playpause_color = "#FFFFFF",              -- color of the play/pause button
@@ -201,8 +208,8 @@ local user_opts = {
     window_fade_alpha = 100,                  -- alpha of the window title bar
     window_fade_blur_strength = 75,           -- blur strength for the window title bar. caution: high values can take a lot of CPU time to render
     window_fade_transparency_strength = 0,    -- use with "window_fade_blur_strength = 0" to create a transparency box
-    thumbnail_border = 3,                     -- width of the thumbnail border (for thumbfast)
-    thumbnail_border_radius = 3,              -- rounded corner radius for thumbnail border (0 to disable)
+    thumbnail_border = 1,                     -- width of the thumbnail border (for thumbfast)
+    thumbnail_border_radius = 5,              -- rounded corner radius for thumbnail border (0 to disable)
 
     -- Button hover effects
     hover_effect = "size,glow,color", -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
@@ -232,18 +239,18 @@ local user_opts = {
     ytdl_format = "",           -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
 
     -- SponsorBlock - these SponsorBlock features need https://github.com/zydezu/mpvconfig/blob/main/scripts/sponsorblock.lua specifically to function
-    show_sponsorblock_segments = true,  -- show SponsorBlock segments on the progress bar
-    add_sponsorblock_chapters = false,  -- add SponsorBlock chapters to the chapter list
-    sponsorblock_seek_range_alpha = 75, -- transparency of SponsorBlock segments
-    sponsor_types = {                   -- what categories to show in the progress bar
-        "sponsor",                      -- all categories: sponsor, intro, outro,
-        "intro",                        -- interaction, selfpromo, preview, music_offtopic, filler
-        "outro",
-        "interaction",
-        "selfpromo",
-        "preview",
-        "music_offtopic",
-        "filler"
+    show_sponsorblock_segments = true,             -- show SponsorBlock segments on the progress bar
+    add_sponsorblock_chapters = false,             -- add SponsorBlock chapters to the chapter list
+    sponsorblock_seek_range_alpha = 75,            -- transparency of SponsorBlock segments
+    sponsor_types = {                              -- what categories to show in the progress bar
+        "sponsor",                                 -- all categories: sponsor, intro, outro,
+        "intro",                                   -- interaction, selfpromo, preview, music_offtopic, filler
+        "outro",                                   -- video outro
+        "interaction",                             -- interaction reminders such as liking and subscribing
+        "selfpromo",                               -- self promotion of socials or other channels
+        "preview",                                 -- video preview
+        "music_offtopic",                          -- silence in music videos
+        "filler"                                   -- filler content/tangents
     },
     sponsorblock_sponsor_color = "#00D400",        -- color for sponsors
     sponsorblock_intro_color = "#00FFFF",          -- color for intermission/intro animations
@@ -252,12 +259,12 @@ local user_opts = {
     sponsorblock_selfpromo_color = "#FFFF00",      -- color for unpaid/self promotion
     sponsorblock_preview_color = "#008FD6",        -- color for unpaid/self promotion
     sponsorblock_music_offtopic_color = "#FF9900", -- color for unpaid/self promotion
-    sponsorblock_filler_color = "#7300FF",         -- color for filler tangent/jokes
+    sponsorblock_filler_color = "#7300FF",         -- color for filler content/tangents
 
     -- Experimental
-    show_youtube_comments = false,                                 -- EXPERIMENTAL - show youtube comments
-    comments_download_path = "~/Pictures/mpv/downloads/comments", -- EXPERIMENTAL - the download path for the comment JSON file
-    FORCE_fix_not_ontop = true,                                    -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
+    show_youtube_comments = false,             -- EXPERIMENTAL - show youtube comments
+    comments_path = "~/Pictures/mpv/comments", -- EXPERIMENTAL - the download path for the comment JSON file
+    FORCE_fix_not_ontop = true,                -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
 }
 ```
 
@@ -283,10 +290,7 @@ Compact mode is a setting you can enable in the configuration, it removes the sk
 > [!IMPORTANT]
 > This changes the actions of the chapter back/forward buttons in the following way:
 >
-> - `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `user_opts`
-> - `Right mouse button` play previous/next chapter and show the chapter list
-> - `Shift + Left mouse button` jumps forwards/backwards by 1 minute
-> - `Shift + Right mouse button` show playlist
+> - `Left mouse button` jumps forwards/backwards by 5 seconds, or by the amount set in `jump_amount`, instead of skipping to the previous/next chapter
 > Please note that this option will override the `showjump` option.
 
 ### Thumbnails
@@ -310,6 +314,8 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 ### Description (only on certain videos)
 
 - `Left mouse button` show the full description, use `up arrow`, `down arrow` or `scroll wheel` to scroll through it
+- `Tab`/`Shift+Tab` cycle through links found in the description
+- `Enter` open the selected link, or close the description if no link is selected
 
 ### Seekbar
 
@@ -328,16 +334,16 @@ Like the built-in script, some buttons may accept multiple mouse actions, here i
 ### Playlist back/forward buttons
 
 - `Left mouse button` play previous/next file
-- `Right mouse button` show playlist
-- `Shift+left mouse button` play previous/next file and show playlist
-- `Shift+right mouse button` show playlist
+- `Right mouse button` shuffle the playlist
+- `Shift+left mouse button` open the interactive playlist selector
+- `Shift+right mouse button` jump to the start/end of the playlist
 
 ### Skip back/forward buttons
 
-- `Left mouse button` go to previous/next chapter
-- `Right mouse button` show chapter list
-- `Shift+left mouse button` go to previous/next chapter and show playlist
-- `Shift+right mouse button` show chapter list
+- `Left mouse button` go to previous/next chapter (or jump by `jump_amount` seconds in compact mode)
+- `Right mouse button` jump forwards/backwards by the amount set in `jump_more_amount`
+- `Shift+left mouse button` open the interactive chapter selector
+- `Shift+right mouse button` go to the next chapter
 
 ### Jump back/forward buttons
 
