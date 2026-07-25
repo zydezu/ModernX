@@ -1,5 +1,5 @@
 --[[
-    modernx.lua v0.4.5 by zydezu
+    modernx.lua v0.4.7 by zydezu
     (https://github.com/zydezu/ModernX)
 
     This script is a result of the original mpv-osc-modern by maoiscat
@@ -30,40 +30,45 @@ local function render_persistent_progressbar() end
 local function limited_list() end
 local function check_title() end
 local function shuffle_playlist() end
-local function normalize_date(date) end
+local function normalize_date(_) end
 local function exec_async() end
 local function is_url() end
 local function check_path_url() end
 local function check_comments() end
 local function load_set_of_comments() end
 local function process_filesize() end
-local function split_utf8_strings(str, maxLength) end
+---@return string, integer
+local function split_utf8_strings(_, _) return "", 0 end
 local function process_vid_stats() end
 local function add_commas_to_number() end
 local function add_like_count_to_title() end
-local function get_playlist(shuffled) end
+local function get_playlist(_) end
 local function get_chapterlist() end
-local function show_message(text, duration) end
+local function show_message(_, _) end
 local function bind_keys() end
 local function unbind_keys() end
 local function destroy_scrolling_keys() end
+local function extract_links() end
+local function open_url() end
+local function plain_replace_all() end
+local function apply_link_highlight() end
 local function check_description() end
-local function show_description(text) end
+local function show_description(_) end
 local function reset_desc_timer() end
 local function render_message() end
 local function window_controls() end
 local function validate_user_opts() end
-local function update_options(list) end
+local function update_options(_) end
 local function show_osc() end
 local function hide_osc() end
-local function osc_visible(visible) end
-local function adjust_subtitles(visible) end
+local function osc_visible(_) end
+local function adjust_subtitles(_) end
 local function pause_state() end
 local function cache_state() end
 local function process_event() end
 local function tick() end
 local function reset_timeout() end
-local function visibility_mode(mode) end
+local function visibility_mode(_) end
 
 -- ====================
 -- Parameters
@@ -72,7 +77,7 @@ local function visibility_mode(mode) end
 -- ====================
 
 local user_opts = {
-    -- Language and display --
+    -- Language and display
     language = "en",            -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",   -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
     layout_option = "original", -- use the original/reduced layout
@@ -92,7 +97,7 @@ local user_opts = {
     fade_duration = 150,             -- fade-out duration (in ms), set to 0 for no fade
     min_mouse_move = 0,              -- minimum mouse movement (in pixels) required to show OSC
     bottom_hover = true,             -- show OSC only when hovering at the bottom
-    bottom_hover_zone = 200,         -- height of hover zone for bottom_hover (in pixels)
+    bottom_hover_zone = 175,         -- height of hover zone for bottom_hover (in pixels)
     osc_on_seek = false,             -- show OSC when seeking
     osc_keep_with_cursor = false,    -- keep OSC visible if mouse cursor is within OSC boundaries
     mouse_seek_pause = true,         -- pause video while seeking with mouse move (on button hold)
@@ -103,30 +108,33 @@ local user_opts = {
     scale_forced_window = 1.0,       -- osc scale factor when forced (no video, for example music files)
 
     -- Time, title and description display
-    show_title = true,           -- show title in the OSC (above seekbar)
-    title = "${media-title}",    -- title above seekbar format: "${media-title}" or "${filename}"
-    title_font_size = 28,        -- font size of the title text (above seekbar)
-    dynamic_title = true,        -- change title if {media-title} and {filename} differ (eg: when playing URLs or audio)
+    show_title = true,             -- show title in the OSC (above seekbar)
+    title = "${media-title}",      -- title above seekbar format: "${media-title}" or "${filename}"
+    title_font_size = 28,          -- font size of the title text (above seekbar)
+    dynamic_title = true,          -- change title if {media-title} and {filename} differ (eg: when playing URLs or audio)
 
-    show_chapter_title = true,   -- show chapter title alongside timestamp (below seekbar)
-    chapter_fmt = "%s",          -- format for chapter display on seekbar hover (set to "no" to disable)
-    show_chapter_markers = true, -- show chapter markers on the seekbar
-    show_top_mark = true,        -- show the top part of the chapter marker
-    show_bottom_mark = false,    -- show the bottom part of the chapter marker
+    show_chapter_title = true,     -- show chapter title alongside timestamp (below seekbar)
+    chapter_fmt = "%s",            -- format for chapter display on seekbar hover (set to "no" to disable)
+    chapter_hover_title = false,   -- show the hovered chapter's name in place of the main title while scrubbing (only applies when thumbfast isn't available)
+    chapter_hover_subtitle = true, -- show the hovered chapter's name in the chapter title text below the seekbar instead of the main title (only applies when thumbfast isn't available)
+    show_chapter_markers = true,   -- show chapter markers on the seekbar
+    chapter_marker_style = "gap",  -- shape of chapter markers: "triangle", "bar", "single-bar", or "gap"
+    show_top_mark = true,          -- show the top part of the chapter marker (only for the "triangle" chapter_marker_style)
+    show_bottom_mark = false,      -- show the bottom part of the chapter marker (only for the "triangle" chapter_marker_style)
 
-    time_total = true,           -- show total time instead of remaining time
-    time_ms = false,             -- show timecodes with milliseconds
-    unicode_minus = false,       -- use the Unicode minus sign in remaining time
-    time_format = "dynamic",     -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
-    time_font_size = 18,         -- font size of the time display
+    time_total = true,             -- show total time instead of remaining time
+    time_ms = false,               -- show timecodes with milliseconds
+    unicode_minus = false,         -- use the Unicode minus sign in remaining time
+    time_format = "dynamic",       -- "dynamic" or "fixed" - dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
+    time_font_size = 18,           -- font size of the time display
 
-    show_description = true,     -- show video description - description on web videos or metadata/stats on local video
-    show_file_size = true,       -- show the current file's size in the description
-    description_font_size = 19,  -- font size of the description text (below title)
-    description_alpha = 100,     -- alpha of the description background box
-    scrolling_speed = 40,        -- the speed of scrolling text in description/comment menus
+    show_description = true,       -- show video description - description on web videos or metadata/stats on local video
+    show_file_size = true,         -- show the current file's size in the description
+    description_font_size = 19,    -- font size of the description text (below title)
+    description_alpha = 100,       -- alpha of the description background box
+    scrolling_speed = 40,          -- the speed of scrolling text in description/comment menus
 
-    date_format = "%Y-%m-%d",    -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
+    date_format = "%Y-%m-%d",      -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
 
     -- Title bar settings
     window_title = true,                      -- show window title in borderless/fullscreen mode
@@ -182,6 +190,8 @@ local user_opts = {
     volumebar_match_seek_color = false,       -- match volume bar color with seekbar color (ignores side_buttons_color)
     time_color = "#FFFFFF",                   -- color of the timestamps (below seekbar)
     chapter_title_color = "#FFFFFF",          -- color of the chapter title next to timestamp (below seekbar)
+    chapter_marker_color = "#1D96F5",         -- color of chapter markers on the seekbar
+    chapter_marker_current_color = "#9D96f5", -- color of the marker for the current chapter
     side_buttons_color = "#FFFFFF",           -- color of the side buttons (audio, subtitles, playlist, etc.)
     middle_buttons_color = "#FFFFFF",         -- color of the middle buttons (skip, jump, chapter, etc.)
     playpause_color = "#FFFFFF",              -- color of the play/pause button
@@ -196,8 +206,8 @@ local user_opts = {
     window_fade_alpha = 100,                  -- alpha of the window title bar
     window_fade_blur_strength = 75,           -- blur strength for the window title bar. caution: high values can take a lot of CPU time to render
     window_fade_transparency_strength = 0,    -- use with "window_fade_blur_strength = 0" to create a transparency box
-    thumbnail_border = 3,                     -- width of the thumbnail border (for thumbfast)
-    thumbnail_border_radius = 3,              -- rounded corner radius for thumbnail border (0 to disable)
+    thumbnail_border = 1,                     -- width of the thumbnail border (for thumbfast)
+    thumbnail_border_radius = 5,              -- rounded corner radius for thumbnail border (0 to disable)
 
     -- Button hover effects
     hover_effect = "size,glow,color", -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
@@ -227,18 +237,18 @@ local user_opts = {
     ytdl_format = "",           -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
 
     -- SponsorBlock - these SponsorBlock features need https://github.com/zydezu/mpvconfig/blob/main/scripts/sponsorblock.lua specifically to function
-    show_sponsorblock_segments = true,  -- show SponsorBlock segments on the progress bar
-    add_sponsorblock_chapters = false,  -- add SponsorBlock chapters to the chapter list
-    sponsorblock_seek_range_alpha = 75, -- transparency of SponsorBlock segments
-    sponsor_types = {                   -- what categories to show in the progress bar
-        "sponsor",                      -- all categories: sponsor, intro, outro,
-        "intro",                        -- interaction, selfpromo, preview, music_offtopic, filler
-        "outro",
-        "interaction",
-        "selfpromo",
-        "preview",
-        "music_offtopic",
-        "filler"
+    show_sponsorblock_segments = true,             -- show SponsorBlock segments on the progress bar
+    add_sponsorblock_chapters = false,             -- add SponsorBlock chapters to the chapter list
+    sponsorblock_seek_range_alpha = 75,            -- transparency of SponsorBlock segments
+    sponsor_types = {                              -- what categories to show in the progress bar
+        "sponsor",                                 -- all categories: sponsor, intro, outro,
+        "intro",                                   -- interaction, selfpromo, preview, music_offtopic, filler
+        "outro",                                   -- video outro
+        "interaction",                             -- interaction reminders such as liking and subscribing
+        "selfpromo",                               -- self promotion of socials or other channels
+        "preview",                                 -- video preview
+        "music_offtopic",                          -- silence in music videos
+        "filler"                                   -- filler content/tangents
     },
     sponsorblock_sponsor_color = "#00D400",        -- color for sponsors
     sponsorblock_intro_color = "#00FFFF",          -- color for intermission/intro animations
@@ -247,16 +257,16 @@ local user_opts = {
     sponsorblock_selfpromo_color = "#FFFF00",      -- color for unpaid/self promotion
     sponsorblock_preview_color = "#008FD6",        -- color for unpaid/self promotion
     sponsorblock_music_offtopic_color = "#FF9900", -- color for unpaid/self promotion
-    sponsorblock_filler_color = "#7300FF",         -- color for filler tangent/jokes
+    sponsorblock_filler_color = "#7300FF",         -- color for filler content/tangents
 
     -- Experimental
-    show_youtube_comments = false,                                -- EXPERIMENTAL - show youtube comments
-    comments_download_path = "~/Pictures/mpv/downloads/comments", -- EXPERIMENTAL - the download path for the comment JSON file
-    FORCE_fix_not_ontop = true,                                   -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
+    show_youtube_comments = false,             -- EXPERIMENTAL - show youtube comments
+    comments_path = "~/Pictures/mpv/comments", -- EXPERIMENTAL - the download path for the comment JSON file
+    FORCE_fix_not_ontop = true,                -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
 }
 -- read options from config and command-line
 require("mp.options").read_options(user_opts, 'modernx', function(list) update_options(list) end)
-mp.observe_property("osc", "bool", function(name, value) if value == true then mp.set_property("osc", "no") end end)
+mp.observe_property("osc", "bool", function(_, value) if value == true then mp.set_property("osc", "no") end end)
 
 local osc_param = { -- calculated by osc_init()
     playresy = 0,   -- canvas size Y
@@ -392,15 +402,21 @@ local sponsorblock_color_map = {
     filler = user_opts.sponsorblock_filler_color
 }
 
-local tick_delay = 1 / 60   -- Fallback
-local audio_track_count = 0 -- TODO: implement
-local sub_track_count = 0   -- TODO: implement
+local tick_delay = 1 / 60 -- Fallback
 local window_control_box_width = 138
 local max_descsize = 200
 local comments_per_page = 25
 local is_december = os.date("*t").month == 12
 local unicode_minus_symbol = string.char(0xe2, 0x88, 0x92) -- UTF-8 for U+2212 MINUS SIGN
 local iconfont = 'fluent-system-icons'
+
+local device = "linux"
+if os.getenv("windir") ~= nil then
+    device = "windows"
+elseif os.execute '[ -d "/Applications" ]' == 0 and os.execute '[ -d "/Library" ]' == 0
+    or os.execute '[ -d "/Applications" ]' == true and os.execute '[ -d "/Library" ]' == true then
+    device = "mac"
+end
 
 local function osc_color_convert(color)
     return color:sub(6, 7) .. color:sub(4, 5) .. color:sub(2, 3)
@@ -460,6 +476,14 @@ local osc_styles = {
         user_opts.description_font_size .. '\\q2\\fn' .. user_opts.font .. '}',
 }
 
+---@class mp.Timer
+---@field oneshot boolean
+---@field timeout number
+---@field stop fun(self: mp.Timer)
+---@field kill fun(self: mp.Timer)
+---@field resume fun(self: mp.Timer)
+---@field is_enabled fun(self: mp.Timer): boolean
+
 -- internal states, do not touch
 local state = {
     showtime = nil,                          -- time of last invocation (last mouse move)
@@ -479,9 +503,9 @@ local state = {
     last_mouseY = nil,     -- last mouse position, to detect significant mouse movement
     mouse_in_window = false,
     fullscreen = false,
-    tick_timer = nil,
+    tick_timer = nil, ---@type mp.Timer?
     tick_last_time = 0, -- when the last tick() was run
-    hide_timer = nil,
+    hide_timer = nil, ---@type mp.Timer?
     cache_state = nil,
     buffering = false,
     idle = false,
@@ -519,6 +543,9 @@ local state = {
     descriptionLoaded = false,
     showingDescription = false,
     scrolledlines = 25,
+    descriptionLinks = {},    -- URLs found in the description
+    descriptionBaseText = "", -- description text without link highlighting applied
+    selectedLinkIndex = 0,    -- 0 = no link selected
     youtubeuploader = "",
     jsoncomments = {},
     youtubecomments = {},
@@ -531,8 +558,8 @@ local state = {
 
     sponsor_segments = {},
 
-    message_text = nil,       -- TODO: needs to be removed
-    message_hide_timer = nil, -- TODO: needs to be removed
+    message_text = nil, -- TODO: needs to be removed
+    message_hide_timer = nil, ---@type mp.Timer? -- TODO: needs to be removed
 }
 
 local logo_lines = {
@@ -806,6 +833,7 @@ function update_tracklist()
         if not (tracktable[n].type == 'unknown') then
             local type = tracktable[n].type
             local mpv_id = tonumber(tracktable[n].id)
+            ---@cast mpv_id number
 
             -- by osc_id
             table.insert(tracks_osc[type], tracktable[n])
@@ -947,7 +975,6 @@ local function prepare_elements()
             static_ass:draw_stop()
         elseif element.type == "slider" then
             --draw static slider parts
-            local slider_lo = element.layout.slider
             -- calculate positions of min and max points
             element.slider.min.ele_pos = user_opts.seek_handle_size * elem_geo.h / 2
             element.slider.max.ele_pos = elem_geo.w - element.slider.min.ele_pos
@@ -959,38 +986,8 @@ local function prepare_elements()
             -- a hack which prepares the whole slider area to allow center placements such like an=5
             static_ass:rect_cw(0, 0, elem_geo.w, elem_geo.h)
             static_ass:rect_ccw(0, 0, elem_geo.w, elem_geo.h)
-            -- chapter marker nibbles
-            if user_opts.show_chapter_markers and element.slider.markerF ~= nil and slider_lo.gap > 0 then
-                local markers = element.slider.markerF()
-                for _, marker in pairs(markers) do
-                    if marker >= element.slider.min.value and marker <= element.slider.max.value then
-                        local s = get_slider_ele_pos_for(element, marker)
-                        if slider_lo.gap > 5 then -- draw triangles
-                            --top
-                            if slider_lo.nibbles_top then
-                                static_ass:move_to(s - 3, slider_lo.gap - 5)
-                                static_ass:line_to(s + 3, slider_lo.gap - 5)
-                                static_ass:line_to(s, slider_lo.gap - 1)
-                            end
-                            --bottom
-                            if slider_lo.nibbles_bottom then
-                                static_ass:move_to(s - 3, elem_geo.h - slider_lo.gap + 5)
-                                static_ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
-                                static_ass:line_to(s + 3, elem_geo.h - slider_lo.gap + 5)
-                            end
-                        else -- draw 2x1px nibbles
-                            --top
-                            if slider_lo.nibbles_top then
-                                static_ass:rect_cw(s - 1, 0, s + 1, slider_lo.gap);
-                            end
-                            --bottom
-                            if slider_lo.nibbles_bottom then
-                                static_ass:rect_cw(s - 1, elem_geo.h - slider_lo.gap, s + 1, elem_geo.h);
-                            end
-                        end
-                    end
-                end
-            end
+            -- chapter marker nibbles are drawn dynamically in draw_seekbar_nibbles(), so they can use
+            -- their own colors instead of inheriting whatever color the slider is drawn with
         end
 
         element.static_ass = static_ass
@@ -1060,6 +1057,26 @@ local function draw_seekbar_handle(element, elem_ass, override_alpha)
     return xp, 0
 end
 
+-- Collects sorted pixel-space positions of chapter markers, skipping the first (start of file)
+local function collect_gap_cuts(element)
+    local cuts = {}
+    if element.slider.markerF then
+        for n, marker in ipairs(element.slider.markerF()) do
+            if n > 1 and marker >= element.slider.min.value and marker <= element.slider.max.value then
+                cuts[#cuts + 1] = get_slider_ele_pos_for(element, marker)
+            end
+        end
+        table.sort(cuts)
+    end
+    return cuts
+end
+
+-- whether chapter markers should be drawn as a real cut in the seekbar rather than a marker shape
+local function gap_style_active(element)
+    return element.name == "seekbar" and user_opts.show_chapter_markers
+        and user_opts.chapter_marker_style == "gap"
+end
+
 -- Draw seekbar progress more accurately
 local function draw_seekbar_progress(element, elem_ass)
     local pos = element.slider.posF()
@@ -1069,7 +1086,153 @@ local function draw_seekbar_progress(element, elem_ass)
     local xp = get_slider_ele_pos_for(element, pos)
     local slider_lo = element.layout.slider
     local elem_geo = element.layout.geometry
-    elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+
+    if gap_style_active(element) then
+        -- cut a small gap out of the played progress at each chapter boundary instead of drawing a marker shape
+        local gap_half = 1.5
+        local seg_start = 0
+        for _, cut in ipairs(collect_gap_cuts(element)) do
+            if cut >= xp then break end
+            local seg_end = math.min(cut - gap_half, xp)
+            if seg_end > seg_start then
+                elem_ass:rect_cw(seg_start, slider_lo.gap, seg_end, elem_geo.h - slider_lo.gap)
+            end
+            seg_start = cut + gap_half
+        end
+        if xp > seg_start then
+            elem_ass:rect_cw(seg_start, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+        end
+    else
+        elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+    end
+end
+
+-- Draws the seekbar's unplayed background with real gaps cut at chapter boundaries
+local function draw_seekbar_gap_background(element, elem_ass)
+    if not gap_style_active(element) then
+        return
+    end
+
+    local slider_lo = element.layout.slider
+    local elem_geo = element.layout.geometry
+
+    elem_ass:draw_stop()
+    elem_ass:merge(element.style_ass)
+    ass_append_alpha(elem_ass, element.layout.alpha, 128)
+    elem_ass:append("{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.seekbarbg_color) .. "&}")
+    elem_ass:merge(element.static_ass)
+
+    local gap_half = 1.5
+    local seg_start = 0
+    for _, cut in ipairs(collect_gap_cuts(element)) do
+        local seg_end = cut - gap_half
+        if seg_end > seg_start then
+            elem_ass:rect_cw(seg_start, slider_lo.gap, seg_end, elem_geo.h - slider_lo.gap)
+        end
+        seg_start = cut + gap_half
+    end
+    if elem_geo.w > seg_start then
+        elem_ass:rect_cw(seg_start, slider_lo.gap, elem_geo.w, elem_geo.h - slider_lo.gap)
+    end
+
+    -- restore the seekbar's own color so the handle and progress fill drawn after this aren't left
+    -- using the background color
+    elem_ass:draw_stop()
+    elem_ass:merge(element.style_ass)
+    ass_append_alpha(elem_ass, element.layout.alpha, 0)
+    elem_ass:append("{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.seekbarfg_color) .. "&}")
+    elem_ass:merge(element.static_ass)
+end
+
+-- Draws chapter markers on the seekbar, shaped and colored according to user_opts
+local function draw_seekbar_nibbles(element, elem_ass)
+    local slider_lo = element.layout.slider
+    local elem_geo = element.layout.geometry
+    local style = user_opts.chapter_marker_style
+
+    if not user_opts.show_chapter_markers or element.slider.markerF == nil or slider_lo.gap <= 0
+        or gap_style_active(element) then
+        return
+    end
+
+    local markers = element.slider.markerF()
+    if #markers == 0 then
+        return
+    end
+
+    -- draw a single marker shape at pixel position s
+    local function draw_nibble(ass, s)
+        if slider_lo.gap > 5 then
+            local bar_h = 3
+            if slider_lo.nibbles_top then
+                if style == "triangle" then
+                    ass:move_to(s - 3, slider_lo.gap - 5)
+                    ass:line_to(s + 3, slider_lo.gap - 5)
+                    ass:line_to(s, slider_lo.gap - 1)
+                elseif style == "bar" then
+                    ass:rect_cw(s - 1, slider_lo.gap - bar_h, s + 1, slider_lo.gap)
+                else -- single-bar
+                    ass:rect_cw(s - 1, slider_lo.gap - bar_h, s + 1, elem_geo.h - slider_lo.gap)
+                end
+            end
+            if slider_lo.nibbles_bottom then
+                if style == "triangle" then
+                    ass:move_to(s - 3, elem_geo.h - slider_lo.gap + 5)
+                    ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
+                    ass:line_to(s + 3, elem_geo.h - slider_lo.gap + 5)
+                elseif style == "bar" then
+                    ass:rect_cw(s - 1, elem_geo.h - slider_lo.gap, s + 1, elem_geo.h - slider_lo.gap + bar_h)
+                else -- single-bar
+                    ass:rect_cw(s - 1, slider_lo.gap, s + 1, elem_geo.h - slider_lo.gap + bar_h)
+                end
+            end
+        else -- not enough room for a shape, draw 2x1px nibbles
+            if slider_lo.nibbles_top then
+                ass:rect_cw(s - 1, 0, s + 1, slider_lo.gap)
+            end
+            if slider_lo.nibbles_bottom then
+                ass:rect_cw(s - 1, elem_geo.h - slider_lo.gap, s + 1, elem_geo.h)
+            end
+        end
+    end
+
+    local function begin_layer(color)
+        elem_ass:draw_stop()
+        elem_ass:merge(element.style_ass)
+        ass_append_alpha(elem_ass, element.layout.alpha, 0)
+        elem_ass:append("{\\blur0\\bord0\\1c&H" .. osc_color_convert(color) .. "&}")
+        elem_ass:merge(element.static_ass)
+    end
+
+    local current_chapter = mp.get_property_number("chapter", -1)
+
+    -- draw non-current chapter markers first
+    local has_non_current = false
+    for n, marker in ipairs(markers) do
+        if (n - 1) ~= current_chapter and marker >= element.slider.min.value and marker <= element.slider.max.value then
+            if not has_non_current then
+                begin_layer(user_opts.chapter_marker_color)
+                has_non_current = true
+            end
+            draw_nibble(elem_ass, get_slider_ele_pos_for(element, marker))
+        end
+    end
+
+    -- draw the current chapter's marker on top, in its own color
+    local drew_current = false
+    if current_chapter >= 0 and current_chapter < #markers then
+        local marker = markers[current_chapter + 1]
+        if marker >= element.slider.min.value and marker <= element.slider.max.value then
+            begin_layer(user_opts.chapter_marker_current_color)
+            draw_nibble(elem_ass, get_slider_ele_pos_for(element, marker))
+            drew_current = true
+        end
+    end
+
+    -- restore the seekbar's own color so later draws (progress fill, handle) aren't left using a marker color
+    if has_non_current or drew_current then
+        begin_layer(user_opts.seekbarfg_color)
+    end
 end
 
 -- Draws seekbar ranges according to user_opts
@@ -1125,7 +1288,6 @@ local function draw_sponsorblock_ranges(element, elem_ass, xp, rh)
         return
     end
 
-    local handle = xp and rh
     xp = xp or 0
     rh = rh or 0
     local slider_lo = element.layout.slider
@@ -1148,16 +1310,24 @@ function render_elements(master_ass)
     -- then we use it instead of the normal title. we calculate it before the
     -- render iterations because the title may be rendered before the slider.
     state.forced_title = nil
+    state.forced_chapter_title = nil
 
     -- disable displaying chapter name in title when thumbfast is available
     -- because thumbfast will render it above the thumbnail instead
     if thumbfast.disabled then
-        if user_opts.chapter_fmt ~= "no" and state.touchingprogressbar then
+        if user_opts.chapter_fmt ~= "no" and state.touchingprogressbar
+            and (user_opts.chapter_hover_title or user_opts.chapter_hover_subtitle) then
             local dur = mp.get_property_number("duration", 0)
             if dur > 0 then
                 local ch = get_chapter(state.sliderpos * dur / 100)
                 if ch and ch.title and ch.title ~= "" then
-                    state.forced_title = string.format(user_opts.chapter_fmt, ch.title)
+                    local formatted = string.format(user_opts.chapter_fmt, ch.title)
+                    if user_opts.chapter_hover_subtitle then
+                        state.forced_chapter_title = formatted
+                    end
+                    if user_opts.chapter_hover_title then
+                        state.forced_title = formatted
+                    end
                 end
             end
         end
@@ -1202,7 +1372,13 @@ function render_elements(master_ass)
                 local s_min = element.slider.min.value
                 local s_max = element.slider.max.value
 
+                if element.name == "seekbar" then
+                    draw_seekbar_gap_background(element, elem_ass)
+                end
                 local xp, rh = draw_seekbar_handle(element, elem_ass) -- handle posistion, handle radius
+                if element.name == "seekbar" then
+                    draw_seekbar_nibbles(element, elem_ass)
+                end
                 draw_seekbar_progress(element, elem_ass)
                 if element.name == "seekbar" then
                     draw_seekbar_ranges(element, elem_ass, xp, rh)
@@ -1273,10 +1449,15 @@ function render_elements(master_ass)
                                     elem_ass:an(7)
                                     elem_ass:append(osc_styles.thumbnail)
                                     elem_ass:draw_start()
-                                    if user_opts.thumbnail_border_radius and user_opts.thumbnail_border_radius > 0 then
+                                    -- the thumbnail image itself is a plain rectangle (drawn separately by thumbfast,
+                                    -- not by this script) and can't be clipped to a rounded shape, so the radius is
+                                    -- capped to the border padding to avoid rounding into the image and exposing its
+                                    -- square corners past the curve
+                                    local radius = math.min(user_opts.thumbnail_border_radius or 0, thumbPad)
+                                    if radius > 0 then
                                         elem_ass:round_rect_cw(-thumbPad * r_w, -thumbPad * r_h,
                                             (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h,
-                                            user_opts.thumbnail_border_radius)
+                                            radius)
                                     else
                                         elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h,
                                             (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
@@ -1341,8 +1522,6 @@ function render_elements(master_ass)
                     end
                     buttontext = buttontext .. "..."
                 end
-                local _, nchars2 = buttontext:gsub(".[\128-\191]*", "")
-                local stretch = (maxchars / #buttontext) * 100
                 buttontext = string.format("{\\fscx%f}",
                     (maxchars / #buttontext) * 100) .. buttontext
             end
@@ -1511,19 +1690,6 @@ local function startupevents()
     mp.set_property_bool("auto-window-resize", false)
 end
 
-function dump(o)
-    if type(o) == 'table' then
-        local s = '{ '
-        for k, v in pairs(o) do
-            if type(k) ~= 'number' then k = '"' .. k .. '"' end
-            s = s .. '[' .. k .. '] = ' .. dump(v) .. ','
-        end
-        return s .. '} '
-    else
-        return tostring(o)
-    end
-end
-
 function check_title()
     local mediatitle = mp.get_property("media-title")
     mp.set_property("title", mediatitle or "")
@@ -1535,6 +1701,8 @@ function check_title()
     -- fake description using metadata
     state.localDescription = nil
     state.localDescriptionClick = nil
+    state.descriptionLinks = {}
+    state.selectedLinkIndex = 0
 
     local title = mp.get_property("media-title")
     local artist = mp.get_property("filtered-metadata/by-key/Album_Artist") or
@@ -1560,6 +1728,7 @@ function check_title()
     if metadata then
         state.ytdescription = metadata.ytdl_description or description or ""
         state.ytdescription = state.ytdescription:gsub('\r', '\\N'):gsub('\n', '\\N'):gsub("%%", "%%")
+        state.descriptionLinks = extract_links(state.ytdescription)
 
         state.is_live = metadata.ytdl_is_live
     else
@@ -1572,7 +1741,7 @@ function check_title()
                 state.localDescriptionClick = title ..
                     "\\N────────────────────\\N" .. state.ytdescription .. "\\N────────────────────\\N"
 
-                local utf8split, lastchar = split_utf8_strings(state.ytdescription, max_descsize)
+                local utf8split, _ = split_utf8_strings(state.ytdescription, max_descsize)
 
                 if #utf8split ~= #state.ytdescription then
                     local tmp = utf8split:gsub("[,%.%s]+$", "")
@@ -1828,12 +1997,12 @@ function check_comments()
             "--skip-download",
             "--write-comments",
             "-o%(id)s",
-            "-P " .. mp.command_native({ "expand-path", user_opts.comments_download_path }),
+            "-P " .. mp.command_native({ "expand-path", user_opts.comments_path }),
             state.url_path
         },
         capture_stdout = true,
         capture_stderr = true
-    }, function(success, result, error)
+    }, function(success, _, error)
         if not success then
             print("Failed to write YouTube comments: " .. error)
             return
@@ -1841,7 +2010,7 @@ function check_comments()
 
         local filename = ""
         local file_prop = mp.get_property("filename")
-        local comments_path = user_opts.comments_download_path or ""
+        local comments_path = user_opts.comments_path or ""
 
         if file_prop then
             print("Downloaded YouTube comments")
@@ -1861,7 +2030,8 @@ function check_comments()
         if file_exists(filename) then
             print("Reading YouTube comments file...")
             local lines = lines_from(filename)
-            state.jsoncomments = mp.utils.parse_json(lines[1]).comments
+            local parsed = lines[1] and mp.utils.parse_json(lines[1])
+            state.jsoncomments = (parsed and parsed.comments) or {}
         else
             print("Error opening YouTube comments file")
             return
@@ -1967,7 +2137,7 @@ function process_filesize(success, result, error)
     request_tick()
 end
 
-local function download_done(success, result, error)
+local function download_done(success, _, error)
     if success then
         show_message("{\\an9}Download saved to " .. mp.command_native({ "expand-path", user_opts.download_path }))
         state.downloaded_once = true
@@ -2028,7 +2198,7 @@ function split_utf8_strings(str, maxLength)
     return table.concat(result), charCount
 end
 
-local function add_commas_to_number(number)
+function add_commas_to_number(number)
     if number == nil then return '' end
 
     return tostring(number)    -- Make sure the "number" is a string
@@ -2036,10 +2206,10 @@ local function add_commas_to_number(number)
         :gsub('%d%d%d', '%0,') -- insert one comma after every 3 numbers
         :gsub(',$', '')        -- Remove a trailing comma if present
         :reverse()             -- Reverse the string again
-        :sub(1)                -- a little hack to get rid of the second return value
+        :sub(1)                -- hack to get rid of the second return value
 end
 
-function process_vid_stats(success, result, error)
+function process_vid_stats(success, _, error)
     if not success then
         print("Couldn't fetch web video stats: " .. error)
         return
@@ -2109,7 +2279,7 @@ function get_playlist(shuffled)
 
     local playlist_label = shuffled and (texts.playlistshuffled or texts.playlist .. " (shuffled)") or texts.playlist
     local message = string.format(playlist_label .. ' [%d/%d]\n', pos, count)
-    for i, v in ipairs(limlist) do
+    for _, v in ipairs(limlist) do
         local title = v.title
         local _, filename = mp.utils.split_path(v.filename)
         if title == nil then
@@ -2205,7 +2375,7 @@ local function make_sponsorblock_segments()
 
         -- updated chapter list
         state.chapter_list = updated_chapters
-        if #updated_chapters > 0 then
+        if #updated_chapters ~= #temp_chapters then
             mp.set_property_native("chapter-list", updated_chapters)
         end
     end
@@ -2260,7 +2430,7 @@ function unbind_keys(keys, name)
         return
     end
     local i = 1
-    for key in keys:gmatch("[^%s]+") do
+    for _ in keys:gmatch("[^%s]+") do
         local prefix = i == 1 and '' or i
         mp.remove_key_binding(name .. prefix)
         i = i + 1
@@ -2270,6 +2440,7 @@ end
 function destroy_scrolling_keys()
     state.showingDescription = false
     state.scrolledlines = 25
+    state.selectedLinkIndex = 0
     show_message("", 0.01) -- clear text
     unbind_keys("UP WHEEL_UP", "move_up")
     unbind_keys("DOWN WHEEL_DOWN", "move_down")
@@ -2277,6 +2448,86 @@ function destroy_scrolling_keys()
     unbind_keys("ESC MBTN_RIGHT", "close")
     unbind_keys("LEFT", "comments_left")
     unbind_keys("RIGHT", "comments_right")
+    unbind_keys("TAB", "link_next")
+    unbind_keys("Shift+TAB", "link_prev")
+end
+
+-- strips trailing punctuation/brackets that the match caught but aren't part of the URL,
+-- e.g. "(...wiki/Foo_(bar))" keeps the URL's own ")" and only drops the wrapping one
+local function trim_trailing_punctuation(url)
+    url = url:gsub('[,%.;:!?"\'>]+$', "")
+    while true do
+        local last = url:sub(-1)
+        local open, close
+        if last == ")" then
+            open, close = "%(", "%)"
+        elseif last == "]" then
+            open, close = "%[", "%]"
+        elseif last == "}" then
+            open, close = "%{", "%}"
+        else
+            break
+        end
+        local _, opens = url:gsub(open, "")
+        local _, closes = url:gsub(close, "")
+        if closes > opens then
+            url = url:sub(1, -2)
+        else
+            break
+        end
+    end
+    return url
+end
+
+-- finds every URL mentioned in a video description
+function extract_links(text)
+    local links = {}
+    local seen = {}
+    -- \r/\n are converted to the literal escape "\N" before this runs, and backslash isn't
+    -- whitespace, so it must be excluded too or a link swallows the rest of the description
+    for match in text:gmatch("https?://[^%s\\]+") do
+        local url = trim_trailing_punctuation(match)
+        if url ~= "" and not seen[url] then
+            seen[url] = true
+            links[#links + 1] = url
+        end
+    end
+    return links
+end
+
+-- string.gsub can't do plain-text (non-pattern) replacement, so this does it manually
+function plain_replace_all(text, find, replace)
+    local out, start = {}, 1
+    while true do
+        local i, j = text:find(find, start, true)
+        if not i then
+            out[#out + 1] = text:sub(start)
+            break
+        end
+        out[#out + 1] = text:sub(start, i - 1)
+        out[#out + 1] = replace
+        start = j + 1
+    end
+    return table.concat(out)
+end
+
+-- wraps the currently selected link (if any) in ASS tags so it stands out in the description
+function apply_link_highlight(text)
+    local url = state.descriptionLinks[state.selectedLinkIndex]
+    if not url then return text end
+    return plain_replace_all(text, url, '{\\c&H4DC3FF&\\u1}' .. url .. '{\\u0\\c}')
+end
+
+function open_url(url)
+    local args
+    if device == "windows" then
+        args = { "powershell", "start", url }
+    elseif device == "mac" then
+        args = { "open", url }
+    else
+        args = { "xdg-open", url }
+    end
+    mp.command_native_async({ name = "subprocess", args = args })
 end
 
 function check_description()
@@ -2287,6 +2538,7 @@ function check_description()
             destroy_scrolling_keys()
         else
             state.showingDescription = true
+            state.selectedLinkIndex = #state.descriptionLinks > 0 and 1 or 0
             if state.is_URL then
                 show_description(state.localDescriptionClick)
             else
@@ -2330,11 +2582,19 @@ function show_description(text)
         reset_desc_timer()
         request_tick()
     end, { repeatable = true })
-    bind_keys("ENTER", "select", destroy_scrolling_keys)
+    bind_keys("ENTER", "select", function()
+        local url = state.descriptionLinks[state.selectedLinkIndex]
+        if url then
+            open_url(url)
+        else
+            destroy_scrolling_keys()
+        end
+    end)
     bind_keys("ESC", "close", function()
         if (state.commentsPage > 0) then
             state.commentsPage = 0
-            state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
+            state.descriptionBaseText = state.localDescriptionClick .. state.commentsAdditionalText
+            state.message_text = "\\N" .. apply_link_highlight(state.descriptionBaseText)
             reset_desc_timer()
             request_tick()
             state.scrolledlines = 25
@@ -2342,6 +2602,21 @@ function show_description(text)
             destroy_scrolling_keys()
         end
     end) -- close menu using ESC
+
+    if #state.descriptionLinks > 0 then
+        bind_keys("TAB", "link_next", function()
+            state.selectedLinkIndex = state.selectedLinkIndex % #state.descriptionLinks + 1
+            state.message_text = "\\N" .. apply_link_highlight(state.descriptionBaseText)
+            reset_desc_timer()
+            request_tick()
+        end)
+        bind_keys("Shift+TAB", "link_prev", function()
+            state.selectedLinkIndex = (state.selectedLinkIndex - 2) % #state.descriptionLinks + 1
+            state.message_text = "\\N" .. apply_link_highlight(state.descriptionBaseText)
+            reset_desc_timer()
+            request_tick()
+        end)
+    end
 
     local function returnMessageText()
         local totalCommentCount = #state.jsoncomments
@@ -2372,7 +2647,8 @@ function show_description(text)
             if (state.commentsParsed) then
                 state.commentsPage = state.commentsPage - 1
                 if (state.commentsPage == 0) then
-                    state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
+                    state.descriptionBaseText = state.localDescriptionClick .. state.commentsAdditionalText
+                    state.message_text = "\\N" .. apply_link_highlight(state.descriptionBaseText)
                 elseif (state.commentsPage > 0) then
                     state.message_text = returnMessageText()
                 else
@@ -2389,7 +2665,8 @@ function show_description(text)
                 state.commentsPage = state.commentsPage + 1
                 if (state.commentsPage > state.maxCommentPages) then
                     state.commentsPage = 0
-                    state.message_text = state.localDescriptionClick .. state.commentsAdditionalText
+                    state.descriptionBaseText = state.localDescriptionClick .. state.commentsAdditionalText
+                    state.message_text = "\\N" .. apply_link_highlight(state.descriptionBaseText)
                 else
                     state.message_text = returnMessageText()
                 end
@@ -2400,7 +2677,8 @@ function show_description(text)
         end)
     end
 
-    text = "\\N" .. text
+    state.descriptionBaseText = text
+    text = "\\N" .. apply_link_highlight(text)
     state.message_text = text
 
     if not state.message_hide_timer then
@@ -2460,24 +2738,25 @@ end
 --
 
 local function new_element(name, type)
-    elements[name] = {}
-    elements[name].type = type
-    elements[name].name = name
+    local element = {}
+    element.type = type
+    element.name = name
 
     -- add default stuff
-    elements[name].eventresponder = {}
-    elements[name].visible = true
-    elements[name].enabled = true
-    elements[name].softrepeat = false
-    elements[name].styledown = (type == "button")
-    elements[name].state = {}
+    element.eventresponder = {}
+    element.visible = true
+    element.enabled = true
+    element.softrepeat = false
+    element.styledown = (type == "button")
+    element.state = {}
 
     if type == "slider" then
-        elements[name].slider = { min = { value = 0 }, max = { value = 100 } }
-        elements[name].thumbnailable = false
+        element.slider = { min = { value = 0 }, max = { value = 100 } }
+        element.thumbnailable = false
     end
 
-    return elements[name]
+    elements[name] = element
+    return element
 end
 
 local function add_layout(name)
@@ -2643,7 +2922,7 @@ layouts["original"] = function()
     add_area('showhide', 0, 0, osc_param.playresx, osc_param.playresy)
 
     -- fetch values
-    local osc_w, osc_h = osc_geo.w, osc_geo.h
+    local osc_w, _ = osc_geo.w, osc_geo.h
 
     -- Controller Background
     local lo, geo
@@ -2682,6 +2961,9 @@ layouts["original"] = function()
     lo.style = osc_styles.seekbar_bg
     lo.alpha[1] = 128
     lo.alpha[3] = 128
+    -- the "gap" style cuts real gaps into the seekbar itself (see draw_seekbar_gap_background),
+    -- so this plain solid background would otherwise be visible underneath those gaps
+    elements['seekbarbg'].visible = not (user_opts.show_chapter_markers and user_opts.chapter_marker_style == "gap")
 
     lo = add_layout('seekbar')
     if user_opts.seekbar_between_timers then
@@ -2944,7 +3226,7 @@ layouts["reduced"] = function()
     add_area('showhide', 0, 0, osc_param.playresx, osc_param.playresy)
 
     -- fetch values
-    local osc_w, osc_h = osc_geo.w, osc_geo.h
+    local osc_w, _ = osc_geo.w, osc_geo.h
 
     -- Controller Background
     local lo, geo
@@ -2979,6 +3261,9 @@ layouts["reduced"] = function()
     lo.style = osc_styles.seekbar_bg
     lo.alpha[1] = 128
     lo.alpha[3] = 128
+    -- the "gap" style cuts real gaps into the seekbar itself (see draw_seekbar_gap_background),
+    -- so this plain solid background would otherwise be visible underneath those gaps
+    elements['seekbarbg'].visible = not (user_opts.show_chapter_markers and user_opts.chapter_marker_style == "gap")
 
     lo = add_layout('seekbar')
     lo.geometry = { x = refX, y = refY - 75, an = 5, w = osc_geo.w - 200, h = 16 }
@@ -3211,7 +3496,7 @@ function validate_user_opts()
     end
 end
 
-function update_options(list)
+function update_options(_)
     validate_user_opts()
     request_tick()
     visibility_mode("auto")
@@ -3275,10 +3560,10 @@ local function osc_init()
             mp.command_native({ "expand-text", user_opts.title })
         -- escape ASS, and strip newlines and trailing slashes
         title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{", "\\{")
-        return not (title == "") and title or "mpv video"
+        return not (title == "") and title or "mpv"
     end
     ne.eventresponder["mbtn_left_up"] = function()
-        mp.commandv("script-binding", "stats/display-page-5")
+        mp.commandv("script-binding", "stats/display-page-1")
     end
     ne.eventresponder["shift+mbtn_left_down"] = function()
         mp.commandv("show-text", mp.get_property_osd("media-title"))
@@ -3328,18 +3613,12 @@ local function osc_init()
             mp.commandv('playlist-prev', 'weak')
             destroy_scrolling_keys()
         end
-    ne.eventresponder['enter'] =
-        function()
-            mp.commandv('playlist-prev', 'weak')
-            destroy_scrolling_keys()
-            show_message(get_playlist(false))
-        end
     ne.eventresponder['mbtn_right_up'] =
-        function() show_message(get_playlist(false)) end
+        function() shuffle_playlist() end
     ne.eventresponder['shift+mbtn_left_down'] =
         function() mp.commandv("script-binding", "select/select-playlist") end
     ne.eventresponder['shift+mbtn_right_down'] =
-        function() show_message(get_playlist(false)) end
+        function() mp.commandv('set', 'playlist-pos', '0') end
 
     -- next
     ne = new_element('pl_next', 'button')
@@ -3351,18 +3630,12 @@ local function osc_init()
             mp.commandv('playlist-next', 'weak')
             destroy_scrolling_keys()
         end
-    ne.eventresponder['enter'] =
-        function()
-            mp.commandv('playlist-next', 'weak')
-            destroy_scrolling_keys()
-            show_message(get_playlist(false))
-        end
     ne.eventresponder['mbtn_right_up'] =
-        function() show_message(get_playlist(false)) end
+        function() shuffle_playlist() end
     ne.eventresponder['shift+mbtn_left_down'] =
         function() mp.commandv("script-binding", "select/select-playlist") end
     ne.eventresponder['shift+mbtn_right_down'] =
-        function() show_message(get_playlist(false)) end
+        function() mp.commandv('set', 'playlist-pos', tostring(pl_count - 1)) end
 
     -- play control buttons
     -- play/pause
@@ -3416,21 +3689,12 @@ local function osc_init()
         end
     ne.eventresponder['mbtn_right_down'] =
         function()
-            if compact_mode then
-                mp.commandv("add", "chapter", -1)
-                show_message(get_chapterlist())
-                show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function
-            else
-                show_message(get_chapterlist())
-            end
+            mp.commandv('seek', -jump_more_amount, jump_mode)
         end
     ne.eventresponder['shift+mbtn_left_down'] =
         function() mp.commandv("script-binding", "select/select-chapter") end
     ne.eventresponder['shift+mbtn_right_down'] =
-        function()
-            mp.commandv('seek', -jump_more_amount, jump_mode)
-        end
-
+        function() mp.commandv("add", "chapter", 1) end
 
     -- skip forward
     ne = new_element('skipfrwd', 'button')
@@ -3448,20 +3712,12 @@ local function osc_init()
         end
     ne.eventresponder['mbtn_right_down'] =
         function()
-            if compact_mode then
-                mp.commandv("add", "chapter", 1)
-                show_message(get_chapterlist())
-                show_message(get_chapterlist()) -- run twice as it might show the wrong chapter without another function
-            else
-                show_message(get_chapterlist())
-            end
+            mp.commandv('seek', jump_more_amount, jump_mode)
         end
     ne.eventresponder['shift+mbtn_left_down'] =
         function() mp.commandv("script-binding", "select/select-chapter") end
     ne.eventresponder['shift+mbtn_right_down'] =
-        function()
-            mp.commandv('seek', jump_more_amount, jump_mode)
-        end
+        function() mp.commandv("add", "chapter", 1) end
 
     if user_opts.jump_buttons then
         if user_opts.jump_icon_number then
@@ -3842,15 +4098,15 @@ local function osc_init()
         if not user_opts.seek_range then
             return nil
         end
-        local cache_state = state.cache_state
-        if not cache_state then
+        local temp_cache_state = state.cache_state
+        if not temp_cache_state then
             return nil
         end
         local duration = mp.get_property_number("duration")
         if (duration == nil) or duration <= 0 then
             return nil
         end
-        local ranges = cache_state["seekable-ranges"]
+        local ranges = temp_cache_state["seekable-ranges"]
         if #ranges == 0 then
             return nil
         end
@@ -3990,15 +4246,15 @@ local function osc_init()
                 if not user_opts.seek_range then
                     return nil
                 end
-                local cache_state = state.cache_state
-                if not cache_state then
+                local temp_cache_state = state.cache_state
+                if not temp_cache_state then
                     return nil
                 end
                 local duration = mp.get_property_number('duration', nil)
                 if (duration == nil) or duration <= 0 then
                     return nil
                 end
-                local ranges = cache_state['seekable-ranges']
+                local ranges = temp_cache_state['seekable-ranges']
                 if #ranges == 0 then
                     return nil
                 end
@@ -4071,7 +4327,9 @@ local function osc_init()
     ne = new_element("chapter_title", "button")
     ne.visible = true
     ne.content = function()
-        if state.buffering ~= nil and state.buffering then
+        if state.forced_chapter_title then
+            return state.forced_chapter_title
+        elseif state.buffering ~= nil and state.buffering then
             return "Buffering..." .. " " .. (mp.get_property("cache-buffering-state") or "0") .. "%"
         else
             if user_opts.chapter_fmt ~= "no" and chapter_index >= 0 then
@@ -4180,8 +4438,8 @@ function adjust_subtitles(visible)
     end
 end
 
-function pause_state(name, enabled)
-    -- fix OSC instantly hiding after scrubbing (initiates a 'fake' pause to stop issues when scrubbing to the end of files)
+function pause_state(_, enabled)
+    -- fix OSC instantly hiding after scrubbing (initiates a pause to stop issues when scrubbing to the end of files)
     if (state.playingWhilstSeeking) then
         state.playingWhilstSeekingWaitingForEnd = true
         return
@@ -4202,7 +4460,7 @@ function pause_state(name, enabled)
     request_tick()
 end
 
-function cache_state(name, st)
+function cache_state(_, st)
     state.cache_state = st
     request_tick()
 end
@@ -4242,13 +4500,12 @@ end
 
 local function render()
     mp.msg.trace('rendering')
-    local current_screen_sizeX, current_screen_sizeY, aspect = mp.get_osd_size()
+    local current_screen_sizeX, current_screen_sizeY, _ = mp.get_osd_size()
     local mouseX, mouseY = get_virt_mouse_pos()
     local now = mp.get_time()
 
     -- check if display changed, if so request reinit
-    if not (state.mp_screen_sizeX == current_screen_sizeX
-            and state.mp_screen_sizeY == current_screen_sizeY) then
+    if not (state.mp_screen_sizeX == current_screen_sizeX and state.mp_screen_sizeY == current_screen_sizeY) then
         request_init_resize()
 
         state.mp_screen_sizeX = current_screen_sizeX
@@ -4497,7 +4754,7 @@ function tick()
 
         -- mpv logo
         if user_opts.idle_screen then
-            for i, line in ipairs(logo_lines) do
+            for _, line in ipairs(logo_lines) do
                 ass:new_event()
                 ass:append(line_prefix .. line)
             end
@@ -4505,7 +4762,7 @@ function tick()
 
         -- Santa hat
         if is_december and user_opts.idle_screen and not user_opts.green_and_grumpy then
-            for i, line in ipairs(santa_hat_lines) do
+            for _, line in ipairs(santa_hat_lines) do
                 ass:new_event()
                 ass:append(line_prefix .. line)
             end
@@ -4563,7 +4820,7 @@ mp.observe_property("chapter-list", "native", function(_, list) -- chapter list 
 end)
 mp.observe_property('duration', "native", function()
     if user_opts.automatic_keyframe_mode then
-        user_opts.seekbar_keyframes = (state.duration or 0) > user_opts.automatic_keyframe_limit
+        user_opts.seekbar_keyframes = tonumber(mp.get_property("duration") or 0) > user_opts.automatic_keyframe_limit
     end
 end)
 mp.observe_property('seeking', nil, function()
@@ -4658,23 +4915,23 @@ if user_opts.key_bindings then
 end
 
 mp.observe_property('fullscreen', 'bool',
-    function(name, val)
+    function(_, val)
         state.fullscreen = val
         request_init_resize()
     end
 )
 mp.observe_property('mute', 'bool',
-    function(name, val)
+    function(_, val)
         state.mute = val
     end
 )
 mp.observe_property('paused-for-cache', 'bool',
-    function(name, val)
+    function(_, val)
         state.buffering = val
     end
 )
 mp.observe_property('loop-file', 'bool',
-    function(name, val) -- ensure compatibility with auto looping scripts (eg: a script that sets videos under 2 seconds to loop by default)
+    function(_, val) -- ensure compatibility with auto looping scripts (eg: a script that sets videos under 2 seconds to loop by default)
         if (val == nil) then
             state.looping = true;
         else
@@ -4683,38 +4940,38 @@ mp.observe_property('loop-file', 'bool',
     end
 )
 mp.observe_property('border', 'bool',
-    function(name, val)
+    function(_, val)
         state.border = val
         request_init_resize()
     end
 )
 mp.observe_property('title-bar', 'bool',
-    function(name, val)
+    function(_, val)
         state.title_bar = val
         request_init_resize()
     end
 )
 mp.observe_property('window-maximized', 'bool',
-    function(name, val)
+    function(_, val)
         state.maximized = val
         request_init_resize()
     end
 )
 mp.observe_property('idle-active', 'bool',
-    function(name, val)
+    function(_, val)
         state.idle = val
         request_tick()
     end
 )
 mp.observe_property('pause', 'bool', pause_state)
 mp.observe_property('demuxer-cache-state', 'native', cache_state)
-mp.observe_property('vo-configured', 'bool', function(name, val)
+mp.observe_property('vo-configured', 'bool', function(_, _)
     request_tick()
 end)
-mp.observe_property('playback-time', 'number', function(name, val)
+mp.observe_property('playback-time', 'number', function(_, _)
     request_tick()
 end)
-mp.observe_property('osd-dimensions', 'native', function(name, val)
+mp.observe_property('osd-dimensions', 'native', function(_, _)
     -- (we could use the value instead of re-querying it all the time, but then
     --  we might have to worry about property update ordering)
     request_init_resize()
@@ -4722,29 +4979,43 @@ end)
 mp.observe_property("display-fps", "number", set_tick_delay)
 -- mouse show/hide bindings
 mp.set_key_bindings({
-    { 'mouse_move',  function(e) process_event('mouse_move', nil) end },
+    { 'mouse_move',  function(_) process_event('mouse_move', nil) end },
     { 'mouse_leave', mouse_leave },
 }, 'showhide', 'force')
 mp.set_key_bindings({
-    { 'mouse_move',  function(e) process_event('mouse_move', nil) end },
+    { 'mouse_move',  function(_) process_event('mouse_move', nil) end },
     { 'mouse_leave', mouse_leave },
 }, 'showhide_wc', 'force')
 do_enable_key_bindings()
 
+
+local unpause_last_pos = mp.get_property_number("playlist-pos", -1)
+mp.observe_property("playlist-pos", "number", function(_, pos)
+    -- only unpause on an actual navigation, not the initial file load
+    local last_pos = unpause_last_pos
+    unpause_last_pos = pos
+
+    if pos ~= nil and last_pos ~= nil and last_pos ~= -1 and pos ~= last_pos then
+        if mp.get_property_bool("pause") then
+            mp.set_property_bool("pause", false)
+        end
+    end
+end)
+
 --mouse input bindings
 mp.set_key_bindings({
-    { "mbtn_left", function(e) process_event("mbtn_left", "up") end,
-        function(e) process_event("mbtn_left", "down") end },
-    { "shift+mbtn_left", function(e) process_event("shift+mbtn_left", "up") end,
-        function(e) process_event("shift+mbtn_left", "down") end },
-    { "shift+mbtn_right", function(e) process_event("shift+mbtn_right", "up") end,
-        function(e) process_event("shift+mbtn_right", "down") end },
-    { "mbtn_right", function(e) process_event("mbtn_right", "up") end,
-        function(e) process_event("mbtn_right", "down") end },
-    { "mbtn_mid", function(e) process_event("shift+mbtn_left", "up") end,
-        function(e) process_event("shift+mbtn_left", "down") end },
-    { "wheel_up",            function(e) process_event("wheel_up", "press") end },
-    { "wheel_down",          function(e) process_event("wheel_down", "press") end },
+    { "mbtn_left", function(_) process_event("mbtn_left", "up") end,
+        function(_) process_event("mbtn_left", "down") end },
+    { "shift+mbtn_left", function(_) process_event("shift+mbtn_left", "up") end,
+        function(_) process_event("shift+mbtn_left", "down") end },
+    { "shift+mbtn_right", function(_) process_event("shift+mbtn_right", "up") end,
+        function(_) process_event("shift+mbtn_right", "down") end },
+    { "mbtn_right", function(_) process_event("mbtn_right", "up") end,
+        function(_) process_event("mbtn_right", "down") end },
+    { "mbtn_mid", function(_) process_event("shift+mbtn_left", "up") end,
+        function(_) process_event("shift+mbtn_left", "down") end },
+    { "wheel_up",            function(_) process_event("wheel_up", "press") end },
+    { "wheel_down",          function(_) process_event("wheel_down", "press") end },
     { "mbtn_left_dbl",       "ignore" },
     { "shift+mbtn_left_dbl", "ignore" },
     { "mbtn_right_dbl",      "ignore" },
@@ -4752,8 +5023,8 @@ mp.set_key_bindings({
 mp.enable_key_bindings('input')
 
 mp.set_key_bindings({
-    { 'mbtn_left', function(e) process_event('mbtn_left', 'up') end,
-        function(e) process_event('mbtn_left', 'down') end },
+    { 'mbtn_left', function(_) process_event('mbtn_left', 'up') end,
+        function(_) process_event('mbtn_left', 'down') end },
 }, 'window-controls', 'force')
 mp.enable_key_bindings('window-controls')
 
