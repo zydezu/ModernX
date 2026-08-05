@@ -4612,7 +4612,7 @@ local function render()
     if not (state.showtime == nil) and (get_hide_timeout() >= 0) then
         local timeout = state.showtime + (get_hide_timeout() / 1000) - now
         if timeout <= 0 then
-            if (state.active_element == nil) and (user_opts.bottom_hover) and (not mouse_over_osc) then
+            if (state.active_element == nil) and (user_opts.bottom_hover) or (not mouse_over_osc) then
                 if (not (state.paused and user_opts.keep_on_pause)) then
                     hide_osc()
                 end
