@@ -82,6 +82,7 @@ local user_opts = {
     -- Language and display
     language = "en",            -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",   -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
+    icon_style = "modern",      -- icon set used by the buttons: "modern", "solid" or "round"
     layout_option = "original", -- use the original/reduced layout
     idle_screen = true,         -- show mpv logo when idle
     key_bindings = true,        -- register additional key bindings, such as chapter scrubbing, pinning the window
@@ -260,7 +261,8 @@ local user_opts = {
     sponsorblock_preview_color = "#008FD6",        -- color for unpaid/self promotion
     sponsorblock_music_offtopic_color = "#FF9900", -- color for unpaid/self promotion
     sponsorblock_filler_color = "#7300FF",         -- color for filler content/tangents
-
+    show_sponsorblock_segment_name_on_hover = true, -- show the SponsorBlock segment type name under the seekbar hover time/thumbnail
+    show_sponsorblock_segment_name_in_chapter_title_on_hover = false, -- temporarily show the SponsorBlock segment type name where the chapter title would be while hovering
     -- Experimental
     show_youtube_comments = false,             -- EXPERIMENTAL - show youtube comments
     comments_path = "~/Pictures/mpv/comments", -- EXPERIMENTAL - the download path for the comment JSON file
