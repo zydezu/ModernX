@@ -1,5 +1,5 @@
 --[[
-    modernx.lua v0.4.7 by zydezu
+    modernx.lua v0.4.8 by zydezu
     (https://github.com/zydezu/ModernX)
 
     This script is a result of the original mpv-osc-modern by maoiscat
@@ -48,7 +48,7 @@ local function show_message(_, _) end
 local function bind_keys() end
 local function unbind_keys() end
 local function destroy_scrolling_keys() end
-local function extract_links() end
+local function extract_links(text) end
 local function open_url() end
 local function plain_replace_all() end
 local function apply_link_highlight() end
@@ -80,13 +80,14 @@ local user_opts = {
     -- Language and display
     language = "en",            -- en:English - .json translations need implementing
     font = "mpv-osd-symbols",   -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
+    icon_style = "modern",      -- icon set used by the buttons: "modern", "solid" or "round"
     layout_option = "original", -- use the original/reduced layout
     idle_screen = true,         -- show mpv logo when idle
     key_bindings = true,        -- register additional key bindings, such as chapter scrubbing, pinning the window
     window_top_bar = "auto",    -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
     show_windowed = true,       -- show OSC when windowed
     show_fullscreen = true,     -- show OSC when fullscreen
-    show_on_pause = true,       -- show OSC when paused
+    show_on_pause = false,      -- show OSC when paused
     keep_on_pause = false,      -- disable OSC hide timeout when paused
     green_and_grumpy = false,   -- disable the Santa hat in December
     visibility = "auto",        -- only used at init to set visibility_mode(...)
@@ -137,9 +138,9 @@ local user_opts = {
     date_format = "%Y-%m-%d",      -- how dates should be formatted, when read from metadata (uses standard lua date formatting)
 
     -- Title bar settings
-    window_title = true,                      -- show window title in borderless/fullscreen mode
-    window_controls = true,                   -- show window controls (close, minimize, maximize) in borderless/fullscreen
-    window_controls_title = "${media-title}", -- same as title but for window_controls
+    window_title = true,                   -- show window title in borderless/fullscreen mode
+    window_controls = true,                -- show window controls (close, minimize, maximize) in borderless/fullscreen
+    window_controls_title = "${filename}", -- same as title but for window_controls
 
     -- Subtitle display settings
     raise_subtitles = true,      -- whether to raise subtitles above the osc when it's shown
@@ -162,7 +163,7 @@ local user_opts = {
     volume_control_type = "linear", -- volume scale type: "linear" or "logarithmic"
 
     info_button = false,            -- show info button
-    ontop_button = true,            -- show window on top button
+    ontop_button = false,           -- show window on top button
     screenshot_button = false,      -- show screenshot button
     screenshot_flag = "subtitles",  -- flag for screenshot button: "subtitles", "video", "window", "each-frame"
     -- https://mpv.io/manual/master/#screenshot-commands
@@ -201,10 +202,10 @@ local user_opts = {
     thumbnail_border_outline = "#000000",     -- color of the border outline for thumbnails
 
     fade_alpha = 100,                         -- alpha of the title bar background box
-    fade_blur_strength = 75,                  -- blur strength for the OSC alpha fade - caution: high values can take a lot of CPU time to render
+    fade_blur_strength = 75,                  -- blur strength for the OSC alpha fade, higher values have a smoother fade effect
     fade_transparency_strength = 0,           -- use with "fade_blur_strength = 0" to create a transparency box
     window_fade_alpha = 100,                  -- alpha of the window title bar
-    window_fade_blur_strength = 75,           -- blur strength for the window title bar. caution: high values can take a lot of CPU time to render
+    window_fade_blur_strength = 75,           -- blur strength for the window title bar. higher values have a smoother fade effect
     window_fade_transparency_strength = 0,    -- use with "window_fade_blur_strength = 0" to create a transparency box
     thumbnail_border = 1,                     -- width of the thumbnail border (for thumbfast)
     thumbnail_border_radius = 5,              -- rounded corner radius for thumbnail border (0 to disable)
@@ -216,7 +217,7 @@ local user_opts = {
     hover_effect_for_sliders = false, -- apply hover effects to slider handles
 
     -- Progress bar settings
-    seek_handle_size = 0.8,              -- size ratio of the seekbar handle (range: 0 ~ 1)
+    seek_handle_size = 0,                -- size ratio of the seekbar handle (range: 0 ~ 1)
     seekbar_between_timers = false,      -- moves the seekbar and progress bar between the timers
     seekbar_height = 2,                  -- height of the seekbar
     progress_bar_height = 16,            -- height of the progress bar
@@ -237,32 +238,34 @@ local user_opts = {
     ytdl_format = "",           -- optional parameteres for yt-dlp downloading, eg: '-f bestvideo+bestaudio/best'
 
     -- SponsorBlock - these SponsorBlock features need https://github.com/zydezu/mpvconfig/blob/main/scripts/sponsorblock.lua specifically to function
-    show_sponsorblock_segments = true,             -- show SponsorBlock segments on the progress bar
-    add_sponsorblock_chapters = false,             -- add SponsorBlock chapters to the chapter list
-    sponsorblock_seek_range_alpha = 75,            -- transparency of SponsorBlock segments
-    sponsor_types = {                              -- what categories to show in the progress bar
-        "sponsor",                                 -- all categories: sponsor, intro, outro,
-        "intro",                                   -- interaction, selfpromo, preview, music_offtopic, filler
-        "outro",                                   -- video outro
-        "interaction",                             -- interaction reminders such as liking and subscribing
-        "selfpromo",                               -- self promotion of socials or other channels
-        "preview",                                 -- video preview
-        "music_offtopic",                          -- silence in music videos
-        "filler"                                   -- filler content/tangents
+    show_sponsorblock_segments = true,                               -- show SponsorBlock segments on the progress bar
+    add_sponsorblock_chapters = false,                               -- add SponsorBlock chapters to the chapter list
+    sponsorblock_seek_range_alpha = 75,                              -- transparency of SponsorBlock segments
+    sponsor_types = {                                                -- what categories to show in the progress bar
+        "sponsor",                                                   -- all categories: sponsor, intro, outro,
+        "intro",                                                     -- interaction, selfpromo, preview, music_offtopic, filler
+        "outro",                                                     -- video outro
+        "interaction",                                               -- interaction reminders such as liking and subscribing
+        "selfpromo",                                                 -- self promotion of socials or other channels
+        "preview",                                                   -- video preview
+        "music_offtopic",                                            -- silence in music videos
+        "filler"                                                     -- filler content/tangents
     },
-    sponsorblock_sponsor_color = "#00D400",        -- color for sponsors
-    sponsorblock_intro_color = "#00FFFF",          -- color for intermission/intro animations
-    sponsorblock_outro_color = "#0202ED",          -- color for endcards/credits
-    sponsorblock_interaction_color = "#CC00FF",    -- color for interaction reminders (reminders to subscribe)
-    sponsorblock_selfpromo_color = "#FFFF00",      -- color for unpaid/self promotion
-    sponsorblock_preview_color = "#008FD6",        -- color for unpaid/self promotion
-    sponsorblock_music_offtopic_color = "#FF9900", -- color for unpaid/self promotion
-    sponsorblock_filler_color = "#7300FF",         -- color for filler content/tangents
+    sponsorblock_sponsor_color = "#00D400",                          -- color for sponsors
+    sponsorblock_intro_color = "#00FFFF",                            -- color for intermission/intro animations
+    sponsorblock_outro_color = "#0202ED",                            -- color for endcards/credits
+    sponsorblock_interaction_color = "#CC00FF",                      -- color for interaction reminders (reminders to subscribe)
+    sponsorblock_selfpromo_color = "#FFFF00",                        -- color for unpaid/self promotion
+    sponsorblock_preview_color = "#008FD6",                          -- color for unpaid/self promotion
+    sponsorblock_music_offtopic_color = "#FF9900",                   -- color for unpaid/self promotion
+    sponsorblock_filler_color = "#7300FF",                           -- color for filler content/tangents
+    show_sponsorblock_segment_name_on_hover = false,                 -- show the SponsorBlock segment type name under the seekbar hover time/thumbnail
+    show_sponsorblock_segment_name_in_chapter_title_on_hover = true, -- temporarily show the SponsorBlock segment type name where the chapter title would be while hovering
 
     -- Experimental
-    show_youtube_comments = false,             -- EXPERIMENTAL - show youtube comments
+    show_youtube_comments = true,              -- EXPERIMENTAL - show youtube comments
     comments_path = "~/Pictures/mpv/comments", -- EXPERIMENTAL - the download path for the comment JSON file
-    FORCE_fix_not_ontop = true,                -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
+    FORCE_fix_not_ontop = false,               -- EXPERIMENTAL - try and mitigate https://github.com/zydezu/ModernX/issues/30, https://github.com/akiirui/mpv-handler/issues/48
 }
 -- read options from config and command-line
 require("mp.options").read_options(user_opts, 'modernx', function(list) update_options(list) end)
@@ -276,7 +279,7 @@ local osc_param = { -- calculated by osc_init()
     areas = {},
 }
 
-local icons = {
+local icons_modern = {
     play = "\238\166\143",
     pause = "\238\163\140",
     replay = "\238\189\191",
@@ -334,6 +337,65 @@ local icons = {
     },
 }
 
+-- so retro
+local icons_material = {
+    play = "\239\142\170",
+    pause = "\239\142\167",
+    replay = "\239\142\178",
+
+    previous = "\239\142\181",
+    next = "\239\142\180",
+    rewind = "\239\142\160",
+    forward = "\239\142\159",
+
+    audio = "\239\142\183",
+    subtitle = "\239\140\164",
+
+    volume = {
+        mute = "\239\142\187",
+        quiet = "\239\142\186",
+        low = "\239\142\185",
+        high = "\239\142\188",
+    },
+
+    download = "\239\136\160",
+    download_initiated = "\239\134\185",
+
+    loop_off = "\239\134\181",
+    loop_on = "\239\134\183",
+
+    info = "\239\135\183",
+
+    pinned_off = "\239\142\149",
+    pinned_on = "\239\142\150",
+
+    screenshot = "\239\135\168",
+    playlist = icons_modern.playlist, -- currently unused
+
+    fullscreen = "\239\133\173",
+    fullscreen_exit = "\239\133\172",
+
+    jumpicons = {
+        [5] = { "\239\142\177", "\239\142\163" },
+        [10] = { "\239\142\175", "\239\142\161" },
+        [30] = { "\239\142\176", "\239\142\162" },
+        default = { "\239\142\178", "\239\142\178" }, -- second icon is mirrored in layout()
+    },
+
+    window = icons_modern.window, -- drawn with osc_styles.window_control, not iconfont
+
+    emoticon = icons_modern.emoticon,
+}
+
+local icon_styles = {
+    modern = { font = "fluent-system-icons" },
+    solid = { font = "Material-Design-Iconic-Font" },
+    round = { font = "Material-Design-Iconic-Round" },
+}
+local selected_icon_style = icon_styles[user_opts.icon_style] or icon_styles.modern
+local icons = (user_opts.icon_style == "solid" or user_opts.icon_style == "round")
+    and icons_material or icons_modern
+
 -- Localization
 local language = {
     ['en'] = {
@@ -362,6 +424,7 @@ local language = {
         download_in_progress = "Download in progress",
         downloading = "Downloading",
         downloaded = "Already downloaded",
+        seedescription = "See description",
     }
 }
 local texts = language[user_opts.language] or language["en"]
@@ -408,7 +471,7 @@ local max_descsize = 200
 local comments_per_page = 25
 local is_december = os.date("*t").month == 12
 local unicode_minus_symbol = string.char(0xe2, 0x88, 0x92) -- UTF-8 for U+2212 MINUS SIGN
-local iconfont = 'fluent-system-icons'
+local iconfont = selected_icon_style.font
 
 local device = "linux"
 if os.getenv("windir") ~= nil then
@@ -561,6 +624,30 @@ local state = {
     message_text = nil, -- TODO: needs to be removed
     message_hide_timer = nil, ---@type mp.Timer? -- TODO: needs to be removed
 }
+
+local function get_sponsor_segment_name(pos)
+    if not user_opts.show_sponsorblock_segment_name_on_hover then
+        return nil
+    end
+    if not user_opts.show_sponsorblock_segments then
+        return nil
+    end
+    if type(state.sponsor_segments) ~= "table" then
+        return nil
+    end
+    for category, segments in pairs(state.sponsor_segments) do
+        if type(segments) == "table" then
+            for _, seg in ipairs(segments) do
+                if type(seg) == "table" and seg.start and seg["end"] then
+                    if pos >= seg.start and pos <= seg["end"] then
+                        return (tostring(category):gsub("^%l", string.upper):gsub("_", " "))
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
 
 local logo_lines = {
     -- White border
@@ -1316,17 +1403,26 @@ function render_elements(master_ass)
     -- because thumbfast will render it above the thumbnail instead
     if thumbfast.disabled then
         if user_opts.chapter_fmt ~= "no" and state.touchingprogressbar
-            and (user_opts.chapter_hover_title or user_opts.chapter_hover_subtitle) then
-            local dur = mp.get_property_number("duration", 0)
-            if dur > 0 then
-                local ch = get_chapter(state.sliderpos * dur / 100)
-                if ch and ch.title and ch.title ~= "" then
-                    local formatted = string.format(user_opts.chapter_fmt, ch.title)
-                    if user_opts.chapter_hover_subtitle then
-                        state.forced_chapter_title = formatted
-                    end
-                    if user_opts.chapter_hover_title then
-                        state.forced_title = formatted
+            and (user_opts.chapter_hover_title or user_opts.chapter_hover_subtitle
+                or user_opts.show_sponsorblock_segment_name_in_chapter_title_on_hover) then
+            local sponsor_name = user_opts.show_sponsorblock_segment_name_in_chapter_title_on_hover
+                and get_sponsor_segment_name(state.sliderpos)
+            if sponsor_name then
+                if user_opts.chapter_hover_subtitle or user_opts.show_sponsorblock_segment_name_in_chapter_title_on_hover then
+                    state.forced_chapter_title = string.format(user_opts.chapter_fmt, sponsor_name)
+                end
+            else
+                local dur = mp.get_property_number("duration", 0)
+                if dur > 0 then
+                    local ch = get_chapter(state.sliderpos * dur / 100)
+                    if ch and ch.title and ch.title ~= "" then
+                        local formatted = string.format(user_opts.chapter_fmt, ch.title)
+                        if user_opts.chapter_hover_subtitle then
+                            state.forced_chapter_title = formatted
+                        end
+                        if user_opts.chapter_hover_title then
+                            state.forced_title = formatted
+                        end
                     end
                 end
             end
@@ -1476,15 +1572,26 @@ function render_elements(master_ass)
                                 if user_opts.chapter_fmt ~= "no" and state.touchingprogressbar then
                                     local dur = mp.get_property_number("duration", 0)
                                     if dur > 0 then
-                                        local ch = get_chapter(state.sliderpos * dur / 100)
-                                        if ch and ch.title and ch.title ~= "" then
+                                        local sponsor_name = user_opts
+                                            .show_sponsorblock_segment_name_in_chapter_title_on_hover
+                                            and get_sponsor_segment_name(state.sliderpos)
+                                        local title_text = nil
+                                        if sponsor_name then
+                                            title_text = sponsor_name
+                                        else
+                                            local ch = get_chapter(state.sliderpos * dur / 100)
+                                            if ch and ch.title and ch.title ~= "" then
+                                                title_text = ch.title
+                                            end
+                                        end
+                                        if title_text then
                                             elem_ass:new_event()
                                             elem_ass:pos((thumbX + thumbfast.width / 2) * r_w,
                                                 thumbY * r_h - user_opts.time_font_size / 2)
                                             elem_ass:an(an)
                                             elem_ass:append(slider_lo.tooltip_style)
                                             ass_append_alpha(elem_ass, slider_lo.alpha, 0)
-                                            elem_ass:append(string.format(user_opts.chapter_fmt, ch.title))
+                                            elem_ass:append(string.format(user_opts.chapter_fmt, title_text))
                                         end
                                     end
                                 end
@@ -1690,9 +1797,34 @@ local function startupevents()
     mp.set_property_bool("auto-window-resize", false)
 end
 
+local mpv_default_title = "${?media-title:${media-title}}${!media-title:No file} - mpv"
+local title_format = mp.get_property("options/title") or ""
+local user_title_format = (title_format ~= "" and title_format ~= mpv_default_title) and title_format or nil
+local title_suffix = ""
+
+local function window_title_base()
+    -- use the real video title (eg: the YouTube title) instead of the URL
+    if state.is_URL then
+        local media_title = mp.get_property("media-title")
+        if media_title and media_title ~= "" then
+            return media_title
+        end
+    end
+    if user_title_format then
+        local title = mp.command_native({ "expand-text", user_title_format }) or ""
+        if title ~= "" then return title end
+    end
+    return mp.get_property("media-title") or ""
+end
+
+local function set_window_title()
+    mp.set_property("title", window_title_base() .. title_suffix)
+end
+
 function check_title()
     local mediatitle = mp.get_property("media-title")
-    mp.set_property("title", mediatitle or "")
+    title_suffix = ""
+    set_window_title()
 
     if (mp.get_property("filename") ~= mediatitle) and user_opts.dynamic_title then
         user_opts.title = "${media-title}"
@@ -1917,10 +2049,11 @@ function check_path_url()
         path = string.gsub(path, "ytdl://", "https://") -- Replace "ytdl://" with "https://"
     end
 
-    if is_url(path) and path or nil then
+    if is_url(path) then
         state.is_URL = true
         state.url_path = path
         print("URL detected.")
+        set_window_title()
 
         if path:match("https?://[^/]*youtube%.com/") or path:match("https?://youtu%.be/") then
             if path:match("/watch%?v=") or path:match("/shorts/") then
@@ -2262,9 +2395,9 @@ function add_like_count_to_title()
         state.viewcount = add_commas_to_number(state.localDescriptionClick:match('Views: (%d+)'))
         state.likecount = add_commas_to_number(state.localDescriptionClick:match('Likes: (%d+)'))
         if (state.viewcount ~= '' and state.likecount ~= '') then
-            mp.set_property("title", mp.get_property("media-title") ..
-                " | " .. icons.emoticon.view .. state.viewcount ..
-                " | " .. icons.emoticon.like .. state.likecount)
+            title_suffix = " | " .. icons.emoticon.view .. state.viewcount ..
+                " | " .. icons.emoticon.like .. state.likecount
+            set_window_title()
         end
     end
 end
@@ -2341,7 +2474,7 @@ local function make_sponsorblock_segments()
                     end
                 end
                 if string.find(chapter.title, ("start"):gsub("[%[%]]", "%%%1")) then
-                    if not is_start_added then
+                    if not is_start_added and temp_segment[current_category] then
                         temp_segment[current_category]["start"] = chapter.time / duration * 100
                         temp_segment[current_category]["is_start_added"] = true
                     end
@@ -3253,10 +3386,22 @@ layouts["reduced"] = function()
     local refX = osc_w / 2
     local refY = posY
 
+    -- Seekbar width is dynamic - grow/shrink with the timer labels (HH:MM:SS vs MM:SS)
+    local remsec = mp.get_property_number("playtime-remaining", 0)
+    local possec = mp.get_property_number("playback-time", 0)
+    local dur = mp.get_property_number("duration", 0)
+    local show_hours = possec >= 3600 or user_opts.time_format ~= "dynamic"
+    local show_remhours = (state.tc_right_rem and remsec >= 3600) or (not state.tc_right_rem and dur >= 3600) or
+        user_opts.time_format ~= "dynamic"
+    local left_margin = 70 + (state.tc_ms and 30 or 0) + (show_hours and 20 or 0)
+    local right_margin = 70 + (state.tc_ms and 30 or 0) + (show_remhours and 25 or 0)
+    local seekbar_w = osc_geo.w - left_margin - right_margin
+    if seekbar_w < 100 then seekbar_w = 100 end
+
     -- Seekbar
     new_element('seekbarbg', 'box')
     lo = add_layout('seekbarbg')
-    lo.geometry = { x = refX, y = refY - 75, an = 5, w = osc_geo.w - 200, h = 2 }
+    lo.geometry = { x = refX, y = refY - 75, an = 5, w = seekbar_w, h = user_opts.seekbar_height }
     lo.layer = 13
     lo.style = osc_styles.seekbar_bg
     lo.alpha[1] = 128
@@ -3266,13 +3411,14 @@ layouts["reduced"] = function()
     elements['seekbarbg'].visible = not (user_opts.show_chapter_markers and user_opts.chapter_marker_style == "gap")
 
     lo = add_layout('seekbar')
-    lo.geometry = { x = refX, y = refY - 75, an = 5, w = osc_geo.w - 200, h = 16 }
+    lo.geometry = { x = refX, y = refY - 75, an = 5, w = seekbar_w, h = user_opts.progress_bar_height }
     lo.style = osc_styles.seekbar_fg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.tooltip
     lo.slider.tooltip_an = 2
+    lo.layer = 40
 
-    if (user_opts.persistent_progress or user_opts.persistent_progresstoggle) then
+    if (user_opts.persistent_progress_default or user_opts.persistent_progress_toggle) then
         lo = add_layout('persistentseekbar')
         lo.geometry = { x = refX, y = refY, an = 5, w = osc_geo.w, h = user_opts.persistent_progress_height }
         lo.style = osc_styles.seekbar_fg
@@ -3301,20 +3447,12 @@ layouts["reduced"] = function()
     lo = add_layout("title")
     lo.geometry = geo
     lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.title,
-        geo.y - geo.h, geo.x + osc_geo.w - 170, geo.y + geo.h)
+        geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
     lo.alpha[3] = 0
-    lo.button.maxchars = geo.w / 5
+    lo.button.maxchars = geo.w / 11
 
-    -- Description
-    if (state.localDescription ~= nil or state.is_URL) and user_opts.show_description then
-        geo = { x = osc_geo.w - 25, y = refY - 115, an = 9, w = 120, h = 19 }
-        lo = add_layout("description")
-        lo.geometry = geo
-        lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.description,
-            geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
-        lo.alpha[3] = 0
-        -- lo.button.maxchars = geo.w / 11
-    end
+    -- Description button is intentionally omitted in reduced mode; the chapter
+    -- title takes its place in the top-right corner instead.
 
     -- Volumebar
     if user_opts.volume_control then
@@ -3404,7 +3542,7 @@ layouts["reduced"] = function()
     -- Chapter Title (next to timestamp)
     if user_opts.show_chapter_title then
         lo = add_layout("chapter_title")
-        lo.geometry = { x = 25, y = refY - 125, an = 1, w = 120, h = 19 }
+        lo.geometry = { x = osc_geo.w - 25, y = refY - 115, an = 9, w = 120, h = 19 }
         lo.style = osc_styles.chapter_title
     end
 
@@ -3563,7 +3701,11 @@ local function osc_init()
         return not (title == "") and title or "mpv"
     end
     ne.eventresponder["mbtn_left_up"] = function()
-        mp.commandv("script-binding", "stats/display-page-1")
+        if user_opts.layout_option == "reduced" and (state.localDescription ~= nil or state.is_URL) and user_opts.show_description then
+            check_description()
+        else
+            mp.commandv("script-binding", "stats/display-page-1")
+        end
     end
     ne.eventresponder["shift+mbtn_left_down"] = function()
         mp.commandv("show-text", mp.get_property_osd("media-title"))
@@ -3578,7 +3720,7 @@ local function osc_init()
     ne.visible = (state.localDescription ~= nil or state.is_URL) and user_opts.show_description
     ne.content = function()
         if #state.videoDescription > 25 and user_opts.layout_option == "reduced" then
-            return "View description"
+            return texts.seedescription
         end
 
         if state.is_URL then
@@ -4089,6 +4231,11 @@ local function osc_init()
             if possec < 3600 and user_opts.time_format ~= "fixed" then
                 time = time:gsub("^00:", "")
             end
+            -- Show SponsorBlock segment type name under the hover time when applicable
+            local sponsor_name = get_sponsor_segment_name(pos)
+            if sponsor_name then
+                time = time .. "\\N" .. sponsor_name
+            end
             return time
         else
             return ""
@@ -4344,7 +4491,7 @@ local function osc_init()
         end
         return "" -- fallback
     end
-    ne.eventresponder["mbtn_left_up"] = function() show_message(get_chapterlist()) end
+    ne.eventresponder["mbtn_left_up"] = function() mp.commandv("script-binding", "select/select-chapter") end
 
     -- Total/remaining time display
     ne = new_element("tc_right", "button")
@@ -4426,7 +4573,8 @@ function adjust_subtitles(visible)
     if visible and user_opts.raise_subtitles and state.osc_visible == true and (state.fullscreen == false or user_opts.show_fullscreen) then
         local _, h = mp.get_osd_size()
         if h > 0 then
-            local subpos = math.floor((osc_param.playresy - (user_opts.raise_subtitle_amount - (user_opts.seekbar_between_timers and 25 or 0))) /
+            local between_timers = user_opts.seekbar_between_timers or user_opts.layout_option == "reduced"
+            local subpos = math.floor((osc_param.playresy - (user_opts.raise_subtitle_amount - (between_timers and 25 or 0))) /
                 osc_param.playresy * 100)
             if subpos < 0 then
                 subpos = 100                      -- out of screen, default to original position
@@ -4900,12 +5048,13 @@ if user_opts.key_bindings then
             if mp.get_property('ontop') == 'yes' then
                 show_message("Pinned window")
                 mp.commandv('set', 'border', "no")
-                mp.set_property("title", mp.get_property("media-title") .. " (Picture-in-Picture)")
+                title_suffix = " (Picture-in-Picture)"
             else
                 show_message("Unpinned window")
                 mp.commandv('set', 'border', "yes")
-                mp.set_property("title", mp.get_property("media-title"))
+                title_suffix = ""
             end
+            set_window_title()
         end
     end);
 
