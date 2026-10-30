@@ -4163,6 +4163,8 @@ local function osc_init()
     ne.tooltipF = texts.statsinfo
     ne.eventresponder['mbtn_left_up'] =
         function() mp.commandv('script-binding', 'stats/display-stats-toggle') end
+    ne.eventresponder['mbtn_right_up'] =
+        function() mp.commandv('script-binding', 'select/menu') end
 
     --tog_ontop
     ne = new_element('tog_ontop', 'button')
@@ -5040,6 +5042,18 @@ if user_opts.key_bindings then
 
     mp.add_key_binding("tab", 'get_chapterlist', function()
         mp.commandv("script-binding", "select/select-chapter")
+    end)
+
+    mp.add_key_binding("m", "menu", function()
+        mp.commandv("script-binding", "select/menu")
+    end)
+
+    mp.add_key_binding("MENU", "context_menu", function()
+        mp.commandv("script-binding", "select/menu")
+    end)
+
+    mp.add_key_binding("ctrl+p", "command_palette", function()
+        mp.commandv("script-binding", "select/menu")
     end)
 
     mp.add_key_binding("p", "pinwindow", function()
