@@ -21,6 +21,8 @@ This fork changes the following:
 - Links found in video descriptions can be selected (`Tab`/`Shift+Tab`) and opened (`Enter`)
 - Added shift+left clicking and shift+right clicking the audio/subtitles button for a list of tracks are shown and traversed through
 - Pressing TAB shows a list of chapters
+- Pressing `m`, `Ctrl+P`, or `MENU` opens MPV's interactive context menu (Chapters, Audio devices, Key bindings, Statistics, Configs, etc.)
+- Right-clicking the info button opens MPV's interactive context menu
 - Added dynamic title changing depending on the file/source being played
 - Automatically resumes playback when navigating to a different playlist item while paused
 - Many more configurable options
