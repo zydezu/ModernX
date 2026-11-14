@@ -1,0 +1,64 @@
+# ModernX Image Viewer
+
+A minimal layout is automatically applied when viewing images while using ModernX osc, which also features zoom controls.
+
+![image_mode_modernx](https://github.com/user-attachments/assets/f9e999bc-6b6b-43d8-893c-d361f86db59f)
+
+## Zoom Controls
+
+Below is a list that explains the zoom control functions depending on how you interact with them.
+
+| Action            | Function                   |
+| ----------------- | -------------------------- |
+| Left mouse click  | Zoom in/out of image       |
+| Right mouse click | Reset zoom level to normal |
+| Mouse Wheel       | Zoom in/out of image       |
+
+## Recommended
+The following options will help you enhance and automate your image viewing experience with mpv. Feel free to adjust them to your liking or use case.
+
+Reset values per viewed file, should be added in top level within `mpv.conf`:
+```EditorConfig
+reset-on-next-file=video-zoom,panscan,video-unscaled,video-rotate,video-align-x,video-align-y
+```
+
+[Auto profiles](https://mpv.io/manual/master/#conditional-auto-profiles) that apply useful [mpv options](https://mpv.io/manual/master/#options) and [ModernX options](/docs/USER_OPTS.md) when viewing images:
+```EditorConfig
+[Video]
+    profile-cond=p["current-tracks/video"] and not p["current-tracks/video"].image
+    profile-restore=copy-equal
+    input-commands=disable-section image
+    taskbar-progress=yes
+
+[Image]
+    profile-desc=ModernX osc Image Viewer mode
+    profile-cond=p["current-tracks/video"] and p["current-tracks/video"].image and not p["current-tracks/video"].albumart
+    profile-restore=copy-equal
+    video-recenter=yes
+    taskbar-progress=no
+    stop-screensaver=no
+    prefetch-playlist=yes
+    video-aspect-override=no
+    image-display-duration=inf
+    title=${media-title} [${?width:${width}x${height}}]
+    input-commands=enable-section image allow-hide-cursor
+    script-opts-append=modernx-osc_fade_strength=50
+    script-opts-append=modernx-show_window_title=yes
+```
+
+In your `input.conf`, add: (adjust keybinds to what suits you)
+```
+# Image viewer binds
+WHEEL_UP         {image} script-binding positioning/cursor-centric-zoom  0.1
+WHEEL_DOWN       {image} script-binding positioning/cursor-centric-zoom -0.1
+0                {image} no-osd set video-align-y 0; no-osd set video-align-x 0
+```
+
+## Useful
+If you want to extend functionality even further to turn mpv into a full fledged image viewer, we recommend the following Github repository:
+- https://github.com/guidocella/mpv-image-config
+
+It allows you to have options such as:
+- Cursor centeric zoom with scroll wheel
+- Pan image, drag to pan and use gestures
+- Double page mode (ie: manga)
