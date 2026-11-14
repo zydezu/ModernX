@@ -1,0 +1,63 @@
+name: "Report an issue or a bug"
+description: "Create a report for an issue or a bug"
+labels: ["bug"]
+body:
+- type: textarea
+  attributes:
+      label: "mpv Information"
+      placeholder: |
+        mpv v0.41.0-374-gf42480d0c Copyright © 2000-2026 mpv/MPlayer/mplayer2 projects
+         built on Mar 24 2026 00:05:32
+        libplacebo version: v7.362.0 (v7.360.0-11-g33b5dfa-dirty)
+        FFmpeg version: N-123592-g7516bf24d
+        FFmpeg library versions:
+           libavcodec      62.29.101
+           libavdevice     62.4.100
+           libavfilter     11.15.101
+           libavformat     62.13.101
+           libavutil       60.29.100
+           libswresample   6.4.100
+           libswscale      9.7.100
+      description: |
+          Provide the output of `mpv --version`.
+      render: bash
+  validations:
+      required: false
+- type: textarea
+  attributes:
+      label: "Details & Reproduction Steps"
+      description: >
+          Try to reproduce your issue with `--no-config` and mpv's stock osc first. If it is reproducible
+          even then, try to find out which option or script causes your issue.
+
+
+          Describe the reproduction steps as precise as possible. It's very likely that
+          the bug you experience wasn't reproduced by the developer because the workflow
+          differs from your own.
+  validations:
+      required: true
+- type: textarea
+  attributes:
+      label: "Log File"
+      placeholder: "Drag and drop log file here (Don't paste content directly)"
+      description: >
+          Make a log file with `--log-file=output.txt` and
+          attach it to the issue. [[details](https://mpv.io/manual/master/#options-log-file)]
+
+
+          If you have trouble producing a log file, you can alternatively use `-v -v`,
+          save the terminal output to a file, and attach it to the issue.
+
+
+          Disclaimer: The log file may contain identifiable information, such as your username.
+          Review the log file before sharing and redact any sensitive data if necessary.
+  validations:
+      required: false
+- type: checkboxes
+  attributes:
+      label: "I carefully read all instructions and confirm that I did the following:"
+      options:
+          - label: "I tested with the latest mpv version to validate that the issue is not already fixed."
+            required: true
+          - label: "I provided all required information."
+            required: true
